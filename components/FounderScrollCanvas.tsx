@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useScroll, useSpring, motion } from 'framer-motion';
+import { useScroll, useSpring, useTransform } from 'framer-motion';
 
 const FRAME_COUNT = 120;
 
@@ -9,23 +9,36 @@ export function FounderScrollCanvas({ children }: { children?: React.ReactNode }
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [loadedCount, setLoadedCount] = useState(0);
+  const [isCanvasReady, setIsCanvasReady] = useState(false);
   const imagesRef = useRef<(HTMLImageElement | null)[]>(new Array(FRAME_COUNT).fill(null));
   const dimensionsRef = useRef<{ width: number; height: number }>({ width: 0, height: 0 });
   const lastDrawnFrameRef = useRef<number>(-1);
 
-  const { scrollYProgress } = useScroll({
+  // Desktop scroll progress (tied to 300vh container)
+  const { scrollYProgress: desktopScrollProgress } = useScroll({
     target: containerRef,
     offset: ['start start', 'end end'],
   });
 
-  const springProgress = useSpring(scrollYProgress, {
+  const springDesktopProgress = useSpring(desktopScrollProgress, {
     stiffness: 100,
     damping: 30,
     restDelta: 0.001,
   });
 
+  // Mobile scroll progress (tied directly to window scroll so mobile scrubs as user scrolls)
+  const { scrollY } = useScroll();
+  const mobileProgress = useTransform(scrollY, [0, 320], [0, 1], { clamp: true });
+  const springMobileProgress = useSpring(mobileProgress, {
+    stiffness: 120,
+    damping: 25,
+    restDelta: 0.001,
+  });
+
   // Draw frame function optimized for zero layout thrashing
-  const drawFrame = useCallback((frameIndex: number) => {
+  const drawFrame = useCallback((frameIndex: number, force = false) => {
+    if (!force && lastDrawnFrameRef.current === frameIndex) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -76,6 +89,7 @@ export function FounderScrollCanvas({ children }: { children?: React.ReactNode }
 
     ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
     lastDrawnFrameRef.current = idx;
+    setIsCanvasReady(true);
   }, []);
 
   // Update canvas size and re-draw current frame
@@ -93,7 +107,7 @@ export function FounderScrollCanvas({ children }: { children?: React.ReactNode }
     dimensionsRef.current = { width: rect.width, height: rect.height };
 
     if (lastDrawnFrameRef.current >= 0) {
-      drawFrame(lastDrawnFrameRef.current);
+      drawFrame(lastDrawnFrameRef.current, true);
     }
   }, [drawFrame]);
 
@@ -120,7 +134,7 @@ export function FounderScrollCanvas({ children }: { children?: React.ReactNode }
           setLoadedCount((prev) => prev + 1);
           // If this is the first frame or current active frame, draw immediately
           if (index === 0 && lastDrawnFrameRef.current < 0) {
-            drawFrame(0);
+            drawFrame(0, true);
           }
           resolve(img);
         };
@@ -182,31 +196,15 @@ export function FounderScrollCanvas({ children }: { children?: React.ReactNode }
     return () => window.removeEventListener('resize', updateCanvasSize);
   }, [updateCanvasSize]);
 
-  // Active scroll & playback loop
+  // Active scroll scrubbing loop
   useEffect(() => {
     let animationFrameId: number;
-    let isMobile = false;
-    if (typeof window !== 'undefined') {
-      isMobile = window.innerWidth < 768;
-    }
 
-    let mobileFrame = 0;
-    let lastTime = performance.now();
-    const fpsInterval = 1000 / 24;
-
-    const render = (currentTime: number) => {
-      if (isMobile) {
-        const elapsed = currentTime - lastTime;
-        if (elapsed > fpsInterval) {
-          lastTime = currentTime - (elapsed % fpsInterval);
-          mobileFrame = (mobileFrame + 1) % FRAME_COUNT;
-          drawFrame(mobileFrame);
-        }
-      } else {
-        const progress = springProgress.get();
-        const targetFrameIndex = Math.min(FRAME_COUNT - 1, Math.max(0, Math.floor(progress * FRAME_COUNT)));
-        drawFrame(targetFrameIndex);
-      }
+    const render = () => {
+      const isMobile = window.innerWidth < 768;
+      const progress = isMobile ? springMobileProgress.get() : springDesktopProgress.get();
+      const targetFrameIndex = Math.min(FRAME_COUNT - 1, Math.max(0, Math.floor(progress * FRAME_COUNT)));
+      drawFrame(targetFrameIndex);
       animationFrameId = requestAnimationFrame(render);
     };
 
@@ -215,33 +213,33 @@ export function FounderScrollCanvas({ children }: { children?: React.ReactNode }
     return () => {
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
     };
-  }, [springProgress, drawFrame]);
+  }, [springMobileProgress, springDesktopProgress, drawFrame]);
 
   const loadPercent = Math.round((loadedCount / FRAME_COUNT) * 100);
   const isFullyLoaded = loadedCount >= FRAME_COUNT;
 
   return (
     <div ref={containerRef} className="relative h-auto md:h-[300vh] w-full">
-      <div className="relative md:sticky md:top-0 h-auto md:h-screen w-full overflow-hidden flex flex-col md:block items-center justify-start md:justify-center pt-1 md:pt-0 pb-6 md:pb-0">
+      <div className="relative md:sticky md:top-0 h-auto md:h-screen w-full overflow-hidden flex flex-col md:block items-center justify-start md:justify-center pt-14 sm:pt-20 md:pt-0 pb-4 md:pb-0">
         
         {/* Palm Tree Animation Container:
-            On mobile (<md): Sized cleanly to ~190px right below the 56px navbar.
+            On mobile (<md): Sized cleanly to ~210px right below the 56px navbar.
             On desktop (md:): Absolute inset-0 filling the entire screen as background layer! */}
-        <div className="relative md:absolute md:inset-0 w-full h-[190px] sm:h-[240px] md:h-full shrink-0 flex items-center justify-center pt-14 md:pt-0 overflow-hidden">
-          {/* Instant First-Frame Base Layer (Eliminates initial blank screen delay) */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="relative md:absolute md:inset-0 w-full h-[210px] sm:h-[260px] md:h-full shrink-0 flex items-center justify-center overflow-hidden">
+          {/* Instant First-Frame Base Layer (Seamlessly fades out once canvas renders frame 0) */}
+          <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-500 ${isCanvasReady ? 'opacity-0' : 'opacity-100'}`}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/sequence/ezgif-frame-001.webp"
               alt="Palm Tree Animation"
-              className="w-full h-full object-contain pointer-events-none select-none opacity-100"
+              className="w-full h-full object-contain pointer-events-none select-none"
               loading="eager"
               fetchPriority="high"
               decoding="sync"
             />
           </div>
 
-          {/* Canvas - Rendered immediately on top without blocking overlays */}
+          {/* Canvas - Rendered with exact same contain bounding box without offset */}
           <canvas
             ref={canvasRef}
             className="relative z-10 w-full h-full object-contain md:object-cover block"
@@ -249,7 +247,7 @@ export function FounderScrollCanvas({ children }: { children?: React.ReactNode }
 
           {/* Minimal, elegant loading indicator */}
           {!isFullyLoaded && (
-            <div className="absolute top-16 md:top-24 right-4 md:right-6 z-30 flex items-center gap-2 px-2.5 py-1 md:px-3 md:py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 transition-opacity duration-500 pointer-events-none">
+            <div className="absolute top-4 md:top-24 right-4 md:right-6 z-30 flex items-center gap-2 px-2.5 py-1 md:px-3 md:py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 transition-opacity duration-500 pointer-events-none">
               <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-emerald)] animate-pulse" />
               <span className="text-white/50 text-[9px] md:text-[10px] font-mono tracking-wider uppercase">
                 Buffering {loadPercent}%
