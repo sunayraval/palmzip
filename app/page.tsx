@@ -455,15 +455,15 @@ export function PortfolioView({ content = contentData, isPreview = false }: { co
     <main className="relative min-h-screen bg-[#050505] selection:bg-[var(--color-brand-cyan)] selection:text-white">
       
       {/* Sticky Header Nav */}
-      <header className={`${isPreview ? 'absolute' : 'fixed'} top-0 inset-x-0 z-50 backdrop-blur-xl bg-black/50 border-b border-white/5 h-16 sm:h-20 px-4 sm:px-6 lg:px-12 flex items-center justify-between`}>
+      <header className={`${isPreview ? 'absolute' : 'fixed'} top-0 inset-x-0 z-50 backdrop-blur-xl bg-black/50 border-b border-white/5 h-14 sm:h-20 px-4 sm:px-6 lg:px-12 flex items-center justify-between`}>
         <motion.div 
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="flex items-center gap-3"
+          className="flex items-center gap-2.5 sm:gap-3"
         >
-          <div className="w-8 h-8 rounded bg-gradient-to-br from-[var(--color-brand-emerald)] to-[var(--color-brand-cyan)] flex items-center justify-center shadow-lg hover:shadow-[0_0_15px_var(--color-brand-emerald)] transition-shadow cursor-pointer">
-            <span className="text-white font-bold text-sm tracking-tighter">SR</span>
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded bg-gradient-to-br from-[var(--color-brand-emerald)] to-[var(--color-brand-cyan)] flex items-center justify-center shadow-lg hover:shadow-[0_0_15px_var(--color-brand-emerald)] transition-shadow cursor-pointer">
+            <span className="text-white font-bold text-xs sm:text-sm tracking-tighter">SR</span>
           </div>
           <span className="text-white/90 font-semibold tracking-wide hidden sm:block">SUNAY RAVAL</span>
         </motion.div>
@@ -472,7 +472,7 @@ export function PortfolioView({ content = contentData, isPreview = false }: { co
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="flex items-center gap-4 sm:gap-6"
+          className="flex items-center gap-3 sm:gap-6"
         >
           <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--color-brand-emerald)]/30 bg-[var(--color-brand-emerald)]/10 hover:bg-[var(--color-brand-emerald)]/20 transition-colors cursor-default">
             <span className="relative flex h-2 w-2">
@@ -482,14 +482,14 @@ export function PortfolioView({ content = contentData, isPreview = false }: { co
             <span className="text-white/80 text-xs font-medium tracking-wide">{HERO.availableBadge}</span>
           </div>
           
-          <Link href="/story" className="text-sm font-medium text-white/90 hover:text-[var(--color-brand-cyan)] transition-colors">
+          <Link href="/story" className="text-xs sm:text-sm font-medium text-white/90 hover:text-[var(--color-brand-cyan)] transition-colors px-2 py-1 rounded">
             Story
           </Link>
           <a 
             href="https://www.linkedin.com/in/sunay-raval-326215245/" 
             target="_blank" 
             rel="noopener noreferrer" 
-            className="text-sm font-medium text-white/90 hover:text-[var(--color-brand-cyan)] transition-colors"
+            className="text-xs sm:text-sm font-medium text-white/90 hover:text-[var(--color-brand-cyan)] transition-colors px-2 py-1 rounded"
           >
             Contact
           </a>
@@ -498,32 +498,43 @@ export function PortfolioView({ content = contentData, isPreview = false }: { co
 
       {/* Main Scrollytelling Container */}
       <div ref={containerRef} className="relative z-0">
-        <FounderScrollCanvas />
-
-        {/* Persistent Hero Overlay with Parallax */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="sticky top-0 h-[100dvh] sm:h-screen w-full flex flex-col items-center justify-center pt-16 sm:pt-0 px-4 sm:px-6 text-center">
-            <motion.div 
-              style={{ opacity: heroOpacity }}
-              className="max-w-4xl flex flex-col items-center gap-3 sm:gap-6"
-            >
-              <h1 className="text-4xl sm:text-7xl md:text-8xl font-black tracking-tighter text-white drop-shadow-[0_0_25px_rgba(255,255,255,0.2)]">
-                <span className="font-normal italic tracking-normal text-4xl sm:text-7xl md:text-9xl text-white/90 pb-1 sm:pb-4 block" style={{ fontFamily: 'var(--font-playfair)' }}>{HERO.titlePart1}</span>
-                {HERO.titlePart2}
-              </h1>
+        <FounderScrollCanvas>
+          <motion.div 
+            style={{ opacity: heroOpacity }}
+            className="max-w-4xl flex flex-col items-center gap-2 sm:gap-4 md:gap-6"
+          >
+            <h1 className="text-3xl sm:text-6xl md:text-8xl font-black tracking-tighter text-white drop-shadow-[0_0_25px_rgba(255,255,255,0.2)]">
+              <span 
+                className="font-normal italic tracking-normal text-3xl sm:text-6xl md:text-9xl text-white/90 pb-0.5 sm:pb-3 block" 
+                style={{ fontFamily: 'var(--font-playfair)' }}
+              >
+                {HERO.titlePart1}
+              </span>
+              {HERO.titlePart2}
+            </h1>
+            
+            {/* Subtitle with the warm yellow gradient glow effect right WITH it (not isolated at bottom) */}
+            <div className="relative flex flex-col items-center max-w-xs sm:max-w-xl md:max-w-2xl px-2">
+              {/* Sunlight glow centered right behind/with the subtitle */}
+              <div 
+                className="absolute -inset-3 sm:-inset-6 md:-inset-10 bg-[radial-gradient(ellipse_at_center,rgba(255,215,0,0.22)_0%,rgba(255,140,0,0.08)_45%,transparent_75%)] pointer-events-none mix-blend-screen blur-xl -z-10" 
+              />
               
-              <p className="text-xs sm:text-base md:text-xl text-white/70 font-light max-w-xs sm:max-w-xl md:max-w-2xl leading-relaxed mt-1 sm:mt-4 bg-black/60 px-4 py-3 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl border border-white/5 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+              <p className="text-xs sm:text-base md:text-xl text-white/80 font-light leading-relaxed bg-black/60 px-3.5 py-2.5 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl border border-[var(--color-brand-gold)]/20 shadow-[0_0_30px_rgba(255,215,0,0.08)]">
                 {HERO.subtitle}
               </p>
-            </motion.div>
-          </div>
-        </div>
-        
-        {/* Sunlight Glow shining down onto next section */}
-        <motion.div 
-          style={{ opacity: glowOpacity }}
-          className="absolute bottom-0 left-0 right-0 h-[100vh] translate-y-1/2 bg-[radial-gradient(ellipse_at_center,rgba(255,215,0,0.15)_0%,rgba(255,140,0,0.05)_40%,transparent_70%)] pointer-events-none mix-blend-screen z-20"
-        />
+
+              {/* Vertical scroll indicator line placed close with the subtitle and glow */}
+              <motion.div
+                className="flex flex-col items-center mt-3 sm:mt-5 pointer-events-none"
+                animate={{ y: [0, 6, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                <div className="w-[1px] h-8 sm:h-12 bg-gradient-to-b from-[var(--color-brand-gold)]/70 via-white/40 to-transparent" />
+              </motion.div>
+            </div>
+          </motion.div>
+        </FounderScrollCanvas>
       </div>
       
       {/* Creative Section (Entrepreneurship, Technology & Community Impact) */}

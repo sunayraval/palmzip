@@ -300,22 +300,22 @@ export function StoryPageView({
   return (
     <main className="min-h-screen bg-[#050505] text-white selection:bg-[var(--color-brand-cyan)] selection:text-white relative">
       {/* Sleek Navigation Bar */}
-      <header className={`${isPreview ? 'absolute' : 'fixed'} top-0 inset-x-0 z-50 backdrop-blur-xl bg-black/50 border-b border-white/5 h-16 sm:h-20 px-3 sm:px-6 lg:px-12 flex items-center justify-between`}>
-        <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group">
-          <div className="w-8 h-8 rounded bg-gradient-to-br from-[var(--color-brand-emerald)] to-[var(--color-brand-cyan)] flex items-center justify-center shadow-lg group-hover:shadow-[0_0_15px_var(--color-brand-cyan)] transition-all cursor-pointer">
-            <span className="text-white font-bold text-sm tracking-tighter">SR</span>
+      <header className={`${isPreview ? 'absolute' : 'fixed'} top-0 inset-x-0 z-50 backdrop-blur-xl bg-black/50 border-b border-white/5 h-14 sm:h-20 px-3 sm:px-6 lg:px-12 flex items-center justify-between`}>
+        <Link href="/" className="flex items-center gap-2 sm:gap-3 group">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded bg-gradient-to-br from-[var(--color-brand-emerald)] to-[var(--color-brand-cyan)] flex items-center justify-center shadow-lg group-hover:shadow-[0_0_15px_var(--color-brand-cyan)] transition-all cursor-pointer">
+            <span className="text-white font-bold text-xs sm:text-sm tracking-tighter">SR</span>
           </div>
           <span className="text-white/90 font-semibold tracking-wide hidden sm:block group-hover:text-white transition-colors">
             SUNAY RAVAL
           </span>
         </Link>
 
-        <div className="flex items-center gap-1 sm:gap-2 bg-white/5 p-1 rounded-full border border-white/10">
+        <div className="flex items-center gap-1 sm:gap-2 bg-white/5 p-0.5 sm:p-1 rounded-full border border-white/10">
           {currentData.tabs?.map((tab: any) => (
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
-              className={`px-3 sm:px-6 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 ${
+              className={`px-2.5 sm:px-6 py-1 sm:py-2 rounded-full text-[11px] sm:text-sm font-medium transition-all duration-300 ${
                 activeTab === tab.id
                   ? 'bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.2)]'
                   : 'text-white/60 hover:text-white hover:bg-white/5'
@@ -323,7 +323,7 @@ export function StoryPageView({
             >
               <span className="hidden sm:inline">{tab.label}</span>
               <span className="sm:hidden">
-                {tab.id === 'technology' ? 'Technology' : 'Ventures'}
+                {tab.id === 'technology' ? 'Tech' : 'Ventures'}
               </span>
             </button>
           ))}
@@ -334,7 +334,7 @@ export function StoryPageView({
       {activeTabData && <VerticalTimelineBar milestones={activeTabData.milestones} />}
 
       {/* Dynamic Tab Content */}
-      <div className="pt-16 sm:pt-20">
+      <div className="pt-14 sm:pt-20">
         {activeTabData?.id === 'entrepreneurship' ? (
           <EntrepreneurshipSections
             data={activeTabData}

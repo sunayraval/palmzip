@@ -5,7 +5,7 @@ import { useScroll, useSpring, motion } from 'framer-motion';
 
 const FRAME_COUNT = 120;
 
-export function FounderScrollCanvas() {
+export function FounderScrollCanvas({ children }: { children?: React.ReactNode }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [loadedCount, setLoadedCount] = useState(0);
@@ -204,54 +204,51 @@ export function FounderScrollCanvas() {
   const isFullyLoaded = loadedCount >= FRAME_COUNT;
 
   return (
-    <div ref={containerRef} className="relative h-[300vh] w-full">
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
+    <div ref={containerRef} className="relative h-[250vh] md:h-[300vh] w-full">
+      <div className="sticky top-0 h-[100dvh] md:h-screen w-full overflow-hidden flex flex-col md:block items-center justify-start md:justify-center">
         
-        {/* Instant First-Frame Base Layer (Eliminates initial blank screen delay) */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/sequence/ezgif-frame-001.webp"
-            alt="Palm Tree Animation"
-            className="w-full h-full object-contain pointer-events-none select-none opacity-100"
-            loading="eager"
-            fetchPriority="high"
-            decoding="sync"
+        {/* Palm Tree Animation Container:
+            On mobile (<md): Topmost element in vertical stack directly below navbar (height ~36vh).
+            On desktop (md:): Absolute inset-0 filling the entire screen as background layer! */}
+        <div className="relative md:absolute md:inset-0 w-full h-[36vh] sm:h-[40vh] md:h-full shrink-0 flex items-center justify-center pt-14 md:pt-0 overflow-hidden">
+          {/* Instant First-Frame Base Layer (Eliminates initial blank screen delay) */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/sequence/ezgif-frame-001.webp"
+              alt="Palm Tree Animation"
+              className="w-full h-full object-contain pointer-events-none select-none opacity-100"
+              loading="eager"
+              fetchPriority="high"
+              decoding="sync"
+            />
+          </div>
+
+          {/* Canvas - Rendered immediately on top without blocking overlays */}
+          <canvas
+            ref={canvasRef}
+            className="relative z-10 w-full h-full object-contain md:object-cover block"
           />
+
+          {/* Minimal, elegant loading indicator */}
+          {!isFullyLoaded && (
+            <div className="absolute top-16 md:top-24 right-4 md:right-6 z-30 flex items-center gap-2 px-2.5 py-1 md:px-3 md:py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 transition-opacity duration-500 pointer-events-none">
+              <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-emerald)] animate-pulse" />
+              <span className="text-white/50 text-[9px] md:text-[10px] font-mono tracking-wider uppercase">
+                Buffering {loadPercent}%
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* Canvas - Rendered immediately on top without blocking overlays */}
-        <canvas
-          ref={canvasRef}
-          className="relative z-10 w-full h-full object-cover block"
-        />
-
-        {/* Minimal, elegant loading indicator that does NOT block the palm tree */}
-        {!isFullyLoaded && (
-          <div className="absolute top-24 right-6 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 transition-opacity duration-500 pointer-events-none">
-            <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-emerald)] animate-pulse" />
-            <span className="text-white/50 text-[10px] font-mono tracking-wider uppercase">
-              Buffering {loadPercent}%
-            </span>
+        {/* Hero Content (Text & Subtitle & Glow):
+            On mobile (<md): Rendered directly below the palm tree in the flex flow.
+            On desktop (md:): Overlaid centered on top of the full-screen canvas. */}
+        {children && (
+          <div className="relative md:absolute md:inset-0 z-20 w-full flex flex-col items-center justify-start md:justify-center px-4 sm:px-6 pointer-events-none text-center mt-1 sm:mt-2 md:mt-0">
+            {children}
           </div>
         )}
-
-        {/* Scroll Indicator */}
-        <motion.div
-          className="absolute bottom-6 sm:bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-20"
-          style={{
-            opacity: useSpring(
-              useScroll({ target: containerRef, offset: ['start start', 'end end'] }).scrollYProgress,
-              { stiffness: 100, damping: 30 }
-            ),
-          }}
-        >
-          <motion.div
-            className="w-[1px] h-12 bg-gradient-to-b from-white/40 to-transparent"
-            animate={{ y: [0, 10, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-          />
-        </motion.div>
       </div>
     </div>
   );

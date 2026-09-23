@@ -84,22 +84,22 @@ export function CrossCountrySection({
     <div
       id={milestone.id}
       ref={containerRef}
-      className="relative w-full max-w-4xl mx-auto h-[175vh] scroll-mt-28"
+      className="relative w-full max-w-4xl mx-auto h-auto md:h-[130vh] scroll-mt-28"
     >
-      {/* Sticky Card Container that remains pinned during scroll scrubbing */}
-      <div className="sticky top-20 sm:top-24 w-full">
+      {/* Sticky on desktop for scrubbing; normal flow on phone so user can freely read */}
+      <div className="relative md:sticky md:top-24 w-full">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.8, ease: 'easeOut' }}
-          className="relative p-5 sm:p-8 md:p-12 rounded-3xl border border-white/15 bg-black/80 backdrop-blur-xl shadow-[0_0_60px_rgba(0,0,0,0.85)] hover:border-cyan-500/40 transition-all duration-300 flex flex-col gap-6 sm:gap-7 overflow-hidden group"
+          className="relative p-4 sm:p-7 md:p-12 rounded-2xl sm:rounded-3xl border border-white/15 bg-black/80 backdrop-blur-xl shadow-[0_0_60px_rgba(0,0,0,0.85)] hover:border-cyan-500/40 transition-all duration-300 flex flex-col gap-4 sm:gap-6 md:gap-7 overflow-hidden group"
         >
           {/* Subtle Ambient Radial Glow */}
           <div className="absolute top-0 right-0 w-80 h-80 bg-[radial-gradient(ellipse_at_top_right,rgba(6,182,212,0.12)_0%,transparent_70%)] pointer-events-none" />
 
           {/* 1. Top Header Row: Chronology & Stage Selector */}
-          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-white/10 pb-5">
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-white/10 pb-4 sm:pb-5">
             <div className="flex flex-col gap-1">
               <p className="text-[var(--color-brand-cyan)] text-xs md:text-sm font-mono tracking-[0.2em] uppercase">
                 // {milestone.dateTag} • National Founder Circuit
@@ -110,7 +110,7 @@ export function CrossCountrySection({
             </div>
 
             {/* Stage Selector Pills (Reflects scroll and allows direct clicking) */}
-            <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 p-1 sm:p-1.5 rounded-full bg-white/[0.04] border border-white/10 self-start sm:self-auto font-mono text-[11px] sm:text-xs">
+            <div className="flex items-center gap-1.5 sm:gap-2 p-1 sm:p-1.5 rounded-full bg-white/[0.04] border border-white/10 self-start sm:self-auto font-mono text-[10px] sm:text-xs">
               <button
                 type="button"
                 onClick={() => setManualStage(1)}
@@ -139,21 +139,21 @@ export function CrossCountrySection({
           </div>
 
           {/* 2. Top Center: MD ➔ Anaheim ➔ Berkeley Flight Trajectory Radar Arc */}
-          <div className="relative z-10 w-full rounded-2xl bg-[#090b12] border border-white/10 p-4 sm:p-5 md:p-6 overflow-hidden shadow-inner flex flex-col gap-2">
-            <div className="flex items-center justify-between text-[11px] font-mono border-b border-white/10 pb-2.5 text-white/50">
+          <div className="relative z-10 w-full rounded-2xl bg-[#090b12] border border-white/10 p-3.5 sm:p-5 md:p-6 overflow-hidden shadow-inner flex flex-col gap-2">
+            <div className="flex items-center justify-between text-[10px] sm:text-[11px] font-mono border-b border-white/10 pb-2 text-white/50">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                <span className="text-white/90 font-semibold tracking-wide uppercase text-[10px]">
+                <span className="text-white/90 font-semibold tracking-wide uppercase text-[9px] sm:text-[10px]">
                   Flight Trajectory Radar Arc
                 </span>
               </div>
-              <span className="text-[10px] text-white/40 font-mono">
+              <span className="text-[9px] sm:text-[10px] text-white/40 font-mono">
                 {activeStage === 1 ? 'LEG 1: MD ➔ ANAHEIM (STOP 1)' : 'LEG 2: ANAHEIM ➔ BERKELEY (FINAL)'}
               </span>
             </div>
 
             {/* SVG Flight Arc Container */}
-            <div className="relative w-full h-28 flex items-center justify-center">
+            <div className="relative w-full h-20 sm:h-28 flex items-center justify-center">
               <svg className="w-full h-full" viewBox="0 0 800 120" preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <filter id="radar-glow" x="-20%" y="-20%" width="140%" height="140%">
@@ -279,7 +279,7 @@ export function CrossCountrySection({
           </div>
 
           {/* 3. Stage Content Below: Only Stage 1 at Anaheim, Switches to Stage 2 at Berkeley */}
-          <div className="relative z-10 w-full min-h-[220px]">
+          <div className="relative z-10 w-full min-h-[160px] sm:min-h-[200px] md:min-h-[220px]">
             <AnimatePresence mode="wait">
               {activeStage === 1 ? (
                 /* STAGE 1 — ANAHEIM CARD */
@@ -289,37 +289,37 @@ export function CrossCountrySection({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -15 }}
                   transition={{ duration: 0.35, ease: 'easeOut' }}
-                  className="w-full flex flex-col gap-4 rounded-2xl bg-white/[0.02] border border-cyan-500/25 p-4 sm:p-6 md:p-8"
+                  className="w-full flex flex-col gap-3.5 sm:gap-4 rounded-2xl bg-white/[0.02] border border-cyan-500/25 p-3.5 sm:p-6 md:p-8"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-cyan-400" />
-                      <h3 className="text-lg md:text-xl font-bold text-white">
+                      <h3 className="text-base sm:text-lg md:text-xl font-bold text-white">
                         {stage1.title}
                       </h3>
                     </div>
-                    <span className="text-xs font-mono text-cyan-400 bg-cyan-950/70 px-3 py-1 rounded-full border border-cyan-500/30 self-start sm:self-auto">
+                    <span className="text-[11px] sm:text-xs font-mono text-cyan-400 bg-cyan-950/70 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full border border-cyan-500/30 self-start sm:self-auto">
                       📍 {stage1.location}
                     </span>
                   </div>
 
-                  <p className="text-sm md:text-base text-white/80 font-light leading-relaxed">
+                  <p className="text-xs sm:text-sm md:text-base text-white/80 font-light leading-relaxed">
                     {stage1.context}
                   </p>
 
                   {/* Highlights Pill Row */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs font-mono">
-                    <div className="p-3 rounded-xl bg-black/50 border border-white/5 flex flex-col gap-1">
-                      <span className="text-white/40 text-[10px] uppercase">State Finish</span>
-                      <span className="text-white/90 font-bold">4th Place Finalist</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 pt-1 text-xs font-mono">
+                    <div className="p-2.5 sm:p-3 rounded-xl bg-black/50 border border-white/5 flex flex-col gap-0.5 sm:gap-1">
+                      <span className="text-white/40 text-[9px] sm:text-[10px] uppercase">State Finish</span>
+                      <span className="text-white/90 font-bold text-xs sm:text-sm">4th Place Finalist</span>
                     </div>
-                    <div className="p-3 rounded-xl bg-black/50 border border-white/5 flex flex-col gap-1">
-                      <span className="text-white/40 text-[10px] uppercase">Event Level</span>
-                      <span className="text-cyan-400 font-bold">National Leadership Conf</span>
+                    <div className="p-2.5 sm:p-3 rounded-xl bg-black/50 border border-white/5 flex flex-col gap-0.5 sm:gap-1">
+                      <span className="text-white/40 text-[9px] sm:text-[10px] uppercase">Event Level</span>
+                      <span className="text-cyan-400 font-bold text-xs sm:text-sm">National Conf</span>
                     </div>
-                    <div className="p-3 rounded-xl bg-black/50 border border-white/5 flex flex-col gap-1">
-                      <span className="text-white/40 text-[10px] uppercase">Focus</span>
-                      <span className="text-[var(--color-brand-gold)] font-bold">Founder Networking</span>
+                    <div className="p-2.5 sm:p-3 rounded-xl bg-black/50 border border-white/5 flex flex-col gap-0.5 sm:gap-1">
+                      <span className="text-white/40 text-[9px] sm:text-[10px] uppercase">Focus</span>
+                      <span className="text-[var(--color-brand-gold)] font-bold text-xs sm:text-sm">Networking</span>
                     </div>
                   </div>
                 </motion.div>
@@ -331,27 +331,27 @@ export function CrossCountrySection({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -15 }}
                   transition={{ duration: 0.35, ease: 'easeOut' }}
-                  className="w-full flex flex-col gap-4 rounded-2xl bg-white/[0.02] border border-[var(--color-brand-gold)]/30 p-4 sm:p-6 md:p-8"
+                  className="w-full flex flex-col gap-3.5 sm:gap-4 rounded-2xl bg-white/[0.02] border border-[var(--color-brand-gold)]/30 p-3.5 sm:p-6 md:p-8"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-[var(--color-brand-gold)]" />
-                      <h3 className="text-lg md:text-xl font-bold text-white">
+                      <h3 className="text-base sm:text-lg md:text-xl font-bold text-white">
                         {stage2.title}
                       </h3>
                     </div>
-                    <span className="text-xs font-mono text-[var(--color-brand-gold)] bg-yellow-950/50 px-3 py-1 rounded-full border border-[var(--color-brand-gold)]/30 self-start sm:self-auto">
+                    <span className="text-[11px] sm:text-xs font-mono text-[var(--color-brand-gold)] bg-yellow-950/50 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full border border-[var(--color-brand-gold)]/30 self-start sm:self-auto">
                       📍 {stage2.location}
                     </span>
                   </div>
 
                   {/* Project Pitched */}
                   {stage2.projectPitched && (
-                    <div className="p-4 rounded-xl bg-black/60 border border-white/10 flex flex-col gap-1.5">
-                      <span className="text-[10px] font-mono text-[var(--color-brand-cyan)] uppercase tracking-wider font-semibold">
+                    <div className="p-3 sm:p-4 rounded-xl bg-black/60 border border-white/10 flex flex-col gap-1 sm:gap-1.5">
+                      <span className="text-[9px] sm:text-[10px] font-mono text-[var(--color-brand-cyan)] uppercase tracking-wider font-semibold">
                         Venture Pitched at Berkeley
                       </span>
-                      <p className="text-sm md:text-base text-white/90 leading-relaxed">
+                      <p className="text-xs sm:text-sm md:text-base text-white/90 leading-relaxed">
                         {stage2.projectPitched}
                       </p>
                     </div>
@@ -359,15 +359,15 @@ export function CrossCountrySection({
 
                   {/* Accolades List */}
                   {stage2.accolades && (
-                    <div className="flex flex-col gap-2 pt-1">
-                      <span className="text-[10px] font-mono text-white/40 uppercase tracking-wider">
+                    <div className="flex flex-col gap-1.5 sm:gap-2 pt-1">
+                      <span className="text-[9px] sm:text-[10px] font-mono text-white/40 uppercase tracking-wider">
                         Awards & Distinctions
                       </span>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
                         {stage2.accolades.map((acc: string, idx: number) => (
                           <div
                             key={idx}
-                            className="flex items-center gap-2.5 p-3 rounded-xl bg-black/50 border border-[var(--color-brand-gold)]/20"
+                            className="flex items-center gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-xl bg-black/50 border border-[var(--color-brand-gold)]/20"
                           >
                             <span className="text-sm">🏆</span>
                             <span className="text-xs font-medium text-white/95">{acc}</span>
@@ -382,9 +382,10 @@ export function CrossCountrySection({
           </div>
 
           {/* Footer Timeline Hint */}
-          <div className="relative z-10 flex items-center justify-between pt-1 border-t border-white/5 text-[10px] font-mono text-white/30">
-            <span>Scroll down to fly from Anaheim to Berkeley</span>
-            <span>{activeStage === 1 ? 'Leg 1 of 2: Anaheim' : 'Leg 2 of 2: Berkeley'}</span>
+          <div className="relative z-10 flex items-center justify-between pt-1 border-t border-white/5 text-[9px] sm:text-[10px] font-mono text-white/30">
+            <span className="hidden sm:inline">Scroll down to fly from Anaheim to Berkeley</span>
+            <span className="sm:hidden">Tap stages above to inspect leg</span>
+            <span>{activeStage === 1 ? 'Leg 1: Anaheim' : 'Leg 2: Berkeley'}</span>
           </div>
         </motion.div>
       </div>
