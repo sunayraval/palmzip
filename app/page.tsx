@@ -532,13 +532,16 @@ export function PortfolioView({ content = contentData, isPreview = false }: { co
                 {HERO.subtitle}
               </p>
 
-              {/* Vertical scroll indicator line on desktop */}
+              {/* Vertical scroll indicator line */}
               <motion.div
-                className="hidden md:flex flex-col items-center mt-3 sm:mt-5 pointer-events-none"
-                animate={{ y: [0, 6, 0] }}
+                className="flex flex-col items-center mt-2.5 sm:mt-5 pointer-events-none"
+                animate={{ y: [0, 5, 0] }}
                 transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
               >
-                <div className="w-[1px] h-8 sm:h-12 bg-gradient-to-b from-[var(--color-brand-gold)]/70 via-white/40 to-transparent" />
+                <span className="md:hidden text-[9px] font-mono tracking-[0.2em] uppercase text-white/40 mb-1">
+                  Scroll to bloom
+                </span>
+                <div className="w-[1px] h-5 sm:h-12 bg-gradient-to-b from-[var(--color-brand-gold)]/70 via-white/40 to-transparent" />
               </motion.div>
             </div>
           </motion.div>

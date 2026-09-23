@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useScroll, useSpring, useTransform } from 'framer-motion';
+import { useScroll, useSpring } from 'framer-motion';
 
 const FRAME_COUNT = 120;
 
@@ -14,24 +14,15 @@ export function FounderScrollCanvas({ children }: { children?: React.ReactNode }
   const dimensionsRef = useRef<{ width: number; height: number }>({ width: 0, height: 0 });
   const lastDrawnFrameRef = useRef<number>(-1);
 
-  // Desktop scroll progress (tied to 300vh container)
-  const { scrollYProgress: desktopScrollProgress } = useScroll({
+  // Scroll progress for pinned sequence (200vh on mobile, 300vh on desktop)
+  const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start start', 'end end'],
   });
 
-  const springDesktopProgress = useSpring(desktopScrollProgress, {
+  const springProgress = useSpring(scrollYProgress, {
     stiffness: 100,
     damping: 30,
-    restDelta: 0.001,
-  });
-
-  // Mobile scroll progress (tied directly to window scroll so mobile scrubs as user scrolls)
-  const { scrollY } = useScroll();
-  const mobileProgress = useTransform(scrollY, [0, 320], [0, 1], { clamp: true });
-  const springMobileProgress = useSpring(mobileProgress, {
-    stiffness: 120,
-    damping: 25,
     restDelta: 0.001,
   });
 
@@ -201,8 +192,7 @@ export function FounderScrollCanvas({ children }: { children?: React.ReactNode }
     let animationFrameId: number;
 
     const render = () => {
-      const isMobile = window.innerWidth < 768;
-      const progress = isMobile ? springMobileProgress.get() : springDesktopProgress.get();
+      const progress = springProgress.get();
       const targetFrameIndex = Math.min(FRAME_COUNT - 1, Math.max(0, Math.floor(progress * FRAME_COUNT)));
       drawFrame(targetFrameIndex);
       animationFrameId = requestAnimationFrame(render);
@@ -213,19 +203,19 @@ export function FounderScrollCanvas({ children }: { children?: React.ReactNode }
     return () => {
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
     };
-  }, [springMobileProgress, springDesktopProgress, drawFrame]);
+  }, [springProgress, drawFrame]);
 
   const loadPercent = Math.round((loadedCount / FRAME_COUNT) * 100);
   const isFullyLoaded = loadedCount >= FRAME_COUNT;
 
   return (
-    <div ref={containerRef} className="relative h-auto md:h-[300vh] w-full">
-      <div className="relative md:sticky md:top-0 h-auto md:h-screen w-full overflow-hidden flex flex-col md:block items-center justify-start md:justify-center pt-14 sm:pt-20 md:pt-0 pb-4 md:pb-0">
+    <div ref={containerRef} className="relative h-[200vh] md:h-[300vh] w-full">
+      <div className="sticky top-0 h-[100dvh] md:h-screen w-full overflow-hidden flex flex-col md:block items-center justify-center pt-14 sm:pt-20 md:pt-0 pb-4 md:pb-0">
         
         {/* Palm Tree Animation Container:
-            On mobile (<md): Sized cleanly to ~210px right below the 56px navbar.
+            On mobile (<md): Sized cleanly to ~220px right below the 56px navbar.
             On desktop (md:): Absolute inset-0 filling the entire screen as background layer! */}
-        <div className="relative md:absolute md:inset-0 w-full h-[210px] sm:h-[260px] md:h-full shrink-0 flex items-center justify-center overflow-hidden">
+        <div className="relative md:absolute md:inset-0 w-full h-[220px] sm:h-[260px] md:h-full shrink-0 flex items-center justify-center overflow-hidden">
           {/* Instant First-Frame Base Layer (Seamlessly fades out once canvas renders frame 0) */}
           <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-500 ${isCanvasReady ? 'opacity-0' : 'opacity-100'}`}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -257,7 +247,7 @@ export function FounderScrollCanvas({ children }: { children?: React.ReactNode }
         </div>
 
         {/* Hero Content (Text & Subtitle & Glow):
-            On mobile (<md): Sits snug directly below the palm tree.
+            On mobile (<md): Sits snug directly below the palm tree, centered in the screen.
             On desktop (md:): Overlaid centered on top of the full-screen canvas. */}
         {children && (
           <div className="relative md:absolute md:inset-0 z-20 w-full flex flex-col items-center justify-start md:justify-center px-4 sm:px-6 pointer-events-none text-center -mt-2 sm:-mt-4 md:mt-0">
