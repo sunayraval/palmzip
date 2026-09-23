@@ -4,7 +4,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { FounderScrollCanvas } from '@/components/FounderScrollCanvas';
 import { NeuralNetwork } from '@/components/NeuralNetwork';
 import { CandlestickBackground } from '@/components/CandlestickChart';
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 
 import contentData from '@/data/content.json';
@@ -439,7 +439,15 @@ export function CreativeSection({ content = contentData, beats }: { content?: an
 
 export function PortfolioView({ content = contentData, isPreview = false }: { content?: any; isPreview?: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const updateSize = () => setIsMobile(window.innerWidth < 768);
+    updateSize();
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
+  }, []);
+
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"]
@@ -500,7 +508,7 @@ export function PortfolioView({ content = contentData, isPreview = false }: { co
       <div ref={containerRef} className="relative z-0">
         <FounderScrollCanvas>
           <motion.div 
-            style={{ opacity: heroOpacity }}
+            style={{ opacity: isMobile ? 1 : heroOpacity }}
             className="max-w-4xl flex flex-col items-center gap-2 sm:gap-4 md:gap-6"
           >
             <h1 className="text-3xl sm:text-6xl md:text-8xl font-black tracking-tighter text-white drop-shadow-[0_0_25px_rgba(255,255,255,0.2)]">
@@ -524,9 +532,9 @@ export function PortfolioView({ content = contentData, isPreview = false }: { co
                 {HERO.subtitle}
               </p>
 
-              {/* Vertical scroll indicator line placed close with the subtitle and glow */}
+              {/* Vertical scroll indicator line on desktop */}
               <motion.div
-                className="flex flex-col items-center mt-3 sm:mt-5 pointer-events-none"
+                className="hidden md:flex flex-col items-center mt-3 sm:mt-5 pointer-events-none"
                 animate={{ y: [0, 6, 0] }}
                 transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
               >

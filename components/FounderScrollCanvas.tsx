@@ -182,18 +182,35 @@ export function FounderScrollCanvas({ children }: { children?: React.ReactNode }
     return () => window.removeEventListener('resize', updateCanvasSize);
   }, [updateCanvasSize]);
 
-  // Active scroll rendering loop
+  // Active scroll & playback loop
   useEffect(() => {
     let animationFrameId: number;
+    let isMobile = false;
+    if (typeof window !== 'undefined') {
+      isMobile = window.innerWidth < 768;
+    }
 
-    const render = () => {
-      const progress = springProgress.get();
-      const targetFrameIndex = Math.min(FRAME_COUNT - 1, Math.max(0, Math.floor(progress * FRAME_COUNT)));
-      drawFrame(targetFrameIndex);
+    let mobileFrame = 0;
+    let lastTime = performance.now();
+    const fpsInterval = 1000 / 24;
+
+    const render = (currentTime: number) => {
+      if (isMobile) {
+        const elapsed = currentTime - lastTime;
+        if (elapsed > fpsInterval) {
+          lastTime = currentTime - (elapsed % fpsInterval);
+          mobileFrame = (mobileFrame + 1) % FRAME_COUNT;
+          drawFrame(mobileFrame);
+        }
+      } else {
+        const progress = springProgress.get();
+        const targetFrameIndex = Math.min(FRAME_COUNT - 1, Math.max(0, Math.floor(progress * FRAME_COUNT)));
+        drawFrame(targetFrameIndex);
+      }
       animationFrameId = requestAnimationFrame(render);
     };
 
-    render();
+    animationFrameId = requestAnimationFrame(render);
 
     return () => {
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
@@ -204,13 +221,13 @@ export function FounderScrollCanvas({ children }: { children?: React.ReactNode }
   const isFullyLoaded = loadedCount >= FRAME_COUNT;
 
   return (
-    <div ref={containerRef} className="relative h-[125vh] md:h-[300vh] w-full">
-      <div className="sticky top-0 h-[100dvh] md:h-screen w-full overflow-hidden flex flex-col md:block items-center justify-start md:justify-center">
+    <div ref={containerRef} className="relative h-auto md:h-[300vh] w-full">
+      <div className="relative md:sticky md:top-0 h-auto md:h-screen w-full overflow-hidden flex flex-col md:block items-center justify-start md:justify-center pt-1 md:pt-0 pb-6 md:pb-0">
         
         {/* Palm Tree Animation Container:
-            On mobile (<md): Compact topmost element directly under navbar without extra vertical padding.
+            On mobile (<md): Sized cleanly to ~190px right below the 56px navbar.
             On desktop (md:): Absolute inset-0 filling the entire screen as background layer! */}
-        <div className="relative md:absolute md:inset-0 w-full h-[24vh] sm:h-[30vh] md:h-full shrink-0 flex items-center justify-center pt-14 md:pt-0 overflow-hidden">
+        <div className="relative md:absolute md:inset-0 w-full h-[190px] sm:h-[240px] md:h-full shrink-0 flex items-center justify-center pt-14 md:pt-0 overflow-hidden">
           {/* Instant First-Frame Base Layer (Eliminates initial blank screen delay) */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -242,7 +259,7 @@ export function FounderScrollCanvas({ children }: { children?: React.ReactNode }
         </div>
 
         {/* Hero Content (Text & Subtitle & Glow):
-            On mobile (<md): Sits snug directly below the palm tree without a large gap.
+            On mobile (<md): Sits snug directly below the palm tree.
             On desktop (md:): Overlaid centered on top of the full-screen canvas. */}
         {children && (
           <div className="relative md:absolute md:inset-0 z-20 w-full flex flex-col items-center justify-start md:justify-center px-4 sm:px-6 pointer-events-none text-center -mt-2 sm:-mt-4 md:mt-0">
