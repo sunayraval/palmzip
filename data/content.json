@@ -1,0 +1,92 @@
+{
+  "hero": {
+    "titlePart1": "Cultivating",
+    "titlePart2": "RESILIENCE.",
+    "subtitle": "Grounded in leadership, creativity, and persistence. Applying entrepreneurship and AI/ML to solve pressing issues. ",
+    "availableBadge": "ENTREPRENEUR |  BUILDER | STUDENT"
+  },
+  "sections": {
+    "entrepreneurship": {
+      "tag": "ENTREPRENEUR",
+      "italicTitle": "Committed to",
+      "mainTitle": "ENTREPRENEURSHIP",
+      "subtitle": "From healthcare operations and venture incubation to national pitch circuits and enterprise team formation."
+    },
+    "technology": {
+      "tag": "BUILDER",
+      "italicTitle": "Research &",
+      "mainTitle": "TECHNOLOGY",
+      "subtitle": "Pioneering vision-language models, edge robotics, and hands-on mechanical & software architectures."
+    },
+    "impact": {
+      "tag": "COMMUNITY LEADERSHIP",
+      "italicTitle": "Community",
+      "mainTitle": "IMPACT",
+      "subtitle": "Empowering students through financial education, executive guest speakers, and actionable wealth literacy."
+    }
+  },
+  "financialLiteracyClub": {
+    "header": "Howard High Financial Literacy Club",
+    "subtitle": "Founder & President",
+    "summary": "Built a student-led organization at Howard High to help peers make educated financial decisions and prepare for the realities of college. Hosted guest sessions featuring business teachers, industry leaders, and college professors to unpack real-world wealth mechanics.",
+    "stats": [
+      {
+        "value": "300+",
+        "label": "Students Impacted"
+      },
+      {
+        "value": "20+",
+        "label": "Meetings Held"
+      },
+      {
+        "value": "3",
+        "label": "Large Community Events"
+      }
+    ],
+    "tickerItems": [
+      "SPY $582.40 ▲ +0.65%",
+      "HFLC [Impact] 300+ Students",
+      "QQQ $495.10 ▲ +0.92%",
+      "COMM [Outreach] 3 Large Community Events",
+      "DIA $421.15 ▲ +0.31%",
+      "SESS [Sessions Held] 20+ Meetings",
+      "SPEAKERS [Network] Faculty • Industry Leaders • Business Teachers",
+      "VTI $284.50 ▲ +0.54%"
+    ]
+  },
+  "beats": [
+    {
+      "id": "beat-b",
+      "microTag": "VENTURE LEADERSHIP & OPERATIONS",
+      "title": "BLUE & GOLD HEALTHCARE",
+      "subtitle": "Co-Founder, COO & CTO. Creating comprehensive business plans to solve hospital staffing and care problems. Pitched numerous healthcare solutions at major competitions.",
+      "metrics": [
+        "TiE NJ Young Achievers Finalist",
+        "Competed in Several Pitch Competitions",
+        "Enterprise Operations & Tech Stack Lead"
+      ]
+    },
+    {
+      "id": "beat-c",
+      "microTag": "INTELLIGENCE & SYSTEMS RESEARCH",
+      "title": "ARTIFICIAL INTELLIGENCE & VLMS",
+      "subtitle": "Engineering practical multi-agent coordination and custom edge architectures. National competitor FBLA in Data Science / AI Event, conducting AI work at the Johns Hopkins Applied Physics Laboratory, evaluating multi-agent VLM coordination; building PULSE, an embodied AI robot combining local VLMs with Raspberry Pi & Arduino for physical navigation. ",
+      "badges": [
+        "VLM & Vision Systems",
+        "Agentic Workflows",
+        "Fusing Robotics and AI",
+        "LiDAR & Camera Integration"
+      ]
+    },
+    {
+      "id": "beat-d",
+      "microTag": "LET's GET IN TOUCH",
+      "title": "LEARN MORE ABOUT MY STORY",
+      "subtitle": "Open to conversation and new business opportunities.",
+      "cta": {
+        "primary": "Get in Touch",
+        "secondary": "Entrepreneurship Journey"
+      }
+    }
+  ]
+}

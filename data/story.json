@@ -1,0 +1,112 @@
+{
+  "tabs": [
+    {
+      "id": "entrepreneurship",
+      "label": "Entrepreneurship",
+      "milestones": [
+        {
+          "id": "noteway",
+          "dateTag": "Summer 2022",
+          "role": "Berkeley Business Academy for Youth (BBAY)",
+          "title": "Noteway",
+          "category": "FIRST MAJOR BUSINESS IDEA",
+          "description": "Built Noteway, an AI-powered note-taking application for college students engineered to enhance lecture comprehension and synthesis.",
+          "accolades": [
+            "Golden Bear Award for Leadership"
+          ],
+          "mediaAsset": "/story-assets/notewaylogo.png"
+        },
+        {
+          "id": "baghealthcare",
+          "dateTag": "Late 2022 – Ongoing",
+          "role": "Co-Founder / Core Venture",
+          "title": "Blue and Gold Healthcare",
+          "link": "baghealthcare.com",
+          "subMilestone": {
+            "eventTag": "2024 TiE University (TiE U) NJ Finals",
+            "achievement": "Awarded Rising Young Entrepreneurs recognition."
+          },
+          "mediaAsset": "/story-assets/baglogo.png"
+        },
+        {
+          "id": "crosscountry",
+          "dateTag": "Summer 2025",
+          "transitionAnimation": "md-to-calli",
+          "title": "Cross-Country Circuit & BBAY",
+          "stages": [
+            {
+              "title": "Stage 1 — FBLA Nationals",
+              "location": "Anaheim, California",
+              "context": "Competed in Business Plan at the National Leadership Conference following a 4th place finish at the State level; engaged in nationwide founder/student networking."
+            },
+            {
+              "title": "Stage 2 — BBAY High School (Bay Area)",
+              "location": "Berkeley / SF Bay Area, California",
+              "projectPitched": "Cofindr — a dedicated networking platform built for founders and operators to discover collaborators and assemble core teams.",
+              "accolades": [
+                "Golden Bear Award for Leadership (2x Recipient)",
+                "2nd Place in the Final Pitch Competition (Team Cofindr)"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "cofindr",
+          "dateTag": "September 2026",
+          "role": "Founder",
+          "title": "Cofindr",
+          "description": "Formally founded Cofindr alongside core collaborators from the BBAY cohort to turn the validated concept into an active platform.",
+          "mediaAsset": "/story-assets/cofindrlogo.png"
+        }
+      ]
+    },
+    {
+      "id": "technology",
+      "label": "Technology & Engineering",
+      "milestones": [
+        {
+          "id": "vending-machine",
+          "dateTag": "5th Grade (Foundational)",
+          "category": "Mechanical Engineering / Creative Prototyping",
+          "title": "Cardboard Vending Machine",
+          "description": "Engineered a fully functioning vending machine prototype entirely out of cardboard to reverse-engineer mechanical dispensing logic and explore hands-on problem-solving.",
+          "accolades": [
+            "Core Takeaway: Early spark for applied engineering and creative system design."
+          ]
+        },
+        {
+          "id": "stock-simulator",
+          "dateTag": "August 2023",
+          "category": "Software Development / FinTech",
+          "title": "Stock Trading Simulator",
+          "description": "Developed an interactive stock market simulation platform designed to let users execute virtual trades, track simulated portfolios, and practice market strategies without financial risk."
+        },
+        {
+          "id": "pulse-robot",
+          "dateTag": "JHU APL ASPIRE",
+          "category": "Robotics & Edge AI",
+          "title": "P.U.L.S.E. Physical Robot",
+          "subtitle": "JHU APL ASPIRE",
+          "link": "https://aspireshowcase.dunked.com/pulse-physical-unit-for-language-sight-and-execution",
+          "description": "Embodied physical robotics platform coupling edge Vision-Language Models with onboard microcontroller actuators for autonomous spatial reasoning and voice-directed navigation."
+        },
+        {
+          "id": "multi-agent-planning",
+          "dateTag": "JHU APL ASPIRE",
+          "category": "Autonomous Systems Research",
+          "title": "Centralized Multi-Agent Planning",
+          "subtitle": "Pixel 2 Pathways • ASPIRE Research Paper",
+          "link": "https://lnkd.in/p/ecyCSXbM",
+          "description": "Centralized Vision-Language Model coordinator orchestrating collaborative multi-agent trajectories, sequential cooperative stacking, and synchronized goal achievement."
+        },
+        {
+          "id": "future-milestones",
+          "dateTag": "Future",
+          "category": "Technology & Engineering",
+          "title": "More to come",
+          "description": "More to come."
+        }
+      ]
+    }
+  ]
+}
