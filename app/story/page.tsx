@@ -560,26 +560,26 @@ function EntrepreneurshipSections({
       </div>
 
       {/* Hero Header Section */}
-      <div className="relative z-10 w-full pt-14 sm:pt-20 pb-10 sm:pb-16 px-4 sm:px-6 md:px-12 flex flex-col items-center text-center max-w-4xl mx-auto">
-        <p className="text-[var(--color-brand-cyan)] bg-black/60 px-5 sm:px-6 py-1.5 sm:py-2 rounded-full font-mono text-xs md:text-sm tracking-[0.3em] uppercase border border-white/10 shadow-2xl mb-4 sm:mb-6">
+      <div className="relative z-10 w-full pt-8 sm:pt-20 pb-4 sm:pb-16 px-4 sm:px-6 md:px-12 flex flex-col items-center text-center max-w-4xl mx-auto">
+        <p className="text-[var(--color-brand-cyan)] bg-black/60 px-4 sm:px-6 py-1 sm:py-2 rounded-full font-mono text-xs md:text-sm tracking-[0.3em] uppercase border border-white/10 shadow-2xl mb-3 sm:mb-6">
           The Journey
         </p>
         <h1 className="text-4xl sm:text-7xl md:text-8xl font-black tracking-tighter drop-shadow-[0_0_35px_rgba(0,0,0,0.8)]">
           <span
-            className="font-normal italic tracking-normal text-4xl sm:text-7xl md:text-9xl text-white pb-2 block"
+            className="font-normal italic tracking-normal text-4xl sm:text-7xl md:text-9xl text-white pb-1 sm:pb-2 block"
             style={{ fontFamily: 'var(--font-playfair)' }}
           >
             Building
           </span>
           VENTURES.
         </h1>
-        <p className="text-sm sm:text-lg md:text-xl text-white/60 font-light max-w-2xl mt-4 sm:mt-6 leading-relaxed px-2">
+        <p className="text-xs sm:text-lg md:text-xl text-white/60 font-light max-w-2xl mt-3 sm:mt-6 leading-relaxed px-2">
           From early product inception to core venture execution, hospital operations, and competitive founder circuits.
         </p>
       </div>
 
       {/* Event Sections Flow with Animated Connecting Flow Lines */}
-      <div className="relative z-10 w-full py-12 sm:py-20 px-3 sm:px-6 md:px-12 flex flex-col items-center bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:48px_48px]">
+      <div className="relative z-10 w-full py-6 sm:py-20 px-3 sm:px-6 md:px-12 flex flex-col items-center bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:48px_48px]">
         {/* Continuous Background Flow Spine */}
         <TimelineContinuousSpine theme="entrepreneurship" />
 
@@ -714,7 +714,7 @@ function TechnologySections({
             style={{ opacity: titleOpacity }}
             className="relative z-20 flex flex-col items-center text-center max-w-4xl mx-auto px-4 sm:px-6 pointer-events-none"
           >
-            <p className="text-[var(--color-brand-cyan)] bg-black/60 px-5 sm:px-6 py-1.5 sm:py-2 rounded-full font-mono text-xs md:text-sm tracking-[0.3em] uppercase border border-white/10 shadow-2xl mb-4 sm:mb-6 backdrop-blur-md">
+            <p className="text-[var(--color-brand-cyan)] bg-black/60 px-4 sm:px-6 py-1 sm:py-2 rounded-full font-mono text-xs md:text-sm tracking-[0.3em] uppercase border border-white/10 shadow-2xl mb-3 sm:mb-6 backdrop-blur-md">
               The Journey
             </p>
             <h1
@@ -728,7 +728,7 @@ function TechnologySections({
       </div>
 
       {/* Event Sections Flow with Animated Connecting Flow Lines */}
-      <div className="relative z-20 w-full -mt-[10vh] sm:-mt-[16vh] md:-mt-[22vh] pb-16 sm:pb-24 px-3 sm:px-6 md:px-12 flex flex-col items-center bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:48px_48px]">
+      <div className="relative z-20 w-full -mt-[14vh] sm:-mt-[16vh] md:-mt-[22vh] pb-12 sm:pb-24 px-3 sm:px-6 md:px-12 flex flex-col items-center bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:48px_48px]">
         {/* Continuous Background Flow Spine */}
         <TimelineContinuousSpine theme="technology" />
 

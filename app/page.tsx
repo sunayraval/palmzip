@@ -57,12 +57,12 @@ export function CreativeSection({ content = contentData, beats }: { content?: an
   const beat2 = STATIC_BEATS[2] || contentData.beats[2];
 
   return (
-    <div className="relative bg-[#050505] z-10 py-16 sm:py-24 md:py-32 px-4 sm:px-8 md:px-12 flex flex-col gap-20 sm:gap-32 md:gap-40 overflow-x-hidden bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:48px_48px] animate-grid">
+    <div className="relative bg-[#050505] z-10 py-10 sm:py-24 md:py-32 px-4 sm:px-8 md:px-12 flex flex-col gap-12 sm:gap-32 md:gap-40 overflow-x-hidden bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:48px_48px] animate-grid">
       
       {/* =================================================================== */}
       {/* PART 1: ENTREPRENEURSHIP (BIG CENTER TITLE & CONTENT)               */}
       {/* =================================================================== */}
-      <div className="w-full flex flex-col items-center gap-12 sm:gap-20">
+      <div className="w-full flex flex-col items-center gap-8 sm:gap-20">
         
         {/* Big Centered Designation Header */}
         <motion.div 
