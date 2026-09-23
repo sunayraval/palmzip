@@ -30,7 +30,7 @@ export function TimelineFlowConnector({
       className="relative w-full max-w-4xl mx-auto flex flex-col items-center justify-center select-none pointer-events-none py-2 my-1"
     >
       {/* SVG Canvas for High-Performance Hardware-Accelerated Flow Line */}
-      <div className="relative w-48 sm:w-56 h-32 sm:h-36 flex items-center justify-center">
+      <div className="relative w-36 sm:w-48 md:w-56 h-28 sm:h-32 md:h-36 flex items-center justify-center">
         <svg
           viewBox="0 0 160 140"
           className="w-full h-full overflow-visible"

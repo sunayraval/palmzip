@@ -153,7 +153,7 @@ function VerticalTimelineBar({ milestones }: { milestones: any[] }) {
   const activeYear = activeMilestone ? getShortDate(activeMilestone.dateTag) : '';
 
   return (
-    <div className="fixed right-3 md:right-8 top-24 bottom-6 z-40 flex flex-col items-end pointer-events-auto select-none">
+    <div className="fixed right-1 sm:right-3 md:right-8 top-20 sm:top-24 bottom-6 z-40 flex flex-col items-end pointer-events-auto select-none">
       {/* Time & Chronology HUD Header */}
       <div className="hidden sm:flex items-center gap-2 mb-3 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg">
         <div className="w-3.5 h-3.5 rounded-full border border-[var(--color-brand-cyan)] flex items-center justify-center">
@@ -165,7 +165,7 @@ function VerticalTimelineBar({ milestones }: { milestones: any[] }) {
       </div>
 
       {/* Full-Height Vertical Timeline Rail Track (Takes up the whole up and down) */}
-      <div className="relative w-full flex-1 pr-3">
+      <div className="relative w-full flex-1 pr-2 sm:pr-3">
         {/* Background Track Line running the full vertical height */}
         <div className="absolute right-[5px] top-0 bottom-0 w-[2px] bg-white/10 rounded-full" />
 
@@ -300,8 +300,8 @@ export function StoryPageView({
   return (
     <main className="min-h-screen bg-[#050505] text-white selection:bg-[var(--color-brand-cyan)] selection:text-white relative">
       {/* Sleek Navigation Bar */}
-      <header className={`${isPreview ? 'absolute' : 'fixed'} top-0 inset-x-0 z-50 backdrop-blur-xl bg-black/50 border-b border-white/5 h-20 px-6 lg:px-12 flex items-center justify-between`}>
-        <Link href="/" className="flex items-center gap-3 group">
+      <header className={`${isPreview ? 'absolute' : 'fixed'} top-0 inset-x-0 z-50 backdrop-blur-xl bg-black/50 border-b border-white/5 h-16 sm:h-20 px-3 sm:px-6 lg:px-12 flex items-center justify-between`}>
+        <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group">
           <div className="w-8 h-8 rounded bg-gradient-to-br from-[var(--color-brand-emerald)] to-[var(--color-brand-cyan)] flex items-center justify-center shadow-lg group-hover:shadow-[0_0_15px_var(--color-brand-cyan)] transition-all cursor-pointer">
             <span className="text-white font-bold text-sm tracking-tighter">SR</span>
           </div>
@@ -310,18 +310,21 @@ export function StoryPageView({
           </span>
         </Link>
 
-        <div className="flex items-center gap-2 bg-white/5 p-1 rounded-full border border-white/10">
+        <div className="flex items-center gap-1 sm:gap-2 bg-white/5 p-1 rounded-full border border-white/10">
           {currentData.tabs?.map((tab: any) => (
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+              className={`px-3 sm:px-6 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 ${
                 activeTab === tab.id
                   ? 'bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.2)]'
                   : 'text-white/60 hover:text-white hover:bg-white/5'
               }`}
             >
-              {tab.label}
+              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="sm:hidden">
+                {tab.id === 'technology' ? 'Technology' : 'Ventures'}
+              </span>
             </button>
           ))}
         </div>
@@ -331,7 +334,7 @@ export function StoryPageView({
       {activeTabData && <VerticalTimelineBar milestones={activeTabData.milestones} />}
 
       {/* Dynamic Tab Content */}
-      <div className="pt-20">
+      <div className="pt-16 sm:pt-20">
         {activeTabData?.id === 'entrepreneurship' ? (
           <EntrepreneurshipSections
             data={activeTabData}
@@ -381,11 +384,11 @@ function EventSection({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-80px' }}
       transition={{ duration: 0.8, ease: 'easeOut' }}
-      className="max-w-6xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-16 items-center scroll-mt-28"
+      className="max-w-6xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center scroll-mt-28"
     >
       {/* Narrative Info Column */}
-      <div className={`flex flex-col gap-6 items-start ${isEven ? 'md:order-1' : 'md:order-2'}`}>
-        <div className="flex flex-col gap-2">
+      <div className={`flex flex-col gap-4 sm:gap-6 items-start ${isEven ? 'md:order-1' : 'md:order-2'}`}>
+        <div className="flex flex-col gap-1.5 sm:gap-2">
           <p className="text-[var(--color-brand-cyan)] text-xs md:text-sm font-mono tracking-[0.15em] uppercase">
             // {milestone.dateTag} {milestone.category ? `• ${milestone.category}` : ''}
           </p>
@@ -396,12 +399,12 @@ function EventSection({
           )}
         </div>
 
-        <h2 className="text-4xl md:text-6xl font-bold tracking-tight text-white/95 leading-tight">
+        <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold tracking-tight text-white/95 leading-tight">
           {milestone.title}
         </h2>
 
         {milestone.description && (
-          <p className="text-lg md:text-xl text-white/60 font-light leading-relaxed">
+          <p className="text-base md:text-xl text-white/60 font-light leading-relaxed">
             {milestone.description}
           </p>
         )}
@@ -411,7 +414,7 @@ function EventSection({
             href={`https://${milestone.link}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-[var(--color-brand-cyan)]/30 bg-[var(--color-brand-cyan)]/10 text-white font-mono text-xs tracking-wider uppercase hover:bg-[var(--color-brand-cyan)]/20 hover:border-[var(--color-brand-cyan)]/60 transition-all duration-300"
+            className="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full border border-[var(--color-brand-cyan)]/30 bg-[var(--color-brand-cyan)]/10 text-white font-mono text-xs tracking-wider uppercase hover:bg-[var(--color-brand-cyan)]/20 hover:border-[var(--color-brand-cyan)]/60 transition-all duration-300"
           >
             <span>Visit {milestone.link}</span>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -425,21 +428,21 @@ function EventSection({
       <motion.div
         whileHover={{ scale: 1.02 }}
         transition={{ duration: 0.4, ease: 'easeOut' }}
-        className={`flex flex-col gap-6 p-8 md:p-10 rounded-3xl border border-white/10 bg-black/60 backdrop-blur-xl shadow-[0_0_40px_rgba(0,0,0,0.7)] hover:border-white/20 transition-all duration-300 relative overflow-hidden group ${
+        className={`flex flex-col gap-6 p-5 sm:p-8 md:p-10 rounded-3xl border border-white/10 bg-black/60 backdrop-blur-xl shadow-[0_0_40px_rgba(0,0,0,0.7)] hover:border-white/20 transition-all duration-300 relative overflow-hidden group ${
           isEven ? 'md:order-2' : 'md:order-1'
         }`}
       >
         {/* Media Asset (Logo or Image) */}
         {milestone.mediaAsset && (
-          <div className="w-full rounded-2xl bg-black/60 border border-white/10 p-6 flex items-center justify-center overflow-hidden min-h-[140px] group">
+          <div className="w-full rounded-2xl bg-black/60 border border-white/10 p-4 sm:p-6 flex items-center justify-center overflow-hidden min-h-[120px] sm:min-h-[140px] group">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={milestone.mediaAsset}
               alt={milestone.title}
               className={`object-contain transition-transform duration-500 group-hover:scale-105 ${
                 milestone.mediaAsset.endsWith('.png') && !milestone.mediaAsset.includes('stock-simulator')
-                  ? 'max-h-20 w-auto opacity-90 group-hover:opacity-100'
-                  : 'max-h-64 w-full rounded-xl object-cover'
+                  ? 'max-h-16 sm:max-h-20 w-auto opacity-90 group-hover:opacity-100'
+                  : 'max-h-52 sm:max-h-64 w-full rounded-xl object-cover'
               }`}
             />
           </div>
@@ -457,7 +460,7 @@ function EventSection({
             {milestone.accolades.map((acc: string, i: number) => (
               <div
                 key={i}
-                className="flex items-start gap-4 p-3 rounded-xl bg-white/[0.02] border border-white/5"
+                className="flex items-start gap-3 sm:gap-4 p-2.5 sm:p-3 rounded-xl bg-white/[0.02] border border-white/5"
               >
                 <span className="w-1.5 h-1.5 mt-2 shrink-0 rounded-full bg-[var(--color-brand-gold)] shadow-[0_0_8px_var(--color-brand-gold)]" />
                 <span className="text-white/90 text-sm md:text-base font-medium leading-relaxed">
@@ -470,11 +473,11 @@ function EventSection({
 
         {/* Sub-Milestone Highlight Card */}
         {milestone.subMilestone && (
-          <div className="relative z-10 p-5 rounded-2xl border border-[var(--color-brand-gold)]/30 bg-black/60 backdrop-blur-md">
+          <div className="relative z-10 p-4 sm:p-5 rounded-2xl border border-[var(--color-brand-gold)]/30 bg-black/60 backdrop-blur-md">
             <span className="text-xs font-mono text-[var(--color-brand-gold)] block mb-1.5 tracking-wider uppercase">
               {milestone.subMilestone.eventTag}
             </span>
-            <p className="text-base font-semibold text-white/95">
+            <p className="text-sm sm:text-base font-semibold text-white/95">
               {milestone.subMilestone.achievement}
             </p>
           </div>
@@ -489,11 +492,11 @@ function EventSection({
             {milestone.stages.map((stage: any, i: number) => (
               <div
                 key={i}
-                className="flex flex-col gap-2.5 p-5 rounded-2xl border border-[var(--color-brand-cyan)]/20 bg-black/60"
+                className="flex flex-col gap-2.5 p-4 sm:p-5 rounded-2xl border border-[var(--color-brand-cyan)]/20 bg-black/60"
               >
-                <div className="flex items-center justify-between gap-4">
-                  <h4 className="text-base font-bold text-white">{stage.title}</h4>
-                  <span className="text-[11px] font-mono text-[var(--color-brand-cyan)] tracking-wider uppercase shrink-0">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <h4 className="text-sm sm:text-base font-bold text-white">{stage.title}</h4>
+                  <span className="text-[10px] sm:text-[11px] font-mono text-[var(--color-brand-cyan)] tracking-wider uppercase shrink-0">
                     {stage.location}
                   </span>
                 </div>
@@ -557,26 +560,26 @@ function EntrepreneurshipSections({
       </div>
 
       {/* Hero Header Section */}
-      <div className="relative z-10 w-full pt-20 pb-16 px-6 md:px-12 flex flex-col items-center text-center max-w-4xl mx-auto">
-        <p className="text-[var(--color-brand-cyan)] bg-black/60 px-6 py-2 rounded-full font-mono text-xs md:text-sm tracking-[0.3em] uppercase border border-white/10 shadow-2xl mb-6">
+      <div className="relative z-10 w-full pt-14 sm:pt-20 pb-10 sm:pb-16 px-4 sm:px-6 md:px-12 flex flex-col items-center text-center max-w-4xl mx-auto">
+        <p className="text-[var(--color-brand-cyan)] bg-black/60 px-5 sm:px-6 py-1.5 sm:py-2 rounded-full font-mono text-xs md:text-sm tracking-[0.3em] uppercase border border-white/10 shadow-2xl mb-4 sm:mb-6">
           The Journey
         </p>
-        <h1 className="text-5xl md:text-8xl font-black tracking-tighter drop-shadow-[0_0_35px_rgba(0,0,0,0.8)]">
+        <h1 className="text-4xl sm:text-7xl md:text-8xl font-black tracking-tighter drop-shadow-[0_0_35px_rgba(0,0,0,0.8)]">
           <span
-            className="font-normal italic tracking-normal text-6xl md:text-9xl text-white pb-2 block"
+            className="font-normal italic tracking-normal text-4xl sm:text-7xl md:text-9xl text-white pb-2 block"
             style={{ fontFamily: 'var(--font-playfair)' }}
           >
             Building
           </span>
           VENTURES.
         </h1>
-        <p className="text-lg md:text-xl text-white/60 font-light max-w-2xl mt-6 leading-relaxed">
+        <p className="text-sm sm:text-lg md:text-xl text-white/60 font-light max-w-2xl mt-4 sm:mt-6 leading-relaxed px-2">
           From early product inception to core venture execution, hospital operations, and competitive founder circuits.
         </p>
       </div>
 
       {/* Event Sections Flow with Animated Connecting Flow Lines */}
-      <div className="relative z-10 w-full py-20 px-6 md:px-12 flex flex-col items-center bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:48px_48px]">
+      <div className="relative z-10 w-full py-12 sm:py-20 px-3 sm:px-6 md:px-12 flex flex-col items-center bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:48px_48px]">
         {/* Continuous Background Flow Spine */}
         <TimelineContinuousSpine theme="entrepreneurship" />
 
@@ -621,10 +624,10 @@ function EntrepreneurshipSections({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={onContinueToTech}
-            className="group relative inline-flex items-center gap-4 px-8 md:px-10 py-4 md:py-5 rounded-full bg-white text-black font-semibold text-base md:text-lg shadow-[0_0_35px_rgba(255,255,255,0.3)] hover:shadow-[0_0_50px_rgba(0,255,255,0.6)] transition-all duration-300 border border-white/90 cursor-pointer"
+            className="group relative inline-flex items-center gap-3 sm:gap-4 px-6 sm:px-8 md:px-10 py-3.5 sm:py-4 md:py-5 rounded-full bg-white text-black font-semibold text-sm sm:text-base md:text-lg shadow-[0_0_35px_rgba(255,255,255,0.3)] hover:shadow-[0_0_50px_rgba(0,255,255,0.6)] transition-all duration-300 border border-white/90 cursor-pointer"
           >
             <span className="tracking-wide">Continue to Tech Journey</span>
-            <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center group-hover:translate-x-1.5 transition-transform duration-300">
+            <div className="w-7 sm:w-8 h-7 sm:h-8 rounded-full bg-black text-white flex items-center justify-center group-hover:translate-x-1.5 transition-transform duration-300">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
@@ -691,7 +694,7 @@ function TechnologySections({
     <div className="relative w-full flex flex-col items-center min-h-screen bg-[#050505]">
       {/* 210vh Pinned Vending Machine Hero with Slow Cinematic Scroll & Smooth Native Handoff */}
       <div ref={containerRef} className="relative w-full h-[210vh]">
-        <div className="sticky top-20 h-[calc(100vh-5rem)] w-full flex flex-col items-center justify-start pt-8 overflow-hidden bg-[#050505]">
+        <div className="sticky top-16 sm:top-20 h-[calc(100vh-4rem)] sm:h-[calc(100vh-5rem)] w-full flex flex-col items-center justify-start pt-6 sm:pt-8 overflow-hidden bg-[#050505]">
           {/* Scroll-Scrubbed Vending Machine Animation */}
           <motion.div
             style={{ opacity: sequenceOpacity }}
@@ -709,13 +712,13 @@ function TechnologySections({
           {/* Clean "Driven by..." Header Overlay (Answers revealed on can: Creativity, Curiosity, Resilience) */}
           <motion.div
             style={{ opacity: titleOpacity }}
-            className="relative z-20 flex flex-col items-center text-center max-w-4xl mx-auto px-6 pointer-events-none"
+            className="relative z-20 flex flex-col items-center text-center max-w-4xl mx-auto px-4 sm:px-6 pointer-events-none"
           >
-            <p className="text-[var(--color-brand-cyan)] bg-black/60 px-6 py-2 rounded-full font-mono text-xs md:text-sm tracking-[0.3em] uppercase border border-white/10 shadow-2xl mb-6 backdrop-blur-md">
+            <p className="text-[var(--color-brand-cyan)] bg-black/60 px-5 sm:px-6 py-1.5 sm:py-2 rounded-full font-mono text-xs md:text-sm tracking-[0.3em] uppercase border border-white/10 shadow-2xl mb-4 sm:mb-6 backdrop-blur-md">
               The Journey
             </p>
             <h1
-              className="text-6xl md:text-8xl lg:text-9xl font-normal italic tracking-wide text-white/95 drop-shadow-[0_0_35px_rgba(0,0,0,0.9)] pb-2"
+              className="text-4xl sm:text-7xl md:text-8xl lg:text-9xl font-normal italic tracking-wide text-white/95 drop-shadow-[0_0_35px_rgba(0,0,0,0.9)] pb-2"
               style={{ fontFamily: 'var(--font-playfair)' }}
             >
               Driven by...
@@ -725,7 +728,7 @@ function TechnologySections({
       </div>
 
       {/* Event Sections Flow with Animated Connecting Flow Lines */}
-      <div className="relative z-20 w-full -mt-[16vh] md:-mt-[22vh] pb-24 px-6 md:px-12 flex flex-col items-center bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:48px_48px]">
+      <div className="relative z-20 w-full -mt-[10vh] sm:-mt-[16vh] md:-mt-[22vh] pb-16 sm:pb-24 px-3 sm:px-6 md:px-12 flex flex-col items-center bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:48px_48px]">
         {/* Continuous Background Flow Spine */}
         <TimelineContinuousSpine theme="technology" />
 
@@ -772,9 +775,9 @@ function TechnologySections({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={onReturnToVentures}
-            className="group relative inline-flex items-center gap-4 px-8 md:px-10 py-4 md:py-5 rounded-full bg-white text-black font-semibold text-base md:text-lg shadow-[0_0_35px_rgba(255,255,255,0.3)] hover:shadow-[0_0_50px_rgba(0,255,255,0.6)] transition-all duration-300 border border-white/90 cursor-pointer"
+            className="group relative inline-flex items-center gap-3 sm:gap-4 px-6 sm:px-8 md:px-10 py-3.5 sm:py-4 md:py-5 rounded-full bg-white text-black font-semibold text-sm sm:text-base md:text-lg shadow-[0_0_35px_rgba(255,255,255,0.3)] hover:shadow-[0_0_50px_rgba(0,255,255,0.6)] transition-all duration-300 border border-white/90 cursor-pointer"
           >
-            <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center group-hover:-translate-x-1.5 transition-transform duration-300">
+            <div className="w-7 sm:w-8 h-7 sm:h-8 rounded-full bg-black text-white flex items-center justify-center group-hover:-translate-x-1.5 transition-transform duration-300">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>

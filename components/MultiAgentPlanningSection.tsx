@@ -40,13 +40,13 @@ export function MultiAgentPlanningSection({
       <div
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className="relative p-8 md:p-12 rounded-3xl border border-white/15 bg-black/80 backdrop-blur-xl shadow-[0_0_60px_rgba(0,0,0,0.85)] hover:border-cyan-500/40 transition-all duration-300 flex flex-col gap-8 overflow-hidden group"
+        className="relative p-5 sm:p-8 md:p-12 rounded-3xl border border-white/15 bg-black/80 backdrop-blur-xl shadow-[0_0_60px_rgba(0,0,0,0.85)] hover:border-cyan-500/40 transition-all duration-300 flex flex-col gap-6 sm:gap-8 overflow-hidden group"
       >
         {/* Ambient Cyan / Violet Glow */}
         <div className="absolute top-0 right-0 w-80 h-80 bg-[radial-gradient(ellipse_at_top_right,rgba(6,182,212,0.12)_0%,transparent_70%)] pointer-events-none" />
 
         {/* 1. Header Information */}
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-white/10 pb-5 sm:pb-6">
           <div className="flex flex-col gap-1.5">
             <p className="text-[var(--color-brand-cyan)] text-xs md:text-sm font-mono tracking-[0.2em] uppercase">
               // ASPIRE Research Paper • Autonomous Systems
@@ -56,19 +56,19 @@ export function MultiAgentPlanningSection({
             </span>
           </div>
 
-          <div className="inline-flex items-center gap-2 self-start sm:self-auto px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono shadow-[0_0_15px_rgba(6,182,212,0.15)]">
+          <div className="inline-flex items-center gap-2 self-start sm:self-auto px-3.5 sm:px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono shadow-[0_0_15px_rgba(6,182,212,0.15)]">
             <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
             <span>Empirical Paper Results</span>
           </div>
         </div>
 
         {/* 2. Title, Subtitle & Research Link */}
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex flex-col gap-2">
-            <h2 className="text-4xl md:text-6xl font-bold tracking-tight text-white/95">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex flex-col gap-1.5 sm:gap-2">
+            <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold tracking-tight text-white/95">
               Centralized Multi-Agent Planning
             </h2>
-            <p className="text-sm md:text-base font-mono text-cyan-400/90 tracking-wide uppercase">
+            <p className="text-xs sm:text-base font-mono text-cyan-400/90 tracking-wide uppercase">
               Pixel 2 Pathways • ASPIRE Research Paper • JHU APL
             </p>
           </div>
@@ -77,7 +77,7 @@ export function MultiAgentPlanningSection({
             href={milestone?.link || "https://lnkd.in/p/ecyCSXbM"}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 self-start sm:self-auto px-5 py-2.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 font-mono text-xs tracking-wider uppercase hover:bg-cyan-500/20 hover:border-cyan-500/60 transition-all duration-300 shadow-[0_0_20px_rgba(6,182,212,0.15)] group/link shrink-0 cursor-pointer"
+            className="inline-flex items-center gap-2 self-start sm:self-auto px-4 sm:px-5 py-2 sm:py-2.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 font-mono text-xs tracking-wider uppercase hover:bg-cyan-500/20 hover:border-cyan-500/60 transition-all duration-300 shadow-[0_0_20px_rgba(6,182,212,0.15)] group/link shrink-0 cursor-pointer"
           >
             <span>View on LinkedIn</span>
             <svg className="w-3.5 h-3.5 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -104,18 +104,18 @@ export function MultiAgentPlanningSection({
         </div>
 
         {/* 4. 2D Vector Waypoint Simulator Visual Component */}
-        <div className="relative z-10 w-full rounded-2xl bg-[#070b14] border border-cyan-500/20 p-5 md:p-6 overflow-hidden shadow-inner flex flex-col gap-4">
+        <div className="relative z-10 w-full rounded-2xl bg-[#070b14] border border-cyan-500/20 p-4 sm:p-5 md:p-6 overflow-hidden shadow-inner flex flex-col gap-4">
           {/* Top Readout HUD Bar */}
-          <div className="relative z-10 flex items-center justify-between border-b border-white/10 pb-3 text-xs font-mono">
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3 text-xs font-mono">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-              <span className="text-cyan-300 font-semibold tracking-wider uppercase text-[11px]">
+              <span className="text-cyan-300 font-semibold tracking-wider uppercase text-[10px] sm:text-[11px]">
                 2D VECTOR WAYPOINT SIMULATOR
               </span>
             </div>
 
             {/* Verified Corner Readout Badge */}
-            <div className="px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 font-mono text-[11px] font-bold shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+            <div className="self-start sm:self-auto px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 font-mono text-[10px] sm:text-[11px] font-bold shadow-[0_0_15px_rgba(6,182,212,0.2)]">
               INFERENCE: 4.46s | SUCCESS: 35/35
             </div>
           </div>
@@ -269,9 +269,9 @@ export function MultiAgentPlanningSection({
           </div>
 
           {/* Interactive simulator caption */}
-          <div className="flex items-center justify-between text-[11px] font-mono text-white/50 pt-1 border-t border-white/10">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] font-mono text-white/50 pt-1 border-t border-white/10">
             <span className="text-white/70">Hover card to inspect centralized multi-agent JSON action plan</span>
-            <span className="text-cyan-400/80">35/35 BENCHMARK PASS</span>
+            <span className="text-cyan-400/80 shrink-0">35/35 BENCHMARK PASS</span>
           </div>
         </div>
 

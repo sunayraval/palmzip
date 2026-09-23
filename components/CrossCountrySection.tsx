@@ -87,34 +87,34 @@ export function CrossCountrySection({
       className="relative w-full max-w-4xl mx-auto h-[175vh] scroll-mt-28"
     >
       {/* Sticky Card Container that remains pinned during scroll scrubbing */}
-      <div className="sticky top-24 w-full">
+      <div className="sticky top-20 sm:top-24 w-full">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.8, ease: 'easeOut' }}
-          className="relative p-8 md:p-12 rounded-3xl border border-white/15 bg-black/80 backdrop-blur-xl shadow-[0_0_60px_rgba(0,0,0,0.85)] hover:border-cyan-500/40 transition-all duration-300 flex flex-col gap-7 overflow-hidden group"
+          className="relative p-5 sm:p-8 md:p-12 rounded-3xl border border-white/15 bg-black/80 backdrop-blur-xl shadow-[0_0_60px_rgba(0,0,0,0.85)] hover:border-cyan-500/40 transition-all duration-300 flex flex-col gap-6 sm:gap-7 overflow-hidden group"
         >
           {/* Subtle Ambient Radial Glow */}
           <div className="absolute top-0 right-0 w-80 h-80 bg-[radial-gradient(ellipse_at_top_right,rgba(6,182,212,0.12)_0%,transparent_70%)] pointer-events-none" />
 
           {/* 1. Top Header Row: Chronology & Stage Selector */}
-          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-white/10 pb-5">
             <div className="flex flex-col gap-1">
               <p className="text-[var(--color-brand-cyan)] text-xs md:text-sm font-mono tracking-[0.2em] uppercase">
                 // {milestone.dateTag} • National Founder Circuit
               </p>
-              <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-white/95">
+              <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold tracking-tight text-white/95">
                 {milestone.title}
               </h2>
             </div>
 
             {/* Stage Selector Pills (Reflects scroll and allows direct clicking) */}
-            <div className="flex items-center gap-2 p-1.5 rounded-full bg-white/[0.04] border border-white/10 self-start sm:self-auto font-mono text-xs">
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 p-1 sm:p-1.5 rounded-full bg-white/[0.04] border border-white/10 self-start sm:self-auto font-mono text-[11px] sm:text-xs">
               <button
                 type="button"
                 onClick={() => setManualStage(1)}
-                className={`px-3.5 py-1.5 rounded-full transition-all duration-300 flex items-center gap-1.5 ${
+                className={`px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full transition-all duration-300 flex items-center gap-1.5 ${
                   activeStage === 1
                     ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_12px_rgba(6,182,212,0.25)]'
                     : 'text-white/40 hover:text-white/80'
@@ -126,7 +126,7 @@ export function CrossCountrySection({
               <button
                 type="button"
                 onClick={() => setManualStage(2)}
-                className={`px-3.5 py-1.5 rounded-full transition-all duration-300 flex items-center gap-1.5 ${
+                className={`px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full transition-all duration-300 flex items-center gap-1.5 ${
                   activeStage === 2
                     ? 'bg-[var(--color-brand-gold)]/20 text-[var(--color-brand-gold)] border border-[var(--color-brand-gold)]/40 shadow-[0_0_12px_rgba(255,215,0,0.25)]'
                     : 'text-white/40 hover:text-white/80'
@@ -139,7 +139,7 @@ export function CrossCountrySection({
           </div>
 
           {/* 2. Top Center: MD ➔ Anaheim ➔ Berkeley Flight Trajectory Radar Arc */}
-          <div className="relative z-10 w-full rounded-2xl bg-[#090b12] border border-white/10 p-5 md:p-6 overflow-hidden shadow-inner flex flex-col gap-2">
+          <div className="relative z-10 w-full rounded-2xl bg-[#090b12] border border-white/10 p-4 sm:p-5 md:p-6 overflow-hidden shadow-inner flex flex-col gap-2">
             <div className="flex items-center justify-between text-[11px] font-mono border-b border-white/10 pb-2.5 text-white/50">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
@@ -289,7 +289,7 @@ export function CrossCountrySection({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -15 }}
                   transition={{ duration: 0.35, ease: 'easeOut' }}
-                  className="w-full flex flex-col gap-4 rounded-2xl bg-white/[0.02] border border-cyan-500/25 p-6 md:p-8"
+                  className="w-full flex flex-col gap-4 rounded-2xl bg-white/[0.02] border border-cyan-500/25 p-4 sm:p-6 md:p-8"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
                     <div className="flex items-center gap-2">
@@ -331,7 +331,7 @@ export function CrossCountrySection({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -15 }}
                   transition={{ duration: 0.35, ease: 'easeOut' }}
-                  className="w-full flex flex-col gap-4 rounded-2xl bg-white/[0.02] border border-[var(--color-brand-gold)]/30 p-6 md:p-8"
+                  className="w-full flex flex-col gap-4 rounded-2xl bg-white/[0.02] border border-[var(--color-brand-gold)]/30 p-4 sm:p-6 md:p-8"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
                     <div className="flex items-center gap-2">

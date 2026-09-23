@@ -72,12 +72,12 @@ export function PulseRobotSection({
       transition={{ duration: 0.8, ease: 'easeOut' }}
       className="max-w-4xl mx-auto w-full scroll-mt-28"
     >
-      <div className="relative p-8 md:p-12 rounded-3xl border border-white/15 bg-black/80 backdrop-blur-xl shadow-[0_0_60px_rgba(0,0,0,0.85)] hover:border-emerald-500/40 transition-all duration-300 flex flex-col gap-8 overflow-hidden group">
+      <div className="relative p-5 sm:p-8 md:p-12 rounded-3xl border border-white/15 bg-black/80 backdrop-blur-xl shadow-[0_0_60px_rgba(0,0,0,0.85)] hover:border-emerald-500/40 transition-all duration-300 flex flex-col gap-6 sm:gap-8 overflow-hidden group">
         {/* Ambient Emerald Glow */}
         <div className="absolute top-0 right-0 w-80 h-80 bg-[radial-gradient(ellipse_at_top_right,rgba(16,185,129,0.12)_0%,transparent_70%)] pointer-events-none" />
 
         {/* 1. Header Information */}
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-white/10 pb-5 sm:pb-6">
           <div className="flex flex-col gap-1.5">
             <p className="text-[var(--color-brand-cyan)] text-xs md:text-sm font-mono tracking-[0.2em] uppercase">
               // JHU APL ASPIRE • Physical Edge Robotics
@@ -87,19 +87,19 @@ export function PulseRobotSection({
             </span>
           </div>
 
-          <div className="inline-flex items-center gap-2 self-start sm:self-auto px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-mono shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+          <div className="inline-flex items-center gap-2 self-start sm:self-auto px-3.5 sm:px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-mono shadow-[0_0_15px_rgba(16,185,129,0.15)]">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             <span>Active Physical Platform</span>
           </div>
         </div>
 
         {/* 2. Title, Subtitle & Showcase Link */}
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex flex-col gap-2">
-            <h2 className="text-4xl md:text-6xl font-bold tracking-tight text-white/95">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex flex-col gap-1.5 sm:gap-2">
+            <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold tracking-tight text-white/95">
               P.U.L.S.E. Physical Robot
             </h2>
-            <p className="text-sm md:text-base font-mono text-emerald-400/90 tracking-wide uppercase">
+            <p className="text-xs sm:text-base font-mono text-emerald-400/90 tracking-wide uppercase">
               JHU APL ASPIRE Research Project
             </p>
           </div>
@@ -108,7 +108,7 @@ export function PulseRobotSection({
             href={milestone?.link || "https://aspireshowcase.dunked.com/pulse-physical-unit-for-language-sight-and-execution"}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 self-start sm:self-auto px-5 py-2.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 font-mono text-xs tracking-wider uppercase hover:bg-emerald-500/20 hover:border-emerald-500/60 transition-all duration-300 shadow-[0_0_20px_rgba(16,185,129,0.15)] group/link shrink-0 cursor-pointer"
+            className="inline-flex items-center gap-2 self-start sm:self-auto px-4 sm:px-5 py-2 sm:py-2.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 font-mono text-xs tracking-wider uppercase hover:bg-emerald-500/20 hover:border-emerald-500/60 transition-all duration-300 shadow-[0_0_20px_rgba(16,185,129,0.15)] group/link shrink-0 cursor-pointer"
           >
             <span>View ASPIRE Showcase</span>
             <svg className="w-3.5 h-3.5 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -135,7 +135,7 @@ export function PulseRobotSection({
         </div>
 
         {/* 4. Mini HUD Terminal Visual Component */}
-        <div className="relative z-10 w-full rounded-2xl bg-[#060b08] border border-emerald-500/20 p-5 md:p-6 overflow-hidden shadow-inner flex flex-col md:flex-row gap-5 items-stretch">
+        <div className="relative z-10 w-full rounded-2xl bg-[#060b08] border border-emerald-500/20 p-4 sm:p-5 md:p-6 overflow-hidden shadow-inner flex flex-col md:flex-row gap-4 sm:gap-5 items-stretch">
           {/* Left Side / Top: 120px Dark Camera Feed Mockup with oscillating scanline */}
           <div className="relative md:w-5/12 h-[120px] rounded-xl bg-[#030704] border border-emerald-500/30 overflow-hidden flex items-center justify-center shrink-0">
             {/* Camera feed ambient grid & vignette */}

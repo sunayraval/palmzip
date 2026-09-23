@@ -57,12 +57,12 @@ export function CreativeSection({ content = contentData, beats }: { content?: an
   const beat2 = STATIC_BEATS[2] || contentData.beats[2];
 
   return (
-    <div className="relative bg-[#050505] z-10 py-32 px-6 md:px-12 flex flex-col gap-40 overflow-x-hidden bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:48px_48px] animate-grid">
+    <div className="relative bg-[#050505] z-10 py-16 sm:py-24 md:py-32 px-4 sm:px-8 md:px-12 flex flex-col gap-20 sm:gap-32 md:gap-40 overflow-x-hidden bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:48px_48px] animate-grid">
       
       {/* =================================================================== */}
       {/* PART 1: ENTREPRENEURSHIP (BIG CENTER TITLE & CONTENT)               */}
       {/* =================================================================== */}
-      <div className="w-full flex flex-col items-center gap-20">
+      <div className="w-full flex flex-col items-center gap-12 sm:gap-20">
         
         {/* Big Centered Designation Header */}
         <motion.div 
@@ -70,16 +70,16 @@ export function CreativeSection({ content = contentData, beats }: { content?: an
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="text-center flex flex-col items-center gap-5 max-w-4xl mx-auto"
+          className="text-center flex flex-col items-center gap-4 sm:gap-5 max-w-4xl mx-auto px-2"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[var(--color-brand-gold)]/30 bg-[var(--color-brand-gold)]/10 text-[var(--color-brand-gold)] font-mono text-xs tracking-[0.25em] uppercase shadow-[0_0_20px_rgba(255,215,0,0.15)]">
+          <div className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full border border-[var(--color-brand-gold)]/30 bg-[var(--color-brand-gold)]/10 text-[var(--color-brand-gold)] font-mono text-[11px] sm:text-xs tracking-[0.25em] uppercase shadow-[0_0_20px_rgba(255,215,0,0.15)]">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-gold)] animate-pulse" />
             <span>{entrep.tag}</span>
           </div>
 
-          <h2 className="text-6xl sm:text-8xl md:text-9xl font-black tracking-tight text-white drop-shadow-[0_0_40px_rgba(255,215,0,0.15)] leading-[0.95]">
+          <h2 className="text-3xl sm:text-7xl md:text-9xl font-black tracking-tight text-white drop-shadow-[0_0_40px_rgba(255,215,0,0.15)] leading-[0.95] break-words">
             <span 
-              className="font-normal italic tracking-normal block text-5xl sm:text-7xl md:text-8xl text-white/90 pb-2" 
+              className="font-normal italic tracking-normal block text-3xl sm:text-6xl md:text-8xl text-white/90 pb-1 sm:pb-2" 
               style={{ fontFamily: 'var(--font-playfair)' }}
             >
               {entrep.italicTitle}
@@ -87,11 +87,11 @@ export function CreativeSection({ content = contentData, beats }: { content?: an
             {entrep.mainTitle}
           </h2>
 
-          <p className="text-lg md:text-2xl text-white/60 font-light max-w-2xl leading-relaxed mt-2">
+          <p className="text-sm sm:text-lg md:text-2xl text-white/60 font-light max-w-2xl leading-relaxed mt-2 px-2">
             {entrep.subtitle}
           </p>
 
-          <div className="w-32 h-[1px] bg-gradient-to-r from-transparent via-[var(--color-brand-gold)] to-transparent mt-2 shadow-[0_0_12px_var(--color-brand-gold)]" />
+          <div className="w-24 sm:w-32 h-[1px] bg-gradient-to-r from-transparent via-[var(--color-brand-gold)] to-transparent mt-2 shadow-[0_0_12px_var(--color-brand-gold)]" />
         </motion.div>
 
         {/* Beat B: Blue & Gold Healthcare */}
@@ -101,16 +101,16 @@ export function CreativeSection({ content = contentData, beats }: { content?: an
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="max-w-6xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-16 items-center"
+          className="max-w-6xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center"
         >
-          <div className="flex flex-col gap-6 items-start">
+          <div className="flex flex-col gap-4 sm:gap-6 items-start">
             <p className="text-[var(--color-brand-gold)] text-xs md:text-sm font-mono tracking-[0.15em] uppercase">
               // {beat0.microTag}
             </p>
-            <h3 className="text-4xl md:text-6xl font-bold tracking-tight text-white/95 leading-tight">
+            <h3 className="text-3xl sm:text-4xl md:text-6xl font-bold tracking-tight text-white/95 leading-tight">
               {beat0.title}
             </h3>
-            <p className="text-lg md:text-xl text-white/60 font-light leading-relaxed">
+            <p className="text-base md:text-xl text-white/60 font-light leading-relaxed">
               {beat0.subtitle}
             </p>
           </div>
@@ -118,9 +118,9 @@ export function CreativeSection({ content = contentData, beats }: { content?: an
           <motion.div 
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-            className="flex flex-col gap-4 p-8 rounded-2xl border border-[var(--color-brand-gold)]/20 bg-black/40 backdrop-blur-md shadow-[0_0_40px_rgba(255,215,0,0.05)]"
+            className="flex flex-col gap-4 p-5 sm:p-8 rounded-2xl border border-[var(--color-brand-gold)]/20 bg-black/40 backdrop-blur-md shadow-[0_0_40px_rgba(255,215,0,0.05)]"
           >
-            <h4 className="text-white/40 font-mono text-sm tracking-widest uppercase mb-2 border-b border-white/10 pb-4">Operational Metrics</h4>
+            <h4 className="text-white/40 font-mono text-xs sm:text-sm tracking-widest uppercase mb-2 border-b border-white/10 pb-4">Operational Metrics</h4>
             {beat0.metrics?.map((metric: string, i: number) => (
               <motion.div 
                 key={i} 
@@ -128,10 +128,10 @@ export function CreativeSection({ content = contentData, beats }: { content?: an
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.15, duration: 0.5, ease: "easeOut" }}
                 whileHover={{ x: 10, backgroundColor: 'rgba(255,255,255,0.03)' }}
-                className="flex items-start gap-4 p-3 -mx-3 rounded-xl cursor-default transition-colors duration-300"
+                className="flex items-start gap-3 sm:gap-4 p-2.5 sm:p-3 -mx-2 sm:-mx-3 rounded-xl cursor-default transition-colors duration-300"
               >
                 <span className="w-1.5 h-1.5 mt-2 shrink-0 rounded-full bg-[var(--color-brand-gold)] shadow-[0_0_8px_var(--color-brand-gold)]" />
-                <span className="text-white/90 font-medium tracking-wide leading-relaxed">{metric}</span>
+                <span className="text-white/90 text-sm sm:text-base font-medium tracking-wide leading-relaxed">{metric}</span>
               </motion.div>
             ))}
           </motion.div>
@@ -146,7 +146,7 @@ export function CreativeSection({ content = contentData, beats }: { content?: an
         >
           <Link
             href="/story"
-            className="group inline-flex items-center gap-3 px-7 py-3.5 rounded-full border border-[var(--color-brand-gold)]/30 bg-black/60 hover:bg-[var(--color-brand-gold)]/10 text-white font-mono text-xs tracking-wider uppercase backdrop-blur-md transition-all duration-300 shadow-[0_0_20px_rgba(255,215,0,0.1)] hover:shadow-[0_0_30px_rgba(255,215,0,0.25)] hover:border-[var(--color-brand-gold)]"
+            className="group inline-flex items-center gap-3 px-5 sm:px-7 py-3 sm:py-3.5 rounded-full border border-[var(--color-brand-gold)]/30 bg-black/60 hover:bg-[var(--color-brand-gold)]/10 text-white font-mono text-xs tracking-wider uppercase backdrop-blur-md transition-all duration-300 shadow-[0_0_20px_rgba(255,215,0,0.1)] hover:shadow-[0_0_30px_rgba(255,215,0,0.25)] hover:border-[var(--color-brand-gold)]"
           >
             <span>Explore Entrepreneurship Journey</span>
             <span className="text-[var(--color-brand-gold)] group-hover:translate-x-1.5 transition-transform">→</span>
@@ -158,7 +158,7 @@ export function CreativeSection({ content = contentData, beats }: { content?: an
       {/* =================================================================== */}
       {/* PART 2: TECHNOLOGY (BIG CENTER TITLE & CONTENT)                     */}
       {/* =================================================================== */}
-      <div className="w-full flex flex-col items-center gap-20 pt-16 border-t border-white/5">
+      <div className="w-full flex flex-col items-center gap-12 sm:gap-20 pt-12 sm:pt-16 border-t border-white/5">
         
         {/* Big Centered Designation Header */}
         <motion.div 
@@ -166,16 +166,16 @@ export function CreativeSection({ content = contentData, beats }: { content?: an
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="text-center flex flex-col items-center gap-5 max-w-4xl mx-auto"
+          className="text-center flex flex-col items-center gap-4 sm:gap-5 max-w-4xl mx-auto px-2"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[var(--color-brand-cyan)]/30 bg-[var(--color-brand-cyan)]/10 text-[var(--color-brand-cyan)] font-mono text-xs tracking-[0.25em] uppercase shadow-[0_0_20px_rgba(0,255,255,0.15)]">
+          <div className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full border border-[var(--color-brand-cyan)]/30 bg-[var(--color-brand-cyan)]/10 text-[var(--color-brand-cyan)] font-mono text-[11px] sm:text-xs tracking-[0.25em] uppercase shadow-[0_0_20px_rgba(0,255,255,0.15)]">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-cyan)] animate-pulse" />
             <span>{tech.tag}</span>
           </div>
 
-          <h2 className="text-6xl sm:text-8xl md:text-9xl font-black tracking-tight text-white drop-shadow-[0_0_40px_rgba(0,255,255,0.15)] leading-[0.95]">
+          <h2 className="text-3xl sm:text-7xl md:text-9xl font-black tracking-tight text-white drop-shadow-[0_0_40px_rgba(0,255,255,0.15)] leading-[0.95] break-words">
             <span 
-              className="font-normal italic tracking-normal block text-5xl sm:text-7xl md:text-8xl text-white/90 pb-2" 
+              className="font-normal italic tracking-normal block text-3xl sm:text-6xl md:text-8xl text-white/90 pb-1 sm:pb-2" 
               style={{ fontFamily: 'var(--font-playfair)' }}
             >
               {tech.italicTitle}
@@ -183,11 +183,11 @@ export function CreativeSection({ content = contentData, beats }: { content?: an
             {tech.mainTitle}
           </h2>
 
-          <p className="text-lg md:text-2xl text-white/60 font-light max-w-2xl leading-relaxed mt-2">
+          <p className="text-sm sm:text-lg md:text-2xl text-white/60 font-light max-w-2xl leading-relaxed mt-2 px-2">
             {tech.subtitle}
           </p>
 
-          <div className="w-32 h-[1px] bg-gradient-to-r from-transparent via-[var(--color-brand-cyan)] to-transparent mt-2 shadow-[0_0_12px_var(--color-brand-cyan)]" />
+          <div className="w-24 sm:w-32 h-[1px] bg-gradient-to-r from-transparent via-[var(--color-brand-cyan)] to-transparent mt-2 shadow-[0_0_12px_var(--color-brand-cyan)]" />
         </motion.div>
 
         {/* Beat C: Artificial Intelligence & VLMs */}
@@ -197,17 +197,17 @@ export function CreativeSection({ content = contentData, beats }: { content?: an
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="relative max-w-6xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-16 items-center"
+          className="relative max-w-6xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center"
         >
           <NeuralNetwork />
-          <div className="flex flex-col gap-6 items-start md:order-2">
+          <div className="flex flex-col gap-4 sm:gap-6 items-start md:order-2">
             <p className="text-[var(--color-brand-cyan)] text-xs md:text-sm font-mono tracking-[0.15em] uppercase">
               // {beat1.microTag}
             </p>
-            <h3 className="text-4xl md:text-6xl font-bold tracking-tight text-white/95 leading-tight">
+            <h3 className="text-3xl sm:text-4xl md:text-6xl font-bold tracking-tight text-white/95 leading-tight">
               {beat1.title}
             </h3>
-            <p className="text-lg md:text-xl text-white/60 font-light leading-relaxed">
+            <p className="text-base md:text-xl text-white/60 font-light leading-relaxed">
               {beat1.subtitle}
             </p>
           </div>
@@ -220,12 +220,12 @@ export function CreativeSection({ content = contentData, beats }: { content?: an
                  whileInView={{ opacity: 1, scale: 1, y: 0 }}
                  transition={{ delay: i * 0.15, duration: 0.6, ease: "easeOut" }}
                  whileHover={{ scale: 1.05, y: -5 }}
-                 className="flex flex-col justify-center items-center text-center p-6 border border-[var(--color-brand-cyan)]/20 rounded-xl bg-[var(--color-brand-cyan)]/5 hover:bg-[var(--color-brand-cyan)]/15 transition-all duration-300 backdrop-blur-sm group cursor-default shadow-[0_0_20px_rgba(0,255,255,0.02)] hover:shadow-[0_0_30px_rgba(0,255,255,0.1)]"
+                 className="flex flex-col justify-center items-center text-center p-5 sm:p-6 border border-[var(--color-brand-cyan)]/20 rounded-xl bg-[var(--color-brand-cyan)]/5 hover:bg-[var(--color-brand-cyan)]/15 transition-all duration-300 backdrop-blur-sm group cursor-default shadow-[0_0_20px_rgba(0,255,255,0.02)] hover:shadow-[0_0_30px_rgba(0,255,255,0.1)]"
               >
                  <motion.div 
                    animate={{ rotate: 360 }}
                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                   className="w-8 h-8 rounded-full border border-[var(--color-brand-cyan)]/40 mb-4 flex items-center justify-center group-hover:border-[var(--color-brand-cyan)] transition-colors duration-300"
+                   className="w-8 h-8 rounded-full border border-[var(--color-brand-cyan)]/40 mb-3 sm:mb-4 flex items-center justify-center group-hover:border-[var(--color-brand-cyan)] transition-colors duration-300"
                  >
                    <div className="w-2 h-2 rounded-full bg-[var(--color-brand-cyan)] shadow-[0_0_10px_var(--color-brand-cyan)]" />
                  </motion.div>
@@ -244,7 +244,7 @@ export function CreativeSection({ content = contentData, beats }: { content?: an
         >
           <Link
             href="/story"
-            className="group inline-flex items-center gap-3 px-7 py-3.5 rounded-full border border-[var(--color-brand-cyan)]/30 bg-black/60 hover:bg-[var(--color-brand-cyan)]/10 text-white font-mono text-xs tracking-wider uppercase backdrop-blur-md transition-all duration-300 shadow-[0_0_20px_rgba(0,255,255,0.1)] hover:shadow-[0_0_30px_rgba(0,255,255,0.25)] hover:border-[var(--color-brand-cyan)]"
+            className="group inline-flex items-center gap-3 px-5 sm:px-7 py-3 sm:py-3.5 rounded-full border border-[var(--color-brand-cyan)]/30 bg-black/60 hover:bg-[var(--color-brand-cyan)]/10 text-white font-mono text-xs tracking-wider uppercase backdrop-blur-md transition-all duration-300 shadow-[0_0_20px_rgba(0,255,255,0.1)] hover:shadow-[0_0_30px_rgba(0,255,255,0.25)] hover:border-[var(--color-brand-cyan)]"
           >
             <span>Explore Technology & Engineering Story</span>
             <span className="text-[var(--color-brand-cyan)] group-hover:translate-x-1.5 transition-transform">→</span>
@@ -256,7 +256,7 @@ export function CreativeSection({ content = contentData, beats }: { content?: an
       {/* =================================================================== */}
       {/* PART 3: COMMUNITY IMPACT (BIG CENTER TITLE & FLC CARD)              */}
       {/* =================================================================== */}
-      <div className="w-full flex flex-col items-center gap-20 pt-16 border-t border-white/5">
+      <div className="w-full flex flex-col items-center gap-12 sm:gap-20 pt-12 sm:pt-16 border-t border-white/5">
         
         {/* Big Centered Designation Header */}
         <motion.div 
@@ -264,16 +264,16 @@ export function CreativeSection({ content = contentData, beats }: { content?: an
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="text-center flex flex-col items-center gap-5 max-w-4xl mx-auto"
+          className="text-center flex flex-col items-center gap-4 sm:gap-5 max-w-4xl mx-auto px-2"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-mono text-xs tracking-[0.25em] uppercase shadow-[0_0_20px_rgba(16,185,129,0.15)]">
+          <div className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-mono text-[11px] sm:text-xs tracking-[0.25em] uppercase shadow-[0_0_20px_rgba(16,185,129,0.15)]">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             <span>{impact.tag}</span>
           </div>
 
-          <h2 className="text-6xl sm:text-8xl md:text-9xl font-black tracking-tight text-white drop-shadow-[0_0_40px_rgba(16,185,129,0.15)] leading-[0.95]">
+          <h2 className="text-3xl sm:text-7xl md:text-9xl font-black tracking-tight text-white drop-shadow-[0_0_40px_rgba(16,185,129,0.15)] leading-[0.95] break-words">
             <span 
-              className="font-normal italic tracking-normal block text-5xl sm:text-7xl md:text-8xl text-white/90 pb-2" 
+              className="font-normal italic tracking-normal block text-3xl sm:text-6xl md:text-8xl text-white/90 pb-1 sm:pb-2" 
               style={{ fontFamily: 'var(--font-playfair)' }}
             >
               {impact.italicTitle}
@@ -281,11 +281,11 @@ export function CreativeSection({ content = contentData, beats }: { content?: an
             {impact.mainTitle}
           </h2>
 
-          <p className="text-lg md:text-2xl text-white/60 font-light max-w-2xl leading-relaxed mt-2">
+          <p className="text-sm sm:text-lg md:text-2xl text-white/60 font-light max-w-2xl leading-relaxed mt-2 px-2">
             {impact.subtitle}
           </p>
 
-          <div className="w-32 h-[1px] bg-gradient-to-r from-transparent via-emerald-500 to-transparent mt-2 shadow-[0_0_12px_rgba(16,185,129,0.5)]" />
+          <div className="w-24 sm:w-32 h-[1px] bg-gradient-to-r from-transparent via-emerald-500 to-transparent mt-2 shadow-[0_0_12px_rgba(16,185,129,0.5)]" />
         </motion.div>
 
         {/* Full-width container: Candlesticks span edge-to-edge across entire screen */}
@@ -304,16 +304,16 @@ export function CreativeSection({ content = contentData, beats }: { content?: an
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="w-full max-w-5xl rounded-3xl border border-white/10 bg-black/80 backdrop-blur-xl p-8 sm:p-12 shadow-[0_0_60px_rgba(0,0,0,0.9)] relative overflow-hidden group hover:border-emerald-500/50 transition-all duration-500 z-10"
+            className="w-full max-w-5xl rounded-3xl border border-white/10 bg-black/80 backdrop-blur-xl p-5 sm:p-8 md:p-12 shadow-[0_0_60px_rgba(0,0,0,0.9)] relative overflow-hidden group hover:border-emerald-500/50 transition-all duration-500 z-10"
           >
             {/* Subtle Ambient Emerald Glow */}
             <div className="absolute top-0 right-0 w-96 h-96 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.12)_0%,transparent_70%)] pointer-events-none" />
 
           {/* Stock Ticker Marquee Ribbon */}
-          <div className="relative w-full rounded-2xl bg-black/70 border border-white/10 mb-10 overflow-hidden py-3.5 shadow-inner">
+          <div className="relative w-full rounded-2xl bg-black/70 border border-white/10 mb-8 sm:mb-10 overflow-hidden py-3 sm:py-3.5 shadow-inner">
             {/* Edge Fade Gradients */}
-            <div className="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-black via-black/80 to-transparent z-10" />
-            <div className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-black via-black/80 to-transparent z-10" />
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-12 sm:w-16 bg-gradient-to-r from-black via-black/80 to-transparent z-10" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-12 sm:w-16 bg-gradient-to-l from-black via-black/80 to-transparent z-10" />
 
             {/* Scrolling Ticker Strip with Pause-on-hover */}
             <div className="animate-marquee items-center gap-8 cursor-default">
@@ -342,34 +342,34 @@ export function CreativeSection({ content = contentData, beats }: { content?: an
           </div>
 
           {/* Club Header & Subtitle */}
-          <div className="flex flex-col gap-4 items-start relative z-10">
+          <div className="flex flex-col gap-3 sm:gap-4 items-start relative z-10">
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-mono text-xs tracking-widest uppercase">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span>{flc.subtitle}</span>
             </div>
 
-            <h3 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white leading-tight">
+            <h3 className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white leading-tight">
               {flc.header}
             </h3>
 
-            <p className="text-base md:text-lg text-white/70 font-light leading-relaxed max-w-3xl mt-1">
+            <p className="text-sm sm:text-base md:text-lg text-white/70 font-light leading-relaxed max-w-3xl mt-1">
               {flc.summary}
             </p>
           </div>
 
           {/* Stats Row: 3 rounded pill/card metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-10 relative z-10">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-5 mt-8 sm:mt-10 relative z-10">
             {flc.stats?.map((stat: { value: string; label: string }, idx: number) => (
               <motion.div
                 key={idx}
                 whileHover={{ y: -4, scale: 1.02 }}
                 transition={{ duration: 0.3, ease: "easeOut" }}
-                className="p-6 md:p-8 rounded-2xl border border-white/10 bg-black/60 hover:bg-black/90 hover:border-emerald-500/40 transition-all duration-300 backdrop-blur-md flex flex-col justify-center items-center text-center group/stat shadow-[0_0_20px_rgba(0,0,0,0.5)]"
+                className="p-5 sm:p-6 md:p-8 rounded-2xl border border-white/10 bg-black/60 hover:bg-black/90 hover:border-emerald-500/40 transition-all duration-300 backdrop-blur-md flex flex-col justify-center items-center text-center group/stat shadow-[0_0_20px_rgba(0,0,0,0.5)]"
               >
-                <span className="text-4xl md:text-5xl font-black text-white tracking-tight group-hover/stat:text-emerald-400 transition-colors duration-300 drop-shadow-[0_0_20px_rgba(16,185,129,0.3)] font-mono">
+                <span className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight group-hover/stat:text-emerald-400 transition-colors duration-300 drop-shadow-[0_0_20px_rgba(16,185,129,0.3)] font-mono">
                   {stat.value}
                 </span>
-                <span className="text-xs md:text-sm text-white/60 font-mono tracking-wider uppercase mt-3">
+                <span className="text-xs md:text-sm text-white/60 font-mono tracking-wider uppercase mt-2 sm:mt-3">
                   {stat.label}
                 </span>
               </motion.div>
@@ -389,28 +389,28 @@ export function CreativeSection({ content = contentData, beats }: { content?: an
         whileInView={{ opacity: 1, scale: 1 }}
         viewport={{ once: true, margin: "-50px" }}
         transition={{ duration: 1, ease: "easeOut" }}
-        className="max-w-5xl mx-auto w-full p-12 md:p-24 rounded-3xl border border-white/10 bg-gradient-to-b from-white/5 to-transparent text-center flex flex-col items-center gap-8 relative overflow-hidden group"
+        className="max-w-5xl mx-auto w-full p-6 sm:p-12 md:p-24 rounded-3xl border border-white/10 bg-gradient-to-b from-white/5 to-transparent text-center flex flex-col items-center gap-6 sm:gap-8 relative overflow-hidden group"
       >
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,255,128,0.1)_0%,transparent_60%)] pointer-events-none" />
         
         <p className="text-white/60 text-xs md:text-sm font-mono tracking-[0.2em] uppercase relative z-10">
           [{beat2.microTag}]
         </p>
-        <h2 className="text-5xl md:text-7xl font-bold tracking-tighter text-white relative z-10 group-hover:text-[var(--color-brand-emerald)] transition-colors duration-700">
+        <h2 className="text-3xl sm:text-5xl md:text-7xl font-bold tracking-tighter text-white relative z-10 group-hover:text-[var(--color-brand-emerald)] transition-colors duration-700">
           {beat2.title}
         </h2>
-        <p className="text-xl text-white/70 font-light max-w-2xl relative z-10">
+        <p className="text-base sm:text-xl text-white/70 font-light max-w-2xl relative z-10 px-2">
           {beat2.subtitle}
         </p>
         
-        <div className="flex flex-col sm:flex-row items-center gap-6 mt-8 relative z-10">
+        <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 mt-4 sm:mt-8 relative z-10 w-full sm:w-auto">
           <motion.a 
             href="https://www.linkedin.com/in/sunay-raval-326215245/"
             target="_blank"
             rel="noopener noreferrer"
             whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(255,255,255,0.3)" }}
             whileTap={{ scale: 0.95 }}
-            className="px-10 py-4 bg-white text-black font-semibold rounded-full transition-all duration-300 inline-flex items-center gap-2.5 shadow-lg"
+            className="w-full sm:w-auto justify-center px-8 sm:px-10 py-3.5 sm:py-4 bg-white text-black font-semibold rounded-full transition-all duration-300 inline-flex items-center gap-2.5 shadow-lg"
           >
             <span>{beat2.cta?.primary || "Get in Touch"}</span>
             <svg className="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 24 24">
@@ -420,11 +420,11 @@ export function CreativeSection({ content = contentData, beats }: { content?: an
           <motion.div
             whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.1)" }}
             whileTap={{ scale: 0.95 }}
-            className="rounded-full"
+            className="w-full sm:w-auto rounded-full"
           >
             <Link 
               href="/story"
-              className="px-10 py-4 border border-white/20 text-white font-medium rounded-full backdrop-blur-sm transition-all duration-300 inline-flex items-center gap-2 hover:border-white/40"
+              className="w-full sm:w-auto justify-center px-8 sm:px-10 py-3.5 sm:py-4 border border-white/20 text-white font-medium rounded-full backdrop-blur-sm transition-all duration-300 inline-flex items-center gap-2 hover:border-white/40"
             >
               <span>{beat2.cta?.secondary || "Entrepreneurship Journey"}</span>
               <span className="text-[var(--color-brand-gold)]">→</span>
@@ -455,7 +455,7 @@ export function PortfolioView({ content = contentData, isPreview = false }: { co
     <main className="relative min-h-screen bg-[#050505] selection:bg-[var(--color-brand-cyan)] selection:text-white">
       
       {/* Sticky Header Nav */}
-      <header className={`${isPreview ? 'absolute' : 'fixed'} top-0 inset-x-0 z-50 backdrop-blur-xl bg-black/50 border-b border-white/5 h-20 px-6 lg:px-12 flex items-center justify-between`}>
+      <header className={`${isPreview ? 'absolute' : 'fixed'} top-0 inset-x-0 z-50 backdrop-blur-xl bg-black/50 border-b border-white/5 h-16 sm:h-20 px-4 sm:px-6 lg:px-12 flex items-center justify-between`}>
         <motion.div 
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -472,7 +472,7 @@ export function PortfolioView({ content = contentData, isPreview = false }: { co
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="flex items-center gap-6"
+          className="flex items-center gap-4 sm:gap-6"
         >
           <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--color-brand-emerald)]/30 bg-[var(--color-brand-emerald)]/10 hover:bg-[var(--color-brand-emerald)]/20 transition-colors cursor-default">
             <span className="relative flex h-2 w-2">
@@ -502,17 +502,17 @@ export function PortfolioView({ content = contentData, isPreview = false }: { co
 
         {/* Persistent Hero Overlay with Parallax */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center px-6 text-center">
+          <div className="sticky top-0 h-[100dvh] sm:h-screen w-full flex flex-col items-center justify-center pt-16 sm:pt-0 px-4 sm:px-6 text-center">
             <motion.div 
               style={{ opacity: heroOpacity }}
-              className="max-w-4xl flex flex-col items-center gap-6"
+              className="max-w-4xl flex flex-col items-center gap-3 sm:gap-6"
             >
-              <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-white drop-shadow-[0_0_25px_rgba(255,255,255,0.2)]">
-                <span className="font-normal italic tracking-normal text-6xl md:text-9xl text-white/90 pb-4 block" style={{ fontFamily: 'var(--font-playfair)' }}>{HERO.titlePart1}</span>
+              <h1 className="text-4xl sm:text-7xl md:text-8xl font-black tracking-tighter text-white drop-shadow-[0_0_25px_rgba(255,255,255,0.2)]">
+                <span className="font-normal italic tracking-normal text-4xl sm:text-7xl md:text-9xl text-white/90 pb-1 sm:pb-4 block" style={{ fontFamily: 'var(--font-playfair)' }}>{HERO.titlePart1}</span>
                 {HERO.titlePart2}
               </h1>
               
-              <p className="text-lg md:text-2xl text-white/70 font-light max-w-2xl leading-relaxed mt-4 bg-black/60 px-8 py-4 rounded-2xl border border-white/5 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+              <p className="text-xs sm:text-base md:text-xl text-white/70 font-light max-w-xs sm:max-w-xl md:max-w-2xl leading-relaxed mt-1 sm:mt-4 bg-black/60 px-4 py-3 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl border border-white/5 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
                 {HERO.subtitle}
               </p>
             </motion.div>

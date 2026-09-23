@@ -61,12 +61,12 @@ export function StockSimulatorSection({
       transition={{ duration: 0.8, ease: 'easeOut' }}
       className="max-w-4xl mx-auto w-full scroll-mt-28"
     >
-      <div className="relative p-8 md:p-12 rounded-3xl border border-white/15 bg-black/80 backdrop-blur-xl shadow-[0_0_60px_rgba(0,0,0,0.85)] hover:border-emerald-500/40 transition-all duration-300 flex flex-col gap-8 overflow-hidden group">
+      <div className="relative p-5 sm:p-8 md:p-12 rounded-3xl border border-white/15 bg-black/80 backdrop-blur-xl shadow-[0_0_60px_rgba(0,0,0,0.85)] hover:border-emerald-500/40 transition-all duration-300 flex flex-col gap-6 sm:gap-8 overflow-hidden group">
         {/* Subtle Ambient Emerald Glow */}
         <div className="absolute top-0 right-0 w-80 h-80 bg-[radial-gradient(ellipse_at_top_right,rgba(16,185,129,0.12)_0%,transparent_70%)] pointer-events-none" />
 
         {/* 1. Header Information */}
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-white/10 pb-5 sm:pb-6">
           <div className="flex flex-col gap-1.5">
             <p className="text-[var(--color-brand-cyan)] text-xs md:text-sm font-mono tracking-[0.2em] uppercase">
               // {milestone.dateTag} • {milestone.category}
@@ -76,7 +76,7 @@ export function StockSimulatorSection({
             </span>
           </div>
 
-          <div className="inline-flex items-center gap-2 self-start sm:self-auto px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-mono shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+          <div className="inline-flex items-center gap-2 self-start sm:self-auto px-3.5 sm:px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-mono shadow-[0_0_15px_rgba(16,185,129,0.15)]">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             <span>Virtual Market Sandbox</span>
           </div>
@@ -84,25 +84,25 @@ export function StockSimulatorSection({
 
         {/* 2. Title */}
         <div className="relative z-10">
-          <h2 className="text-4xl md:text-6xl font-bold tracking-tight text-white/95">
+          <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold tracking-tight text-white/95">
             {milestone.title}
           </h2>
         </div>
 
         {/* 3. Real-Time Trading Terminal Visualizer (No static photos) */}
-        <div className="relative z-10 w-full rounded-2xl bg-[#060e18] border border-emerald-500/20 p-5 md:p-8 overflow-hidden shadow-inner flex flex-col gap-6">
+        <div className="relative z-10 w-full rounded-2xl bg-[#060e18] border border-emerald-500/20 p-4 sm:p-5 md:p-8 overflow-hidden shadow-inner flex flex-col gap-4 sm:gap-6">
           {/* Top Terminal HUD */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
-            <div className="flex items-center gap-6 font-mono">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-white/10 pb-4">
+            <div className="flex items-center gap-4 sm:gap-6 font-mono">
               <div>
                 <span className="text-[10px] text-white/40 block uppercase tracking-wider">Simulated Portfolio</span>
-                <span className="text-lg md:text-xl font-bold text-white tracking-tight">
+                <span className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight">
                   ${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </span>
               </div>
-              <div className="border-l border-white/10 pl-6">
+              <div className="border-l border-white/10 pl-4 sm:pl-6">
                 <span className="text-[10px] text-white/40 block uppercase tracking-wider">Total Return</span>
-                <span className="text-lg md:text-xl font-bold text-emerald-400 flex items-center gap-1">
+                <span className="text-base sm:text-lg md:text-xl font-bold text-emerald-400 flex items-center gap-1">
                   <span>+{pnlPercent}%</span>
                   <span className="text-xs">▲</span>
                 </span>
@@ -189,9 +189,9 @@ export function StockSimulatorSection({
           </div>
 
           {/* Interactive Trade Execution Controls */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-3 border-t border-white/10 font-mono text-xs">
-            <div className="flex items-center gap-2 text-white/50 text-[11px]">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 pt-3 border-t border-white/10 font-mono text-xs">
+            <div className="flex items-center gap-2 text-white/50 text-[11px] self-start sm:self-auto">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
               <span>
                 {lastAction
                   ? `Execution Confirmed: ${lastAction}`
@@ -199,11 +199,11 @@ export function StockSimulatorSection({
               </span>
             </div>
 
-            <div className="flex items-center gap-2 self-end sm:self-auto">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={() => handleTrade('BUY')}
-                className="px-4 py-2 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/50 transition-all duration-200 hover:scale-105 active:scale-95 font-semibold flex items-center gap-1.5 cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+                className="flex-1 sm:flex-none justify-center px-3.5 sm:px-4 py-2 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/50 transition-all duration-200 hover:scale-105 active:scale-95 font-semibold flex items-center gap-1.5 cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.2)] text-xs"
               >
                 <span>+ SIMULATE BUY</span>
               </button>
@@ -211,7 +211,7 @@ export function StockSimulatorSection({
                 type="button"
                 onClick={() => handleTrade('SELL')}
                 disabled={shares < 25}
-                className="px-4 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 transition-all duration-200 hover:scale-105 active:scale-95 font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
+                className="flex-1 sm:flex-none justify-center px-3.5 sm:px-4 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 transition-all duration-200 hover:scale-105 active:scale-95 font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:pointer-events-none text-xs"
               >
                 <span>- SIMULATE SELL</span>
               </button>
@@ -222,7 +222,7 @@ export function StockSimulatorSection({
         {/* 4. Narrative Description */}
         {milestone.description && (
           <div className="relative z-10">
-            <p className="text-lg md:text-xl text-white/70 font-light leading-relaxed">
+            <p className="text-base md:text-xl text-white/70 font-light leading-relaxed">
               {milestone.description}
             </p>
           </div>

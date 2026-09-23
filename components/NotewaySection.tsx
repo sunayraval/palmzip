@@ -85,13 +85,13 @@ export function NotewaySection({
     >
       <div
         ref={containerRef}
-        className="relative p-8 md:p-12 rounded-3xl border border-white/15 bg-black/60 backdrop-blur-xl shadow-[0_0_50px_rgba(0,0,0,0.85)] hover:border-white/25 transition-all duration-300 flex flex-col gap-7 overflow-hidden group"
+        className="relative p-5 sm:p-8 md:p-12 rounded-3xl border border-white/15 bg-black/60 backdrop-blur-xl shadow-[0_0_50px_rgba(0,0,0,0.85)] hover:border-white/25 transition-all duration-300 flex flex-col gap-6 sm:gap-7 overflow-hidden group"
       >
         {/* Subtle ambient cyan glow */}
         <div className="absolute top-0 right-0 w-80 h-80 bg-[radial-gradient(ellipse_at_top_right,rgba(6,182,212,0.12)_0%,transparent_70%)] pointer-events-none" />
 
         {/* 1. Header Information */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6 relative z-10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-white/10 pb-5 sm:pb-6 relative z-10">
           <div className="flex flex-col gap-1.5">
             <p className="text-[var(--color-brand-cyan)] text-xs md:text-sm font-mono tracking-[0.2em] uppercase">
               // {milestone.dateTag} {milestone.category ? `• ${milestone.category}` : ''}
@@ -104,7 +104,7 @@ export function NotewaySection({
           </div>
 
           {milestone.accolades?.[0] && (
-            <div className="inline-flex items-center gap-2 self-start sm:self-auto px-4 py-1.5 rounded-full bg-[var(--color-brand-gold)]/10 border border-[var(--color-brand-gold)]/30 text-[var(--color-brand-gold)] text-xs font-mono shadow-[0_0_15px_rgba(255,215,0,0.08)]">
+            <div className="inline-flex items-center gap-2 self-start sm:self-auto px-3.5 sm:px-4 py-1.5 rounded-full bg-[var(--color-brand-gold)]/10 border border-[var(--color-brand-gold)]/30 text-[var(--color-brand-gold)] text-xs font-mono shadow-[0_0_15px_rgba(255,215,0,0.08)]">
               <span>🏆</span>
               <span className="font-semibold">{milestone.accolades[0]}</span>
             </div>
@@ -113,13 +113,13 @@ export function NotewaySection({
 
         {/* 2. Title */}
         <div className="relative z-10">
-          <h2 className="text-4xl md:text-6xl font-bold tracking-tight text-white/95">
+          <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold tracking-tight text-white/95">
             {milestone.title}
           </h2>
         </div>
 
         {/* 3. Lecture Screen Canvas (Reading Source - Abstract Scribbles) */}
-        <div className="relative rounded-2xl bg-[#090b12] border border-cyan-500/20 p-5 md:p-6 overflow-hidden z-10 shadow-inner flex flex-col gap-4">
+        <div className="relative rounded-2xl bg-[#090b12] border border-cyan-500/20 p-4 sm:p-5 md:p-6 overflow-hidden z-10 shadow-inner flex flex-col gap-4">
           {/* Sweeping optical reading scanbeam */}
           <motion.div
             animate={{ top: ['-10%', '110%'] }}
@@ -175,9 +175,9 @@ export function NotewaySection({
         </div>
 
         {/* 4. Real-time Transcribing on the Noteway Text Itself */}
-        <div className="relative z-10 flex flex-col gap-2.5 bg-white/[0.02] border border-white/10 rounded-2xl p-5 md:p-6">
+        <div className="relative z-10 flex flex-col gap-2.5 bg-white/[0.02] border border-white/10 rounded-2xl p-4 sm:p-5 md:p-6">
           <div className="flex items-center justify-between text-[11px] font-mono text-white/40 pb-2 border-b border-white/5">
-            <span className="text-emerald-400 font-semibold tracking-wider uppercase text-[10px] flex items-center gap-2">
+            <span className="text-emerald-400 font-semibold tracking-wider uppercase text-[10px] flex items-center gap-1.5 sm:gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
               Live Speech-to-Text Transcription
             </span>
@@ -186,12 +186,12 @@ export function NotewaySection({
             </span>
           </div>
 
-          <p className="text-lg md:text-xl text-white/90 font-light leading-relaxed min-h-[64px]">
+          <p className="text-base md:text-xl text-white/90 font-light leading-relaxed min-h-[56px] sm:min-h-[64px]">
             {fullText.slice(0, typedLength)}
             <motion.span
               animate={{ opacity: [1, 0, 1] }}
               transition={{ duration: 0.8, repeat: Infinity }}
-              className="inline-block w-2 h-5 ml-1.5 bg-cyan-400 align-middle shadow-[0_0_10px_#06b6d4]"
+              className="inline-block w-2 h-4 sm:h-5 ml-1.5 bg-cyan-400 align-middle shadow-[0_0_10px_#06b6d4]"
             />
           </p>
         </div>

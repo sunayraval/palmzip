@@ -238,7 +238,7 @@ export function FounderScrollCanvas() {
 
         {/* Scroll Indicator */}
         <motion.div
-          className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-20"
+          className="absolute bottom-6 sm:bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-20"
           style={{
             opacity: useSpring(
               useScroll({ target: containerRef, offset: ['start start', 'end end'] }).scrollYProgress,

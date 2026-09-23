@@ -31,12 +31,12 @@ export function CofindrSection({
       transition={{ duration: 0.8, ease: 'easeOut' }}
       className="max-w-4xl mx-auto w-full scroll-mt-28"
     >
-      <div className="relative p-8 md:p-12 rounded-3xl border border-white/15 bg-black/80 backdrop-blur-xl shadow-[0_0_60px_rgba(0,0,0,0.85)] hover:border-cyan-500/40 transition-all duration-300 flex flex-col gap-8 overflow-hidden group">
+      <div className="relative p-5 sm:p-8 md:p-12 rounded-3xl border border-white/15 bg-black/80 backdrop-blur-xl shadow-[0_0_60px_rgba(0,0,0,0.85)] hover:border-cyan-500/40 transition-all duration-300 flex flex-col gap-6 sm:gap-8 overflow-hidden group">
         {/* Subtle Ambient Cyan Radial Glow */}
         <div className="absolute top-0 right-0 w-80 h-80 bg-[radial-gradient(ellipse_at_top_right,rgba(6,182,212,0.12)_0%,transparent_70%)] pointer-events-none" />
 
         {/* 1. Header Information: Chronology, Role & Status Tag */}
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-white/10 pb-5 sm:pb-6">
           <div className="flex flex-col gap-1.5">
             <p className="text-[var(--color-brand-cyan)] text-xs md:text-sm font-mono tracking-[0.2em] uppercase">
               // {milestone.dateTag} • Venture Platform
@@ -48,7 +48,7 @@ export function CofindrSection({
             )}
           </div>
 
-          <div className="inline-flex items-center gap-2 self-start sm:self-auto px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono shadow-[0_0_15px_rgba(6,182,212,0.15)]">
+          <div className="inline-flex items-center gap-2 self-start sm:self-auto px-3.5 sm:px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono shadow-[0_0_15px_rgba(6,182,212,0.15)]">
             <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
             <span>BBAY Cohort Spin-Out</span>
           </div>
@@ -56,7 +56,7 @@ export function CofindrSection({
 
         {/* 2. Title */}
         <div className="relative z-10">
-          <h2 className="text-4xl md:text-6xl font-bold tracking-tight text-white/95">
+          <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold tracking-tight text-white/95">
             {milestone.title}
           </h2>
         </div>
@@ -68,13 +68,13 @@ export function CofindrSection({
             <img
               src={milestone.mediaAsset}
               alt={milestone.title}
-              className="max-h-28 md:max-h-36 w-auto object-contain drop-shadow-[0_0_40px_rgba(0,0,0,0.95)] transition-transform duration-500 group-hover:scale-105"
+              className="max-h-20 sm:max-h-28 md:max-h-36 w-auto object-contain drop-shadow-[0_0_40px_rgba(0,0,0,0.95)] transition-transform duration-500 group-hover:scale-105"
             />
           </div>
         )}
 
         {/* 4. Streamlined Network Animation (Extra telemetry & headers removed, pure animation) */}
-        <div className="relative z-10 w-full rounded-2xl bg-[#090b12] border border-cyan-500/20 p-4 md:p-6 overflow-hidden shadow-inner flex flex-col items-center justify-center">
+        <div className="relative z-10 w-full rounded-2xl bg-[#090b12] border border-cyan-500/20 p-3 sm:p-4 md:p-6 overflow-hidden shadow-inner flex flex-col items-center justify-center">
           {/* Subtle grid texture */}
           <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(6,182,212,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(6,182,212,0.04)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none" />
 

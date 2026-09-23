@@ -19,7 +19,7 @@ export function BlueAndGoldSection({
       transition={{ duration: 0.8, ease: 'easeOut' }}
       className="max-w-4xl mx-auto w-full scroll-mt-28"
     >
-      <div className="relative p-8 md:p-12 rounded-3xl border border-white/15 bg-black/75 backdrop-blur-xl shadow-[0_0_60px_rgba(0,0,0,0.85)] hover:border-emerald-500/40 transition-all duration-300 flex flex-col gap-8 overflow-hidden group">
+      <div className="relative p-5 sm:p-8 md:p-12 rounded-3xl border border-white/15 bg-black/75 backdrop-blur-xl shadow-[0_0_60px_rgba(0,0,0,0.85)] hover:border-emerald-500/40 transition-all duration-300 flex flex-col gap-6 sm:gap-8 overflow-hidden group">
         {/* 1. Clinical Telemetry Grid & Heart Rate Monitor Spanning Full Box Background */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
           {/* Medical grid pattern */}
@@ -65,7 +65,7 @@ export function BlueAndGoldSection({
         </div>
 
         {/* 2. Top Header Row: Chronology, Role, Title & Website Link */}
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-white/10 pb-5 sm:pb-6">
           <div className="flex flex-col gap-1.5">
             <p className="text-[var(--color-brand-cyan)] text-xs md:text-sm font-mono tracking-[0.2em] uppercase">
               // {milestone.dateTag} {milestone.category ? `• ${milestone.category}` : ''}
@@ -82,7 +82,7 @@ export function BlueAndGoldSection({
               href={`https://${milestone.link}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 self-start sm:self-auto px-5 py-2.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 font-mono text-xs tracking-wider uppercase hover:bg-emerald-500/20 hover:border-emerald-500/60 transition-all duration-300 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
+              className="inline-flex items-center gap-2 self-start sm:self-auto px-4 sm:px-5 py-2 sm:py-2.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 font-mono text-xs tracking-wider uppercase hover:bg-emerald-500/20 hover:border-emerald-500/60 transition-all duration-300 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
             >
               <span>Visit {milestone.link}</span>
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -94,31 +94,31 @@ export function BlueAndGoldSection({
 
         {/* 3. Title */}
         <div className="relative z-10">
-          <h2 className="text-4xl md:text-6xl font-bold tracking-tight text-white/95">
+          <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold tracking-tight text-white/95">
             {milestone.title}
           </h2>
         </div>
 
         {/* 4. Centerpiece: Enlarged Logo floating over the background ECG */}
         {milestone.mediaAsset && (
-          <div className="relative z-10 w-full py-8 md:py-12 flex items-center justify-center">
+          <div className="relative z-10 w-full py-6 sm:py-8 md:py-12 flex items-center justify-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={milestone.mediaAsset}
               alt={milestone.title}
-              className="max-h-40 md:max-h-52 w-auto object-contain drop-shadow-[0_0_40px_rgba(0,0,0,0.95)] transition-transform duration-500 group-hover:scale-105"
+              className="max-h-28 sm:max-h-40 md:max-h-52 w-auto object-contain drop-shadow-[0_0_40px_rgba(0,0,0,0.95)] transition-transform duration-500 group-hover:scale-105"
             />
           </div>
         )}
 
         {/* 5. Sub-Milestone: TiE University Achievement */}
         {milestone.subMilestone && (
-          <div className="relative z-10 p-5 md:p-6 rounded-2xl border border-[var(--color-brand-gold)]/30 bg-black/60 backdrop-blur-md flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="relative z-10 p-4 sm:p-5 md:p-6 rounded-2xl border border-[var(--color-brand-gold)]/30 bg-black/60 backdrop-blur-md flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-mono text-[var(--color-brand-gold)] tracking-wider uppercase">
                 {milestone.subMilestone.eventTag}
               </span>
-              <p className="text-base md:text-lg font-semibold text-white/95">
+              <p className="text-sm sm:text-base md:text-lg font-semibold text-white/95">
                 {milestone.subMilestone.achievement}
               </p>
             </div>

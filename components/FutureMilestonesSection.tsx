@@ -19,7 +19,7 @@ export function FutureMilestonesSection({
       transition={{ duration: 0.5, ease: 'easeOut' }}
       className="max-w-4xl mx-auto w-full scroll-mt-28 transform-gpu"
     >
-      <div className="relative p-8 md:p-12 rounded-2xl border border-white/10 bg-[#0a0a0a] shadow-[0_0_40px_rgba(0,0,0,0.6)] flex flex-col items-center justify-center text-center overflow-hidden group">
+      <div className="relative p-6 sm:p-8 md:p-12 rounded-2xl border border-white/10 bg-[#0a0a0a] shadow-[0_0_40px_rgba(0,0,0,0.6)] flex flex-col items-center justify-center text-center overflow-hidden group">
         {/* Subtle Ambient Radial Glow */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,255,255,0.04)_0%,transparent_70%)] pointer-events-none" />
 
@@ -30,7 +30,7 @@ export function FutureMilestonesSection({
           </span>
         </div>
 
-        <h3 className="relative z-10 text-2xl md:text-3xl font-light tracking-tight text-white/90">
+        <h3 className="relative z-10 text-xl sm:text-2xl md:text-3xl font-light tracking-tight text-white/90">
           More to come.
         </h3>
       </div>
