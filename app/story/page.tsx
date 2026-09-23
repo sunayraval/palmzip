@@ -295,7 +295,13 @@ export function StoryPageView({
     }
   };
 
-  const activeTabData = currentData.tabs?.find((t: any) => t.id === activeTab) || currentData.tabs?.[0];
+  const rawActiveTabData = currentData.tabs?.find((t: any) => t.id === activeTab) || currentData.tabs?.[0];
+  const activeTabData = rawActiveTabData
+    ? {
+        ...rawActiveTabData,
+        milestones: (rawActiveTabData.milestones || []).filter((m: any) => !m.archived),
+      }
+    : null;
 
   return (
     <main className="min-h-screen bg-[#050505] text-white selection:bg-[var(--color-brand-cyan)] selection:text-white relative">

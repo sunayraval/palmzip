@@ -73,10 +73,10 @@ export function CrossCountrySection({
   const stage2 = milestone.stages?.[1] || {
     title: 'Stage 2 — BBAY High School (Bay Area)',
     location: 'Berkeley / SF Bay Area, California',
-    projectPitched: 'Cofindr — a dedicated networking platform built for founders and operators to discover collaborators and assemble core teams.',
+    projectPitched: 'A dedicated networking platform built for founders and operators to discover collaborators and assemble core teams.',
     accolades: [
       'Golden Bear Award for Leadership (2x Recipient)',
-      '2nd Place in the Final Pitch Competition (Team Cofindr)'
+      '2nd Place in the Final Pitch Competition'
     ]
   };
 

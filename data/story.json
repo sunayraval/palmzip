@@ -42,20 +42,21 @@
             {
               "title": "Stage 2 — BBAY High School (Bay Area)",
               "location": "Berkeley / SF Bay Area, California",
-              "projectPitched": "Cofindr — a dedicated networking platform built for founders and operators to discover collaborators and assemble core teams.",
+              "projectPitched": "A dedicated networking platform built for founders and operators to discover collaborators and assemble core teams.",
               "accolades": [
                 "Golden Bear Award for Leadership (2x Recipient)",
-                "2nd Place in the Final Pitch Competition (Team Cofindr)"
+                "2nd Place in the Final Pitch Competition"
               ]
             }
           ]
         },
         {
           "id": "cofindr",
+          "archived": true,
           "dateTag": "September 2026",
           "role": "Founder",
           "title": "Cofindr",
-          "description": "Formally founded Cofindr alongside core collaborators from the BBAY cohort to turn the validated concept into an active platform.",
+          "description": "Formally founded alongside core collaborators from the BBAY cohort to turn the validated concept into an active platform.",
           "mediaAsset": "/story-assets/cofindrlogo.png"
         }
       ]
