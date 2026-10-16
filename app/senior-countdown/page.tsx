@@ -10,7 +10,6 @@ interface MilestoneEvent {
   startDate: string; // ISO: YYYY-MM-DD
   endDate?: string;   // ISO: YYYY-MM-DD
   category: 'school' | 'college';
-  description?: string;
 }
 
 interface MarkingPeriod {
@@ -28,7 +27,7 @@ interface MarkingPeriod {
 const GRADUATION_DATE = new Date('2027-05-28T12:00:00-04:00');
 const SENIOR_START_DATE = new Date('2026-08-24T08:00:00-04:00');
 
-// Marking Periods
+// 4 Marking Periods
 const MARKING_PERIODS: MarkingPeriod[] = [
   {
     id: 'q1',
@@ -271,13 +270,10 @@ const HCPSS_OFF_DAYS = [
   '2027-05-31',
 ];
 
-type SenioritisTier = 'mild' | 'spicy' | 'hot' | 'overload';
-
 export default function SeniorCountdownPage() {
   const [mounted, setMounted] = useState(false);
   const [now, setNow] = useState<Date>(() => new Date());
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'school' | 'college'>('all');
-  const [previewTierOverride, setPreviewTierOverride] = useState<SenioritisTier | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -304,72 +300,72 @@ export default function SeniorCountdownPage() {
   }, [now]);
 
   // Senior year completion percentage (Aug 24, 2026 -> May 28, 2027)
-  const realProgressPercent = useMemo(() => {
+  const progressPercent = useMemo(() => {
     const totalDuration = GRADUATION_DATE.getTime() - SENIOR_START_DATE.getTime();
     const elapsed = now.getTime() - SENIOR_START_DATE.getTime();
     const pct = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
     return pct;
   }, [now]);
 
-  // Senioritis Tier Calculation
-  const activeTier: SenioritisTier = useMemo(() => {
-    if (previewTierOverride) return previewTierOverride;
-    if (realProgressPercent < 25) return 'mild';
-    if (realProgressPercent < 50) return 'spicy';
-    if (realProgressPercent < 75) return 'hot';
-    return 'overload';
-  }, [realProgressPercent, previewTierOverride]);
+  // Dynamic Phase and Color Interpolation based on Progress
+  const senioritisData = useMemo(() => {
+    const pct = progressPercent;
 
-  const tierMetadata = useMemo(() => {
-    switch (activeTier) {
-      case 'mild':
-        return {
-          label: 'MILD LEVEL',
-          tagline: 'Still taking notes, syllabus week mindset',
-          colorName: 'Emerald Green',
-          hex: '#10b981',
-          bgHex: 'rgba(16, 185, 129, 0.15)',
-          borderHex: 'rgba(16, 185, 129, 0.4)',
-          multiplier: 1.0,
-          heatPct: Math.max(12, Math.min(25, realProgressPercent)),
-        };
-      case 'spicy':
-        return {
-          label: 'SPICY LEVEL',
-          tagline: 'Early Action submitted, attendance slipping',
-          colorName: 'Serrano Orange',
-          hex: '#f59e0b',
-          bgHex: 'rgba(245, 158, 11, 0.15)',
-          borderHex: 'rgba(245, 158, 11, 0.45)',
-          multiplier: 2.2,
-          heatPct: 45,
-        };
-      case 'hot':
-        return {
-          label: 'HOT LEVEL',
-          tagline: 'Second semester senior, senioritis in full swing',
-          colorName: 'Habanero Red',
-          hex: '#ef4444',
-          bgHex: 'rgba(239, 68, 68, 0.2)',
-          borderHex: 'rgba(239, 68, 68, 0.5)',
-          multiplier: 3.5,
-          heatPct: 68,
-        };
-      case 'overload':
-        return {
-          label: 'OVERLOAD LEVEL',
-          tagline: 'Critical Senioritis reached! Graduation imminent',
-          colorName: 'Ghost Pepper Blazing',
-          hex: '#ff0055',
-          bgHex: 'rgba(255, 0, 85, 0.25)',
-          borderHex: 'rgba(255, 0, 85, 0.65)',
-          multiplier: 5.0,
-          heatPct: 95,
-        };
+    if (pct < 25) {
+      return {
+        phaseName: 'MILD LEVEL',
+        tagline: 'Syllabus week mindset, full attendance',
+        color: '#10b981', // Jalapeño Emerald
+        border: 'rgba(16, 185, 129, 0.4)',
+        bgGlow: 'rgba(16, 185, 129, 0.12)',
+        particleMultiplier: 1.0,
+        hue: 150,
+      };
+    } else if (pct < 50) {
+      return {
+        phaseName: 'SPICY LEVEL',
+        tagline: 'Early action submitted, attendance slipping',
+        color: '#f59e0b', // Serrano Gold-Orange
+        border: 'rgba(245, 158, 11, 0.45)',
+        bgGlow: 'rgba(245, 158, 11, 0.14)',
+        particleMultiplier: 2.2,
+        hue: 38,
+      };
+    } else if (pct < 75) {
+      return {
+        phaseName: 'HOT LEVEL',
+        tagline: 'Second semester senior, senioritis in full swing',
+        color: '#ef4444', // Habanero Crimson
+        border: 'rgba(239, 68, 68, 0.5)',
+        bgGlow: 'rgba(239, 68, 68, 0.18)',
+        particleMultiplier: 3.6,
+        hue: 8,
+      };
+    } else {
+      return {
+        phaseName: 'OVERLOAD LEVEL',
+        tagline: 'Critical Senioritis reached! Graduation imminent',
+        color: '#ff0055', // Ghost Pepper Blazing
+        border: 'rgba(255, 0, 85, 0.65)',
+        bgGlow: 'rgba(255, 0, 85, 0.25)',
+        particleMultiplier: 5.2,
+        hue: 345,
+      };
     }
-  }, [activeTier, realProgressPercent]);
+  }, [progressPercent]);
 
-  // Particle Canvas Emitter for Pepper Flame
+  // Pepper SVG fill calculations:
+  // Body top is y=42, bottom is y=152 (total height = 110)
+  const pepperFill = useMemo(() => {
+    const bottomY = 152;
+    const topY = 42;
+    const totalH = bottomY - topY;
+    const fillH = totalH * (progressPercent / 100);
+    const fillY = bottomY - fillH;
+    return { fillY, fillH };
+  }, [progressPercent]);
+
+  // Particle Canvas Emitter: Emits sparks with amplitude proportional to heat
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -377,8 +373,8 @@ export default function SeniorCountdownPage() {
     if (!ctx) return;
 
     let animationFrameId: number;
-    const multiplier = tierMetadata.multiplier;
-    const particleCount = Math.floor(18 * multiplier);
+    const multiplier = senioritisData.particleMultiplier;
+    const particleCount = Math.floor(16 * multiplier);
 
     interface Particle {
       x: number;
@@ -393,25 +389,20 @@ export default function SeniorCountdownPage() {
 
     const particles: Particle[] = [];
 
-    const getHueForTier = () => {
-      if (activeTier === 'mild') return 145 + Math.random() * 25; // Green-emerald
-      if (activeTier === 'spicy') return 35 + Math.random() * 20;  // Orange-gold
-      if (activeTier === 'hot') return 5 + Math.random() * 25;    // Red-orange
-      return Math.random() > 0.5 ? 340 + Math.random() * 25 : 40; // Magenta & fiery gold
-    };
-
     const spawnParticle = (): Particle => {
       const w = canvas.width;
       const h = canvas.height;
+      // Amplitude scales wider as year progresses
+      const spread = 20 + multiplier * 18;
       return {
-        x: w * 0.5 + (Math.random() - 0.5) * (20 + multiplier * 12),
-        y: h * 0.75 + (Math.random() - 0.5) * 10,
-        vx: (Math.random() - 0.5) * (0.8 + multiplier * 0.7),
-        vy: -(1.2 + Math.random() * (1.5 + multiplier * 1.2)),
-        size: 2 + Math.random() * (2.5 + multiplier * 1.5),
-        alpha: 0.7 + Math.random() * 0.3,
+        x: w * 0.5 + (Math.random() - 0.5) * spread,
+        y: h * 0.72 + (Math.random() - 0.5) * 12,
+        vx: (Math.random() - 0.5) * (0.8 + multiplier * 0.8),
+        vy: -(1.4 + Math.random() * (1.6 + multiplier * 1.4)),
+        size: 2 + Math.random() * (2 + multiplier * 1.2),
+        alpha: 0.75 + Math.random() * 0.25,
         decay: 0.012 + Math.random() * 0.018,
-        hue: getHueForTier(),
+        hue: senioritisData.hue + (Math.random() - 0.5) * 20,
       };
     };
 
@@ -448,12 +439,10 @@ export default function SeniorCountdownPage() {
 
     render();
 
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, [activeTier, tierMetadata]);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [senioritisData]);
 
-  // 2. Quick Stats: Next Deadline
+  // Quick Stats: Next Deadline
   const nextEvent = useMemo(() => {
     const todayStr = now.toISOString().split('T')[0];
     for (const ev of EVENTS) {
@@ -468,7 +457,7 @@ export default function SeniorCountdownPage() {
     return null;
   }, [now]);
 
-  // 3. Quick Stats: School Days Remaining until May 28, 2027
+  // Quick Stats: School Days Remaining until May 28, 2027
   const schoolDaysRemaining = useMemo(() => {
     const curr = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const grad = new Date(GRADUATION_DATE.getFullYear(), GRADUATION_DATE.getMonth(), GRADUATION_DATE.getDate());
@@ -490,7 +479,7 @@ export default function SeniorCountdownPage() {
     return Math.min(180, days);
   }, [now]);
 
-  // 4. Quick Stats: Mondays Left until May 28, 2027
+  // Quick Stats: Mondays Left until May 28, 2027
   const mondaysRemaining = useMemo(() => {
     const curr = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const grad = new Date(GRADUATION_DATE.getFullYear(), GRADUATION_DATE.getMonth(), GRADUATION_DATE.getDate());
@@ -521,7 +510,7 @@ export default function SeniorCountdownPage() {
         <div
           className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[450px] blur-3xl transition-colors duration-1000"
           style={{
-            background: `radial-gradient(ellipse at top, ${tierMetadata.hex}22 0%, rgba(6,182,212,0.06) 40%, transparent 70%)`,
+            background: `radial-gradient(ellipse at top, ${senioritisData.color}20 0%, rgba(6,182,212,0.06) 40%, transparent 70%)`,
           }}
         />
         <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(195,154,63,0.05)_0%,transparent_70%)] blur-3xl" />
@@ -586,22 +575,20 @@ export default function SeniorCountdownPage() {
           </p>
         </div>
 
-        {/* 1. TOP SECTION: BIG COUNTDOWN + SENIORITIS SPICY PEPPER METER */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 bg-gradient-to-b from-[#0c1015]/90 to-[#07090c]/90 border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden backdrop-blur-xl">
-          {/* Subtle top glow line */}
-          <div
-            className="absolute top-0 inset-x-0 h-[2px] transition-colors duration-1000"
-            style={{
-              background: `linear-gradient(90deg, transparent, ${tierMetadata.hex}, transparent)`,
-            }}
-          />
+        {/* 1. TOP SECTION: TWO SEPARATE BOXES SIDE-BY-SIDE */}
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          {/* BOX 1: Main Countdown Box (8 Cols) */}
+          <div className="lg:col-span-8 bg-gradient-to-b from-[#0c1015]/95 to-[#07090c]/95 border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden backdrop-blur-xl flex flex-col justify-between gap-6 sm:gap-8">
+            {/* Subtle top cyan line */}
+            <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[var(--color-brand-cyan)]/70 to-transparent" />
 
-          {/* Left / Center: Big Countdown & Progress Bar (8 Cols) */}
-          <div className="lg:col-span-8 flex flex-col justify-between gap-6 sm:gap-8">
             <div>
               <div className="flex flex-wrap items-center justify-between gap-2 text-xs uppercase tracking-widest text-white/50 font-mono mb-4">
-                <span>Senior Graduation: May 28, 2027 • 12:00 PM EST</span>
-                <span className="text-[var(--color-brand-cyan)] font-semibold">Ticking Live</span>
+                <span className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  Senior Graduation: May 28, 2027 • 12:00 PM EST
+                </span>
+                <span className="text-[var(--color-brand-cyan)] font-semibold">Live Ticker</span>
               </div>
 
               {/* 4 Digital Timer Blocks */}
@@ -614,7 +601,7 @@ export default function SeniorCountdownPage() {
                 ].map((unit, idx) => (
                   <div
                     key={idx}
-                    className="bg-black/60 border border-white/10 rounded-2xl py-4 sm:py-6 px-2 flex flex-col items-center justify-center shadow-inner group hover:border-white/30 transition-colors"
+                    className="bg-black/60 border border-white/10 rounded-2xl py-4 sm:py-6 px-2 flex flex-col items-center justify-center shadow-inner hover:border-white/30 transition-colors"
                   >
                     <span className="text-3xl sm:text-5xl md:text-6xl font-mono font-bold tracking-tight text-white tabular-nums">
                       {mounted ? String(unit.value).padStart(2, '0') : '--'}
@@ -633,7 +620,7 @@ export default function SeniorCountdownPage() {
                 <span className="flex items-center gap-2">
                   <span className="text-white font-medium">Senior Year Progress</span>
                   <span className="text-[var(--color-brand-cyan)] font-bold">
-                    ({mounted ? `${realProgressPercent.toFixed(1)}%` : '...'} Completed)
+                    ({mounted ? `${progressPercent.toFixed(1)}%` : '...'} Completed)
                   </span>
                 </span>
                 <span className="text-white/40 text-[11px] sm:text-xs">Aug 24, 2026 → May 28, 2027</span>
@@ -643,20 +630,20 @@ export default function SeniorCountdownPage() {
                 <div
                   className="h-full rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(6,182,212,0.5)]"
                   style={{
-                    width: mounted ? `${realProgressPercent}%` : '0%',
-                    background: `linear-gradient(90deg, #044b36 0%, #06b6d4 50%, ${tierMetadata.hex} 100%)`,
+                    width: mounted ? `${progressPercent}%` : '0%',
+                    background: `linear-gradient(90deg, #044b36 0%, #06b6d4 50%, ${senioritisData.color} 100%)`,
                   }}
                 />
               </div>
             </div>
           </div>
 
-          {/* Right: Senioritis Fire Meter (Spicy Pepper) (4 Cols) */}
+          {/* BOX 2: Senioritis Spicy Pepper Meter in its OWN Separate Box (4 Cols) */}
           <div
-            className="lg:col-span-4 rounded-2xl border p-5 flex flex-col justify-between relative overflow-hidden transition-all duration-700 backdrop-blur-md"
+            className="lg:col-span-4 rounded-3xl border p-6 flex flex-col justify-between relative overflow-hidden transition-all duration-700 backdrop-blur-xl shadow-2xl"
             style={{
-              borderColor: tierMetadata.borderHex,
-              background: `linear-gradient(180deg, ${tierMetadata.bgHex} 0%, rgba(10, 14, 18, 0.9) 100%)`,
+              borderColor: senioritisData.border,
+              background: `linear-gradient(180deg, ${senioritisData.bgGlow} 0%, rgba(9, 12, 16, 0.95) 100%)`,
             }}
           >
             {/* Particle Canvas Behind Pepper */}
@@ -667,144 +654,151 @@ export default function SeniorCountdownPage() {
               className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-90"
             />
 
-            {/* Top Badge */}
-            <div className="flex items-center justify-between relative z-10 mb-3">
-              <span className="text-[11px] font-mono uppercase tracking-widest text-white/70 font-semibold flex items-center gap-1.5">
+            {/* Top Row: Title + ONLY the Current Phase */}
+            <div className="flex items-center justify-between relative z-10 mb-2">
+              <span className="text-xs font-mono uppercase tracking-widest text-white/80 font-semibold flex items-center gap-1.5">
                 <span className="text-sm">🌶️</span> Senioritis Meter
               </span>
               <span
-                className="text-[10px] font-mono px-2 py-0.5 rounded-full uppercase tracking-wider font-bold border transition-colors duration-500"
+                className="text-[11px] font-mono px-3 py-1 rounded-full uppercase tracking-wider font-bold border transition-colors duration-500 shadow-md"
                 style={{
-                  color: tierMetadata.hex,
-                  borderColor: tierMetadata.borderHex,
-                  backgroundColor: 'rgba(0,0,0,0.4)',
+                  color: senioritisData.color,
+                  borderColor: senioritisData.border,
+                  backgroundColor: 'rgba(0,0,0,0.6)',
                 }}
               >
-                {tierMetadata.label}
+                {senioritisData.phaseName}
               </span>
             </div>
 
-            {/* Center: Stylized Spicy Chili Pepper Illustration */}
+            {/* Center: Filling Pepper Chamber Graphic */}
             <div className="relative z-10 flex flex-col items-center justify-center py-2 sm:py-3">
-              <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center">
-                {/* Ambient pulsating heat glow circle */}
+              <div className="relative w-36 h-36 sm:w-40 sm:h-40 flex items-center justify-center">
+                {/* Dynamic heat halo glow */}
                 <div
-                  className="absolute inset-2 rounded-full blur-xl transition-all duration-700 animate-pulse pointer-events-none opacity-60"
-                  style={{ backgroundColor: tierMetadata.hex }}
+                  className="absolute inset-4 rounded-full blur-2xl transition-all duration-700 animate-pulse pointer-events-none opacity-60"
+                  style={{ backgroundColor: senioritisData.color }}
                 />
 
-                {/* SVG Spicy Pepper Graphic */}
+                {/* SVG Pepper with Double-Clipped Liquid Fill that rises with % */}
                 <svg
-                  viewBox="0 0 100 100"
+                  viewBox="0 0 200 220"
                   className="w-full h-full drop-shadow-2xl relative z-10"
                 >
                   <defs>
-                    {/* Linear fill gradient for pepper body */}
-                    <linearGradient id="pepperGrad" x1="0%" y1="100%" x2="50%" y2="0%">
-                      <stop offset="0%" stopColor={tierMetadata.hex} />
-                      <stop offset="60%" stopColor={activeTier === 'overload' ? '#ffd700' : tierMetadata.hex} />
-                      <stop offset="100%" stopColor={activeTier === 'mild' ? '#044b36' : '#b91c1c'} />
+                    {/* The exact contour of the pepper chamber */}
+                    <clipPath id="pepperChamberOutline">
+                      <path d="M 100 42 C 126 44 136 64 133 86 C 130 110 114 130 100 152 C 96 156 94 156 95 150 C 98 132 89 112 82 94 C 76 76 80 44 100 42 Z" />
+                    </clipPath>
+
+                    {/* Clip rect that rises from bottom based on progressPercent */}
+                    <clipPath id="pepperLiquidHeightClip">
+                      <rect
+                        x="0"
+                        y={pepperFill.fillY.toFixed(1)}
+                        width="200"
+                        height={(pepperFill.fillH + 20).toFixed(1)}
+                      />
+                    </clipPath>
+
+                    {/* Liquid fill gradient */}
+                    <linearGradient id="pepperLiquidGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                      <stop offset="0%" stopColor={senioritisData.color} />
+                      <stop offset="85%" stopColor={senioritisData.color} />
+                      <stop offset="100%" stopColor="#ffffff" stopOpacity="0.9" />
                     </linearGradient>
 
-                    <filter id="flameGlow" x="-20%" y="-20%" width="140%" height="140%">
-                      <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor={tierMetadata.hex} floodOpacity="0.8" />
+                    <filter id="liquidGlowFilter" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor={senioritisData.color} floodOpacity="0.9" />
                     </filter>
                   </defs>
 
-                  {/* Pepper Green Stem */}
+                  {/* Stem at top */}
                   <path
-                    d="M 52 18 C 50 10 56 6 62 4 C 60 7 57 11 55 18 Z"
+                    d="M 105 38 C 103 22 110 14 122 10 C 117 15 113 22 109 38 Z"
                     fill="#10b981"
                     stroke="#044b36"
-                    strokeWidth="1.5"
+                    strokeWidth="2"
                   />
                   <path
-                    d="M 45 20 C 47 16 57 16 59 20 C 57 23 47 23 45 20 Z"
+                    d="M 93 40 C 96 33 111 33 114 40 C 111 44 96 44 93 40 Z"
                     fill="#059669"
                   />
 
-                  {/* Pepper Curved Body */}
+                  {/* Unfilled Glass Chamber Outline */}
                   <path
-                    d="M 48 22 C 65 24 72 38 70 54 C 68 70 56 82 48 92 C 45 95 43 95 44 91 C 46 80 40 68 36 56 C 32 44 35 26 48 22 Z"
-                    fill="url(#pepperGrad)"
-                    stroke={tierMetadata.hex}
-                    strokeWidth="2"
-                    filter="url(#flameGlow)"
-                  />
-
-                  {/* Highlights / 3D sheen */}
-                  <path
-                    d="M 44 28 C 39 38 38 52 42 66"
-                    stroke="rgba(255,255,255,0.4)"
+                    d="M 100 42 C 126 44 136 64 133 86 C 130 110 114 130 100 152 C 96 156 94 156 95 150 C 98 132 89 112 82 94 C 76 76 80 44 100 42 Z"
+                    fill="rgba(255, 255, 255, 0.04)"
+                    stroke="rgba(255, 255, 255, 0.22)"
                     strokeWidth="2.5"
-                    strokeLinecap="round"
-                    fill="none"
                   />
 
-                  {/* Flame sparks icons at top when hot/overload */}
-                  {(activeTier === 'hot' || activeTier === 'overload') && (
-                    <text x="66" y="24" fontSize="16" className="animate-bounce">
-                      🔥
-                    </text>
-                  )}
-                </svg>
-              </div>
+                  {/* Filled Section: Only fills up to current graduation progress */}
+                  <g clipPath="url(#pepperChamberOutline)">
+                    <g clipPath="url(#pepperLiquidHeightClip)">
+                      <rect
+                        x="0"
+                        y="0"
+                        width="200"
+                        height="220"
+                        fill="url(#pepperLiquidGrad)"
+                        filter="url(#liquidGlowFilter)"
+                      />
+                      {/* Bright meniscus line across liquid level */}
+                      <rect
+                        x="0"
+                        y={(pepperFill.fillY - 1).toFixed(1)}
+                        width="200"
+                        height="3"
+                        fill="#ffffff"
+                        opacity="0.95"
+                      />
+                      {/* Gloss highlight */}
+                      <path
+                        d="M 91 50 C 85 66 84 90 89 115"
+                        stroke="rgba(255,255,255,0.4)"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        fill="none"
+                      />
+                    </g>
+                  </g>
 
-              {/* Tagline & Level description */}
-              <div className="text-center mt-2">
-                <span
-                  className="text-xs font-mono font-bold tracking-wider uppercase block"
-                  style={{ color: tierMetadata.hex }}
-                >
-                  {tierMetadata.label} ({tierMetadata.heatPct.toFixed(0)}% Heat)
-                </span>
-                <p className="text-[11px] text-white/70 max-w-xs mt-0.5 leading-snug">
-                  {tierMetadata.tagline}
-                </p>
+                  {/* Measurement tick marks along side */}
+                  <line x1="145" y1="145" x2="153" y2="145" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
+                  <text x="157" y="148" fontSize="9" fill="rgba(255,255,255,0.4)" fontFamily="monospace">0%</text>
+
+                  <line x1="147" y1="118" x2="155" y2="118" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
+                  <text x="159" y="121" fontSize="9" fill="rgba(255,255,255,0.4)" fontFamily="monospace">25%</text>
+
+                  <line x1="149" y1="92" x2="157" y2="92" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
+                  <text x="161" y="95" fontSize="9" fill="rgba(255,255,255,0.4)" fontFamily="monospace">50%</text>
+
+                  <line x1="147" y1="66" x2="155" y2="66" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
+                  <text x="159" y="69" fontSize="9" fill="rgba(255,255,255,0.4)" fontFamily="monospace">75%</text>
+
+                  <line x1="142" y1="42" x2="150" y2="42" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
+                  <text x="154" y="45" fontSize="9" fill="rgba(255,255,255,0.4)" fontFamily="monospace">MAX</text>
+                </svg>
               </div>
             </div>
 
-            {/* Bottom 4-Tier Gauge Selector / Live Preview */}
-            <div className="relative z-10 pt-3 border-t border-white/10 flex flex-col gap-1.5">
-              <div className="flex items-center justify-between text-[10px] font-mono text-white/50">
-                <span>Heat Stages</span>
-                {previewTierOverride && (
-                  <button
-                    onClick={() => setPreviewTierOverride(null)}
-                    className="text-[var(--color-brand-cyan)] hover:underline cursor-pointer"
-                  >
-                    Reset to Live
-                  </button>
-                )}
+            {/* Bottom Row: Percentage Heat & Current Phase Info Only */}
+            <div className="relative z-10 pt-3 border-t border-white/10 flex flex-col gap-1 text-center">
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-2xl sm:text-3xl font-mono font-bold tracking-tight text-white tabular-nums">
+                  {mounted ? `${progressPercent.toFixed(1)}%` : '--'}
+                </span>
+                <span
+                  className="text-xs font-mono font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-black/50 border"
+                  style={{ color: senioritisData.color, borderColor: senioritisData.border }}
+                >
+                  HEAT
+                </span>
               </div>
-
-              <div className="grid grid-cols-4 gap-1">
-                {(['mild', 'spicy', 'hot', 'overload'] as SenioritisTier[]).map(t => {
-                  const isCurrent = activeTier === t;
-                  const isLive = !previewTierOverride && realProgressPercent < 25
-                    ? t === 'mild'
-                    : !previewTierOverride && realProgressPercent < 50
-                    ? t === 'spicy'
-                    : !previewTierOverride && realProgressPercent < 75
-                    ? t === 'hot'
-                    : t === 'overload';
-
-                  return (
-                    <button
-                      key={t}
-                      onClick={() => setPreviewTierOverride(t)}
-                      title={`Preview ${t} tier`}
-                      className={`py-1 rounded text-[10px] font-mono uppercase font-bold transition-all cursor-pointer ${
-                        isCurrent
-                          ? 'bg-white text-black shadow-md'
-                          : 'bg-black/40 text-white/50 hover:text-white border border-white/5'
-                      }`}
-                    >
-                      {t.slice(0, 4)}
-                    </button>
-                  );
-                })}
-              </div>
+              <p className="text-xs text-white/60 font-sans leading-snug">
+                {senioritisData.tagline}
+              </p>
             </div>
           </div>
         </section>
@@ -836,7 +830,6 @@ export default function SeniorCountdownPage() {
 
               const isPast = currentTime > end;
               const isActive = currentTime >= start && currentTime <= end;
-              const isFuture = currentTime < start;
 
               // Calculate countdown to end
               const diffToEnd = Math.max(0, end - currentTime);
@@ -940,7 +933,7 @@ export default function SeniorCountdownPage() {
 
         {/* 3. QUICK STATS GRID */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-          {/* Card 1: Next Deadline */}
+          {/* Card 1: Next Target */}
           <div className="bg-[#0b0e12]/80 border border-white/10 rounded-2xl p-5 sm:p-6 backdrop-blur-md flex flex-col justify-between hover:border-[var(--color-brand-gold)]/40 transition-colors">
             <div>
               <div className="flex items-center justify-between mb-3">
