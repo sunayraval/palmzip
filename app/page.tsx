@@ -490,9 +490,6 @@ export function PortfolioView({ content = contentData, isPreview = false }: { co
             <span className="text-white/80 text-xs font-medium tracking-wide">{HERO.availableBadge}</span>
           </div>
           
-          <Link href="/projects" className="text-xs sm:text-sm font-medium text-white/90 hover:text-[var(--color-brand-cyan)] transition-colors px-2 py-1 rounded">
-            Projects
-          </Link>
           <Link href="/story" className="text-xs sm:text-sm font-medium text-white/90 hover:text-[var(--color-brand-cyan)] transition-colors px-2 py-1 rounded">
             Story
           </Link>

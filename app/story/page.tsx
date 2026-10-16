@@ -339,9 +339,6 @@ export function StoryPageView({
           <Link href="/" className="text-white/70 hover:text-white transition-colors px-2 py-1">
             Home
           </Link>
-          <Link href="/projects" className="text-white/70 hover:text-white transition-colors px-2 py-1">
-            Projects
-          </Link>
           <Link href="/senior-countdown" className="text-[var(--color-brand-gold)] hover:text-amber-300 transition-colors px-2 py-1 flex items-center gap-1">
             <span>Countdown</span>
             <span className="text-xs">↗</span>
