@@ -278,6 +278,7 @@ export default function SeniorCountdownPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
+    document.title = "Senior Countdown | Sunay Raval";
     setMounted(true);
     setNow(new Date());
 

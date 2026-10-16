@@ -19,7 +19,10 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Sunay Raval",
+  title: {
+    default: "Sunay Raval",
+    template: "%s | Sunay Raval",
+  },
   description: "Sunay Raval - Entrepreneurship, Technology, and Leadership",
   icons: {
     icon: [

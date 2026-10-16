@@ -442,6 +442,7 @@ export function PortfolioView({ content = contentData, isPreview = false }: { co
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
+    document.title = "Sunay Raval";
     const updateSize = () => setIsMobile(window.innerWidth < 768);
     updateSize();
     window.addEventListener('resize', updateSize);

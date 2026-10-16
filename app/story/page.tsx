@@ -275,6 +275,7 @@ export function StoryPageView({
   const [activeTab, setActiveTab] = useState(initialTab);
 
   useEffect(() => {
+    document.title = "Story | Sunay Raval";
     if (defaultTab && defaultTab !== activeTab) {
       setActiveTab(defaultTab);
     } else if (typeof window !== 'undefined') {
@@ -284,7 +285,7 @@ export function StoryPageView({
         setActiveTab(tabParam);
       }
     }
-  }, [defaultTab, currentData]);
+  }, [defaultTab, currentData, activeTab]);
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
@@ -339,8 +340,8 @@ export function StoryPageView({
           <Link href="/" className="text-white/70 hover:text-white transition-colors px-2 py-1">
             Home
           </Link>
-          <Link href="/senior-countdown" className="text-[var(--color-brand-gold)] hover:text-amber-300 transition-colors px-2 py-1 flex items-center gap-1">
-            <span>Countdown</span>
+          <Link href="/senior-countdown" className="text-[var(--color-brand-gold)] hover:text-amber-300 transition-colors px-2 py-1 flex items-center gap-1 font-medium">
+            <span>Senior Countdown</span>
             <span className="text-xs">↗</span>
           </Link>
         </nav>
