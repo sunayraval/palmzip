@@ -50,6 +50,39 @@
   .animate-marquee:hover {
     animation-play-state: paused;
   }
+
+  /* Pepper Senioritis Shaking Animations */
+  .pepper-shake-0 {
+    animation: pepper-calm 3s ease-in-out infinite;
+  }
+
+  .pepper-shake-mild {
+    animation: pepper-shake-1 0.4s ease-in-out infinite;
+  }
+
+  .pepper-shake-spicy {
+    animation: pepper-shake-2 0.22s ease-in-out infinite;
+  }
+
+  .pepper-shake-hot {
+    animation: pepper-shake-3 0.14s ease-in-out infinite;
+  }
+
+  .pepper-shake-blazing {
+    animation: pepper-shake-4 0.09s ease-in-out infinite;
+  }
+
+  .pepper-shake-reaper {
+    animation: pepper-shake-5 0.055s cubic-bezier(0.36, 0.07, 0.19, 0.97) infinite;
+  }
+
+  .pepper-jolt {
+    animation: pepper-tap-jolt 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .animate-float-flame {
+    animation: float-flame 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  }
 }
 
 @keyframes grid-flow {
@@ -69,4 +102,78 @@
     transform: translateX(-50%);
   }
 }
+
+@keyframes pepper-calm {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-2px) rotate(0.5deg);
+  }
+}
+
+@keyframes pepper-shake-1 {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(-1px, 0.5px) rotate(-0.8deg); }
+  75% { transform: translate(1px, -0.5px) rotate(0.8deg); }
+}
+
+@keyframes pepper-shake-2 {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  20% { transform: translate(-2px, 1.5px) rotate(-1.5deg); }
+  40% { transform: translate(2px, -1.5px) rotate(1.5deg); }
+  60% { transform: translate(-1.5px, -1px) rotate(-1.2deg); }
+  80% { transform: translate(1.5px, 1.5px) rotate(1.2deg); }
+}
+
+@keyframes pepper-shake-3 {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  15% { transform: translate(-3.5px, 2px) rotate(-3deg); }
+  35% { transform: translate(3.5px, -2.5px) rotate(3deg); }
+  55% { transform: translate(-3px, -2px) rotate(-2.5deg); }
+  75% { transform: translate(3px, 2.5px) rotate(2.5deg); }
+  90% { transform: translate(-2px, 1.5px) rotate(-2deg); }
+}
+
+@keyframes pepper-shake-4 {
+  0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1.02); }
+  12% { transform: translate(-5px, 3.5px) rotate(-4.5deg) scale(1.03); }
+  28% { transform: translate(5.5px, -4px) rotate(4.5deg) scale(1.04); }
+  48% { transform: translate(-5.5px, -3.5px) rotate(-4deg) scale(1.03); }
+  68% { transform: translate(5px, 4px) rotate(4.5deg) scale(1.04); }
+  84% { transform: translate(-4px, 4.5px) rotate(-3.5deg) scale(1.02); }
+}
+
+@keyframes pepper-shake-5 {
+  0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1.05); }
+  10% { transform: translate(-7.5px, 5px) rotate(-7deg) scale(1.07); }
+  25% { transform: translate(7.5px, -6px) rotate(7deg) scale(1.08); }
+  40% { transform: translate(-8px, -5px) rotate(-7deg) scale(1.06); }
+  55% { transform: translate(8.5px, 6.5px) rotate(7.5deg) scale(1.09); }
+  70% { transform: translate(-7.5px, 7px) rotate(-6.5deg) scale(1.07); }
+  85% { transform: translate(8px, -6.5px) rotate(7deg) scale(1.08); }
+}
+
+@keyframes pepper-tap-jolt {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.18) rotate(-5deg); }
+  75% { transform: scale(0.95) rotate(3deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes float-flame {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(0.8);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translateY(-28px) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-56px) scale(0.6);
+  }
+}
+
 

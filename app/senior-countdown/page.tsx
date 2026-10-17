@@ -270,10 +270,84 @@ const HCPSS_OFF_DAYS = [
   '2027-05-31',
 ];
 
+interface SeniorFactor {
+  id: string;
+  label: string;
+  shortLabel: string;
+  boost: number;
+  icon: string;
+  desc: string;
+}
+
+const SENIOR_FACTORS: SeniorFactor[] = [
+  {
+    id: 'college_apps',
+    label: 'College Apps Due Soon',
+    shortLabel: 'College Apps',
+    boost: 25,
+    icon: '📝',
+    desc: 'Common App essays, Coalition deadlines & supplements',
+  },
+  {
+    id: 'ea_ed_rush',
+    label: 'Nov 1 EA/ED Midnight Panic',
+    shortLabel: 'EA/ED Rush',
+    boost: 20,
+    icon: '⚡',
+    desc: 'Submitting minutes before the 11:59 PM deadline',
+  },
+  {
+    id: 'missed_period',
+    label: 'Skipping 1st Period Class',
+    shortLabel: '1st Period Tardy',
+    boost: 15,
+    icon: '⏰',
+    desc: 'Chronic sleep-ins and ditching morning homeroom',
+  },
+  {
+    id: 'canvas_slump',
+    label: 'Zero Motivation (Canvas Slump)',
+    shortLabel: 'Zero Motivation',
+    boost: 15,
+    icon: '🥱',
+    desc: 'Cannot bring myself to submit basic assignments',
+  },
+  {
+    id: 'already_committed',
+    label: 'Accepted & Checked Out',
+    shortLabel: 'Checked Out',
+    boost: 25,
+    icon: '🏖️',
+    desc: 'College admission secured, senior slide mode activated',
+  },
+];
+
+const SENIOR_PRESETS = [
+  { id: 'baseline', label: 'Calendar Only', boost: 0, icon: '📅' },
+  { id: 'college_apps', label: 'College Apps Crunch', boost: 35, icon: '📝' },
+  { id: 'ea_ed_rush', label: 'EA/ED Panic', boost: 55, icon: '⚡' },
+  { id: 'senior_slide', label: 'Senior Slide', boost: 70, icon: '🥱' },
+  { id: 'reaper_overload', label: 'Critical Overload', boost: 80, icon: '💀' },
+];
+
+interface FloatingFlame {
+  id: number;
+  x: number;
+  text: string;
+}
+
 export default function SeniorCountdownPage() {
   const [mounted, setMounted] = useState(false);
   const [now, setNow] = useState<Date>(() => new Date());
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'school' | 'college'>('all');
+
+  // Senior Artificial Boost State
+  const [boostPercent, setBoostPercent] = useState<number>(35); // Defaults to +35% for current college apps season!
+  const [activeFactors, setActiveFactors] = useState<string[]>(['college_apps']);
+  const [activePreset, setActivePreset] = useState<string>('college_apps');
+  const [tapCount, setTapCount] = useState<number>(0);
+  const [isJolting, setIsJolting] = useState<boolean>(false);
+  const [floatingFlames, setFloatingFlames] = useState<FloatingFlame[]>([]);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -282,12 +356,40 @@ export default function SeniorCountdownPage() {
     setMounted(true);
     setNow(new Date());
 
+    // Restore saved senior boost state if available
+    try {
+      const saved = localStorage.getItem('palmzip_senioritis_boost_state_v3');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed.boostPercent === 'number') setBoostPercent(parsed.boostPercent);
+        if (Array.isArray(parsed.activeFactors)) setActiveFactors(parsed.activeFactors);
+        if (typeof parsed.tapCount === 'number') setTapCount(parsed.tapCount);
+        if (typeof parsed.activePreset === 'string') setActivePreset(parsed.activePreset);
+      }
+    } catch {
+      // fallback to initial defaults
+    }
+
     const timer = setInterval(() => {
       setNow(new Date());
     }, 1000);
 
     return () => clearInterval(timer);
   }, []);
+
+  const persistBoost = (newBoost: number, factors: string[], taps: number, preset: string) => {
+    try {
+      localStorage.setItem(
+        'palmzip_senioritis_boost_state_v3',
+        JSON.stringify({
+          boostPercent: newBoost,
+          activeFactors: factors,
+          tapCount: taps,
+          activePreset: preset,
+        })
+      );
+    } catch {}
+  };
 
   // 1. Digital Countdown to Graduation (May 28, 2027)
   const gradCountdown = useMemo(() => {
@@ -308,63 +410,175 @@ export default function SeniorCountdownPage() {
     return pct;
   }, [now]);
 
-  // Dynamic Phase and Color Interpolation based on Progress
-  const senioritisData = useMemo(() => {
-    const pct = progressPercent;
+  // Combined Effective Heat = Base Calendar Progress + Senior Artificial Boost
+  const effectiveHeat = useMemo(() => {
+    return Math.min(100, Math.max(0, progressPercent + boostPercent));
+  }, [progressPercent, boostPercent]);
 
-    if (pct < 25) {
+  // Dynamic Phase, Color, Particle Rate, and Pepper Shake Intensity based on Heat
+  const senioritisData = useMemo(() => {
+    const heat = effectiveHeat;
+
+    if (heat < 25) {
       return {
+        tier: 1,
         phaseName: 'MILD LEVEL',
-        tagline: 'Syllabus week mindset, full attendance',
+        pepperName: 'Jalapeño Mild',
+        tagline: 'Syllabus week mindset • 100% attendance & minimal homework stress',
         color: '#10b981', // Jalapeño Emerald
         border: 'rgba(16, 185, 129, 0.4)',
         bgGlow: 'rgba(16, 185, 129, 0.12)',
         particleMultiplier: 1.0,
         hue: 150,
+        shakeClass: 'pepper-shake-0',
+        shakeName: 'Calm Breathing',
+        steamCount: 0,
       };
-    } else if (pct < 50) {
+    } else if (heat < 50) {
       return {
+        tier: 2,
         phaseName: 'SPICY LEVEL',
-        tagline: 'Early action submitted, attendance slipping',
+        pepperName: 'Serrano Kick',
+        tagline: 'Early deadlines looming • Attendance slipping & caffeine levels rising',
         color: '#f59e0b', // Serrano Gold-Orange
         border: 'rgba(245, 158, 11, 0.45)',
-        bgGlow: 'rgba(245, 158, 11, 0.14)',
-        particleMultiplier: 2.2,
+        bgGlow: 'rgba(245, 158, 11, 0.15)',
+        particleMultiplier: 2.4,
         hue: 38,
+        shakeClass: 'pepper-shake-mild',
+        shakeName: 'Mild Jitter',
+        steamCount: 1,
       };
-    } else if (pct < 75) {
+    } else if (heat < 75) {
       return {
+        tier: 3,
         phaseName: 'HOT LEVEL',
-        tagline: 'Second semester senior, senioritis in full swing',
+        pepperName: 'Habanero Blaze',
+        tagline: 'College apps grind in full swing! Common App open at 2 AM & motivation slipping',
         color: '#ef4444', // Habanero Crimson
-        border: 'rgba(239, 68, 68, 0.5)',
-        bgGlow: 'rgba(239, 68, 68, 0.18)',
-        particleMultiplier: 3.6,
+        border: 'rgba(239, 68, 68, 0.55)',
+        bgGlow: 'rgba(239, 68, 68, 0.22)',
+        particleMultiplier: 4.0,
         hue: 8,
+        shakeClass: 'pepper-shake-hot',
+        shakeName: 'Vigorous Rattle',
+        steamCount: 2,
+      };
+    } else if (heat < 90) {
+      return {
+        tier: 4,
+        phaseName: 'BLAZING LEVEL',
+        pepperName: 'Ghost Pepper Sizzle',
+        tagline: 'Severe Senioritis! Early action submitted, 1st period skipped, zero study motivation',
+        color: '#ff0055', // Ghost Pepper Blazing Neon Pink
+        border: 'rgba(255, 0, 85, 0.7)',
+        bgGlow: 'rgba(255, 0, 85, 0.28)',
+        particleMultiplier: 5.8,
+        hue: 345,
+        shakeClass: 'pepper-shake-blazing',
+        shakeName: 'Violent Shiver',
+        steamCount: 3,
       };
     } else {
       return {
-        phaseName: 'OVERLOAD LEVEL',
-        tagline: 'Critical Senioritis reached! Graduation imminent',
-        color: '#ff0055', // Ghost Pepper Blazing
-        border: 'rgba(255, 0, 85, 0.65)',
-        bgGlow: 'rgba(255, 0, 85, 0.25)',
-        particleMultiplier: 5.2,
-        hue: 345,
+        tier: 5,
+        phaseName: 'CRITICAL OVERLOAD',
+        pepperName: 'Carolina Reaper Meltdown',
+        tagline: 'THERMONUCLEAR SENIOR SLIDE! 100% checked out, full senioritis, graduation imminent!',
+        color: '#ff0033', // Carolina Reaper Thermal Red
+        border: 'rgba(255, 0, 51, 0.85)',
+        bgGlow: 'rgba(255, 0, 51, 0.35)',
+        particleMultiplier: 7.5,
+        hue: 350,
+        shakeClass: 'pepper-shake-reaper',
+        shakeName: 'Seizure Tremor 💀',
+        steamCount: 4,
       };
     }
-  }, [progressPercent]);
+  }, [effectiveHeat]);
 
-  // Pepper SVG fill calculations:
+  // Pepper SVG fill calculations based on Effective Heat:
   // Body top is y=42, bottom is y=152 (total height = 110)
   const pepperFill = useMemo(() => {
     const bottomY = 152;
     const topY = 42;
     const totalH = bottomY - topY;
-    const fillH = totalH * (progressPercent / 100);
+    const fillH = totalH * (Math.min(100, Math.max(0, effectiveHeat)) / 100);
     const fillY = bottomY - fillH;
     return { fillY, fillH };
-  }, [progressPercent]);
+  }, [effectiveHeat]);
+
+  // Senior Boost Event Handlers
+  const handleSelectPreset = (presetId: string, boostVal: number) => {
+    setActivePreset(presetId);
+    setBoostPercent(boostVal);
+    let newFactors: string[] = [];
+    if (presetId === 'college_apps') newFactors = ['college_apps'];
+    else if (presetId === 'ea_ed_rush') newFactors = ['college_apps', 'ea_ed_rush'];
+    else if (presetId === 'senior_slide') newFactors = ['missed_period', 'canvas_slump'];
+    else if (presetId === 'reaper_overload') newFactors = SENIOR_FACTORS.map(f => f.id);
+    setActiveFactors(newFactors);
+    persistBoost(boostVal, newFactors, tapCount, presetId);
+  };
+
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseFloat(e.target.value);
+    setBoostPercent(val);
+    setActivePreset('custom');
+    persistBoost(val, activeFactors, tapCount, 'custom');
+  };
+
+  const handleToggleFactor = (factor: SeniorFactor) => {
+    let nextFactors: string[];
+    let newBoost: number;
+
+    if (activeFactors.includes(factor.id)) {
+      nextFactors = activeFactors.filter(id => id !== factor.id);
+      newBoost = Math.max(0, boostPercent - factor.boost);
+    } else {
+      nextFactors = [...activeFactors, factor.id];
+      const maxPossible = Math.max(0, 100 - progressPercent);
+      newBoost = Math.min(maxPossible, boostPercent + factor.boost);
+    }
+
+    setActiveFactors(nextFactors);
+    setBoostPercent(newBoost);
+    setActivePreset('custom');
+    persistBoost(newBoost, nextFactors, tapCount, 'custom');
+  };
+
+  const handleTapToBoost = () => {
+    const newTaps = tapCount + 1;
+    setTapCount(newTaps);
+
+    const maxBoost = Math.max(0, 100 - progressPercent);
+    const newBoost = Math.min(maxBoost, boostPercent + 2);
+    setBoostPercent(newBoost);
+    setActivePreset('custom');
+    persistBoost(newBoost, activeFactors, newTaps, 'custom');
+
+    // Jolt animation on click
+    setIsJolting(true);
+    setTimeout(() => setIsJolting(false), 260);
+
+    // Spawn floating flame particles
+    const id = Date.now() + Math.random();
+    const x = 30 + Math.random() * 40;
+    const sprites = ['+2% 🔥', '+2% 🌶️', 'HEAT UP! 🔥', '+2% ⚡', 'BOOST! 🔥'];
+    const text = sprites[Math.floor(Math.random() * sprites.length)];
+    setFloatingFlames(prev => [...prev.slice(-5), { id, x, text }]);
+    setTimeout(() => {
+      setFloatingFlames(prev => prev.filter(f => f.id !== id));
+    }, 950);
+  };
+
+  const handleResetBoost = () => {
+    setBoostPercent(0);
+    setActiveFactors([]);
+    setActivePreset('baseline');
+    persistBoost(0, [], tapCount, 'baseline');
+  };
+
 
   // Particle Canvas Emitter: Emits sparks with amplitude proportional to heat
   useEffect(() => {
@@ -641,10 +855,10 @@ export default function SeniorCountdownPage() {
 
           {/* BOX 2: Senioritis Spicy Pepper Meter in its OWN Separate Box (4 Cols) */}
           <div
-            className="lg:col-span-4 rounded-3xl border p-6 flex flex-col justify-between relative overflow-hidden transition-all duration-700 backdrop-blur-xl shadow-2xl"
+            className="lg:col-span-4 rounded-3xl border p-5 sm:p-6 flex flex-col justify-between relative overflow-hidden transition-all duration-700 backdrop-blur-xl shadow-2xl"
             style={{
               borderColor: senioritisData.border,
-              background: `linear-gradient(180deg, ${senioritisData.bgGlow} 0%, rgba(9, 12, 16, 0.95) 100%)`,
+              background: `linear-gradient(180deg, ${senioritisData.bgGlow} 0%, rgba(9, 12, 16, 0.96) 100%)`,
             }}
           >
             {/* Particle Canvas Behind Pepper */}
@@ -655,140 +869,222 @@ export default function SeniorCountdownPage() {
               className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-90"
             />
 
-            {/* Top Row: Title + ONLY the Current Phase */}
-            <div className="flex items-center justify-between relative z-10 mb-2">
+            {/* Top Row: Title + Phase + Boost Badge */}
+            <div className="flex items-center justify-between relative z-10 mb-2 gap-2">
               <span className="text-xs font-mono uppercase tracking-widest text-white/80 font-semibold flex items-center gap-1.5">
                 <span className="text-sm">🌶️</span> Senioritis Meter
               </span>
-              <span
-                className="text-[11px] font-mono px-3 py-1 rounded-full uppercase tracking-wider font-bold border transition-colors duration-500 shadow-md"
-                style={{
-                  color: senioritisData.color,
-                  borderColor: senioritisData.border,
-                  backgroundColor: 'rgba(0,0,0,0.6)',
-                }}
-              >
-                {senioritisData.phaseName}
-              </span>
-            </div>
-
-            {/* Center: Filling Pepper Chamber Graphic */}
-            <div className="relative z-10 flex flex-col items-center justify-center py-2 sm:py-3">
-              <div className="relative w-36 h-36 sm:w-40 sm:h-40 flex items-center justify-center">
-                {/* Dynamic heat halo glow */}
-                <div
-                  className="absolute inset-4 rounded-full blur-2xl transition-all duration-700 animate-pulse pointer-events-none opacity-60"
-                  style={{ backgroundColor: senioritisData.color }}
-                />
-
-                {/* SVG Pepper with Double-Clipped Liquid Fill that rises with % */}
-                <svg
-                  viewBox="0 0 200 220"
-                  className="w-full h-full drop-shadow-2xl relative z-10"
+              <div className="flex items-center gap-1.5">
+                {boostPercent > 0 && (
+                  <span
+                    className="text-[10px] font-mono px-2 py-0.5 rounded-full uppercase tracking-wider font-bold border animate-pulse flex items-center gap-1"
+                    style={{
+                      color: senioritisData.color,
+                      borderColor: senioritisData.border,
+                      backgroundColor: 'rgba(0,0,0,0.7)',
+                    }}
+                  >
+                    <span>🔥 +{boostPercent.toFixed(0)}%</span>
+                  </span>
+                )}
+                <span
+                  className="text-[11px] font-mono px-2.5 py-0.5 rounded-full uppercase tracking-wider font-bold border transition-colors duration-500 shadow-md"
+                  style={{
+                    color: senioritisData.color,
+                    borderColor: senioritisData.border,
+                    backgroundColor: 'rgba(0,0,0,0.6)',
+                  }}
                 >
-                  <defs>
-                    {/* The exact contour of the pepper chamber */}
-                    <clipPath id="pepperChamberOutline">
-                      <path d="M 100 42 C 126 44 136 64 133 86 C 130 110 114 130 100 152 C 96 156 94 156 95 150 C 98 132 89 112 82 94 C 76 76 80 44 100 42 Z" />
-                    </clipPath>
-
-                    {/* Clip rect that rises from bottom based on progressPercent */}
-                    <clipPath id="pepperLiquidHeightClip">
-                      <rect
-                        x="0"
-                        y={pepperFill.fillY.toFixed(1)}
-                        width="200"
-                        height={(pepperFill.fillH + 20).toFixed(1)}
-                      />
-                    </clipPath>
-
-                    {/* Liquid fill gradient */}
-                    <linearGradient id="pepperLiquidGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-                      <stop offset="0%" stopColor={senioritisData.color} />
-                      <stop offset="85%" stopColor={senioritisData.color} />
-                      <stop offset="100%" stopColor="#ffffff" stopOpacity="0.9" />
-                    </linearGradient>
-
-                    <filter id="liquidGlowFilter" x="-20%" y="-20%" width="140%" height="140%">
-                      <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor={senioritisData.color} floodOpacity="0.9" />
-                    </filter>
-                  </defs>
-
-                  {/* Stem at top */}
-                  <path
-                    d="M 105 38 C 103 22 110 14 122 10 C 117 15 113 22 109 38 Z"
-                    fill="#10b981"
-                    stroke="#044b36"
-                    strokeWidth="2"
-                  />
-                  <path
-                    d="M 93 40 C 96 33 111 33 114 40 C 111 44 96 44 93 40 Z"
-                    fill="#059669"
-                  />
-
-                  {/* Unfilled Glass Chamber Outline */}
-                  <path
-                    d="M 100 42 C 126 44 136 64 133 86 C 130 110 114 130 100 152 C 96 156 94 156 95 150 C 98 132 89 112 82 94 C 76 76 80 44 100 42 Z"
-                    fill="rgba(255, 255, 255, 0.04)"
-                    stroke="rgba(255, 255, 255, 0.22)"
-                    strokeWidth="2.5"
-                  />
-
-                  {/* Filled Section: Only fills up to current graduation progress */}
-                  <g clipPath="url(#pepperChamberOutline)">
-                    <g clipPath="url(#pepperLiquidHeightClip)">
-                      <rect
-                        x="0"
-                        y="0"
-                        width="200"
-                        height="220"
-                        fill="url(#pepperLiquidGrad)"
-                        filter="url(#liquidGlowFilter)"
-                      />
-                      {/* Bright meniscus line across liquid level */}
-                      <rect
-                        x="0"
-                        y={(pepperFill.fillY - 1).toFixed(1)}
-                        width="200"
-                        height="3"
-                        fill="#ffffff"
-                        opacity="0.95"
-                      />
-                      {/* Gloss highlight */}
-                      <path
-                        d="M 91 50 C 85 66 84 90 89 115"
-                        stroke="rgba(255,255,255,0.4)"
-                        strokeWidth="3"
-                        strokeLinecap="round"
-                        fill="none"
-                      />
-                    </g>
-                  </g>
-
-                  {/* Measurement tick marks along side */}
-                  <line x1="145" y1="145" x2="153" y2="145" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
-                  <text x="157" y="148" fontSize="9" fill="rgba(255,255,255,0.4)" fontFamily="monospace">0%</text>
-
-                  <line x1="147" y1="118" x2="155" y2="118" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
-                  <text x="159" y="121" fontSize="9" fill="rgba(255,255,255,0.4)" fontFamily="monospace">25%</text>
-
-                  <line x1="149" y1="92" x2="157" y2="92" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
-                  <text x="161" y="95" fontSize="9" fill="rgba(255,255,255,0.4)" fontFamily="monospace">50%</text>
-
-                  <line x1="147" y1="66" x2="155" y2="66" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
-                  <text x="159" y="69" fontSize="9" fill="rgba(255,255,255,0.4)" fontFamily="monospace">75%</text>
-
-                  <line x1="142" y1="42" x2="150" y2="42" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
-                  <text x="154" y="45" fontSize="9" fill="rgba(255,255,255,0.4)" fontFamily="monospace">MAX</text>
-                </svg>
+                  {senioritisData.phaseName}
+                </span>
               </div>
             </div>
 
-            {/* Bottom Row: Percentage Heat & Current Phase Info Only */}
-            <div className="relative z-10 pt-3 border-t border-white/10 flex flex-col gap-1 text-center">
+            {/* Center: Filling Pepper Chamber Graphic with Live Shaking */}
+            <div className="relative z-10 flex flex-col items-center justify-center py-1 sm:py-2">
+              <div className="relative w-36 h-36 sm:w-44 sm:h-44 flex items-center justify-center">
+                {/* Dynamic heat halo glow */}
+                <div
+                  className={`absolute inset-2 rounded-full blur-2xl transition-all duration-700 pointer-events-none ${
+                    effectiveHeat >= 75 ? 'animate-ping opacity-35' : 'animate-pulse opacity-60'
+                  }`}
+                  style={{ backgroundColor: senioritisData.color }}
+                />
+
+                {/* Floating flame particles on tap */}
+                {floatingFlames.map(flame => (
+                  <span
+                    key={flame.id}
+                    className="absolute pointer-events-none text-xs font-mono font-bold text-amber-300 z-30 animate-float-flame"
+                    style={{ left: `${flame.x}%`, top: '40%' }}
+                  >
+                    {flame.text}
+                  </span>
+                ))}
+
+                {/* Shaking Pepper Wrapper */}
+                <div
+                  className={`w-full h-full relative z-10 flex items-center justify-center transition-transform select-none ${
+                    senioritisData.shakeClass
+                  } ${isJolting ? 'pepper-jolt' : ''}`}
+                  title="Click pepper to boost senior heat!"
+                >
+                  <svg
+                    viewBox="0 0 200 220"
+                    className="w-full h-full drop-shadow-2xl relative z-10 cursor-pointer"
+                    onClick={handleTapToBoost}
+                  >
+                    <title>Senioritis Pepper Chamber</title>
+                    <defs>
+                      {/* The exact contour of the pepper chamber */}
+                      <clipPath id="pepperChamberOutline">
+                        <path d="M 100 42 C 126 44 136 64 133 86 C 130 110 114 130 100 152 C 96 156 94 156 95 150 C 98 132 89 112 82 94 C 76 76 80 44 100 42 Z" />
+                      </clipPath>
+
+                      {/* Clip rect that rises from bottom based on effectiveHeat */}
+                      <clipPath id="pepperLiquidHeightClip">
+                        <rect
+                          x="0"
+                          y={pepperFill.fillY.toFixed(1)}
+                          width="200"
+                          height={(pepperFill.fillH + 20).toFixed(1)}
+                        />
+                      </clipPath>
+
+                      {/* Liquid fill gradient */}
+                      <linearGradient id="pepperLiquidGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                        <stop offset="0%" stopColor={senioritisData.color} />
+                        <stop offset="85%" stopColor={senioritisData.color} />
+                        <stop offset="100%" stopColor="#ffffff" stopOpacity="0.9" />
+                      </linearGradient>
+
+                      <filter id="liquidGlowFilter" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor={senioritisData.color} floodOpacity="0.9" />
+                      </filter>
+                    </defs>
+
+                    {/* Dynamic Steam Wisps rising above Stem when hot */}
+                    {senioritisData.steamCount >= 1 && (
+                      <path
+                        d="M 112 14 Q 118 6 114 0"
+                        stroke="rgba(255,255,255,0.7)"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        fill="none"
+                        className="animate-pulse"
+                      />
+                    )}
+                    {senioritisData.steamCount >= 2 && (
+                      <path
+                        d="M 100 16 Q 94 8 98 1"
+                        stroke="rgba(255,255,255,0.7)"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        fill="none"
+                        className="animate-pulse"
+                      />
+                    )}
+                    {senioritisData.steamCount >= 3 && (
+                      <path
+                        d="M 124 18 Q 130 10 126 3"
+                        stroke={senioritisData.color}
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        fill="none"
+                        className="animate-pulse"
+                      />
+                    )}
+
+                    {/* Stem at top */}
+                    <path
+                      d="M 105 38 C 103 22 110 14 122 10 C 117 15 113 22 109 38 Z"
+                      fill="#10b981"
+                      stroke="#044b36"
+                      strokeWidth="2"
+                    />
+                    <path
+                      d="M 93 40 C 96 33 111 33 114 40 C 111 44 96 44 93 40 Z"
+                      fill="#059669"
+                    />
+
+                    {/* Unfilled Glass Chamber Outline */}
+                    <path
+                      d="M 100 42 C 126 44 136 64 133 86 C 130 110 114 130 100 152 C 96 156 94 156 95 150 C 98 132 89 112 82 94 C 76 76 80 44 100 42 Z"
+                      fill="rgba(255, 255, 255, 0.04)"
+                      stroke="rgba(255, 255, 255, 0.22)"
+                      strokeWidth="2.5"
+                    />
+
+                    {/* Filled Section: Only fills up to effective heat percentage */}
+                    <g clipPath="url(#pepperChamberOutline)">
+                      <g clipPath="url(#pepperLiquidHeightClip)">
+                        <rect
+                          x="0"
+                          y="0"
+                          width="200"
+                          height="220"
+                          fill="url(#pepperLiquidGrad)"
+                          filter="url(#liquidGlowFilter)"
+                        />
+                        {/* Bright meniscus line across liquid level */}
+                        <rect
+                          x="0"
+                          y={(pepperFill.fillY - 1).toFixed(1)}
+                          width="200"
+                          height="3"
+                          fill="#ffffff"
+                          opacity="0.95"
+                        />
+                        {/* Gloss highlight */}
+                        <path
+                          d="M 91 50 C 85 66 84 90 89 115"
+                          stroke="rgba(255,255,255,0.4)"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          fill="none"
+                        />
+                      </g>
+                    </g>
+
+                    {/* Measurement tick marks along side */}
+                    <line x1="145" y1="145" x2="153" y2="145" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
+                    <text x="157" y="148" fontSize="9" fill="rgba(255,255,255,0.4)" fontFamily="monospace">0%</text>
+
+                    <line x1="147" y1="118" x2="155" y2="118" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
+                    <text x="159" y="121" fontSize="9" fill="rgba(255,255,255,0.4)" fontFamily="monospace">25%</text>
+
+                    <line x1="149" y1="92" x2="157" y2="92" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
+                    <text x="161" y="95" fontSize="9" fill="rgba(255,255,255,0.4)" fontFamily="monospace">50%</text>
+
+                    <line x1="147" y1="66" x2="155" y2="66" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
+                    <text x="159" y="69" fontSize="9" fill="rgba(255,255,255,0.4)" fontFamily="monospace">75%</text>
+
+                    <line x1="142" y1="42" x2="150" y2="42" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
+                    <text x="154" y="45" fontSize="9" fill="rgba(255,255,255,0.4)" fontFamily="monospace">MAX</text>
+                  </svg>
+                </div>
+              </div>
+
+              {/* Tap to boost button right below pepper */}
+              <button
+                type="button"
+                onClick={handleTapToBoost}
+                className="mt-1 text-[11px] font-mono px-3 py-1 rounded-full border border-white/10 bg-black/50 hover:bg-white/10 text-white/80 hover:text-white transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 shadow-sm"
+              >
+                <span>🔥 Tap Pepper to Heat (+2%)</span>
+                {tapCount > 0 && (
+                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 font-bold">
+                    ×{tapCount}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* Bottom Row: Percentage Heat & Breakdown */}
+            <div className="relative z-10 pt-2.5 pb-2 border-t border-white/10 flex flex-col gap-1.5 text-center">
               <div className="flex items-center justify-center gap-2">
                 <span className="text-2xl sm:text-3xl font-mono font-bold tracking-tight text-white tabular-nums">
-                  {mounted ? `${progressPercent.toFixed(1)}%` : '--'}
+                  {mounted ? `${effectiveHeat.toFixed(1)}%` : '--'}
                 </span>
                 <span
                   className="text-xs font-mono font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-black/50 border"
@@ -796,10 +1092,120 @@ export default function SeniorCountdownPage() {
                 >
                   HEAT
                 </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 border border-white/10 text-white/50">
+                  {senioritisData.pepperName}
+                </span>
               </div>
-              <p className="text-xs text-white/60 font-sans leading-snug">
+
+              {/* Breakdown pill: Base + Boost */}
+              <div className="flex items-center justify-center gap-2 text-[10px] font-mono text-white/50">
+                <span>Base: {mounted ? `${progressPercent.toFixed(1)}%` : '--'}</span>
+                <span>•</span>
+                <span style={{ color: boostPercent > 0 ? senioritisData.color : 'inherit' }}>
+                  Boost: +{boostPercent.toFixed(1)}%
+                </span>
+                <span>•</span>
+                <span className="text-white/40 italic">Shake: {senioritisData.shakeName}</span>
+              </div>
+
+              <p className="text-xs text-white/70 font-sans leading-snug px-1">
                 {senioritisData.tagline}
               </p>
+            </div>
+
+            {/* Senior Interactive Booster Control Panel */}
+            <div className="relative z-10 mt-2 pt-3 border-t border-white/10 flex flex-col gap-3 bg-black/40 -mx-5 sm:-mx-6 -mb-5 sm:-mb-6 p-4 sm:p-5 rounded-b-3xl">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono uppercase tracking-wider text-white/80 font-bold flex items-center gap-1.5">
+                  <span>⚡</span> Senior Boost Control
+                </span>
+                {boostPercent > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleResetBoost}
+                    className="text-[10px] font-mono text-white/50 hover:text-white/90 underline cursor-pointer"
+                  >
+                    ↺ Reset Base
+                  </button>
+                )}
+              </div>
+
+              {/* Quick Situation Presets Row */}
+              <div className="flex flex-wrap gap-1.5">
+                {SENIOR_PRESETS.map(preset => {
+                  const isActive = activePreset === preset.id;
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => handleSelectPreset(preset.id, preset.boost)}
+                      className={`text-[10px] font-mono px-2.5 py-1 rounded-lg border transition-all cursor-pointer flex items-center gap-1 ${
+                        isActive
+                          ? 'border-[var(--color-brand-cyan)] bg-cyan-950/40 text-cyan-200 font-bold shadow-[0_0_10px_rgba(6,182,212,0.2)]'
+                          : 'border-white/10 bg-white/5 text-white/60 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      <span>{preset.icon}</span>
+                      <span>{preset.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Drag Rating Slider */}
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between text-[11px] font-mono text-white/70">
+                  <span>Adjust Boost Rating</span>
+                  <span className="font-bold" style={{ color: senioritisData.color }}>
+                    +{boostPercent.toFixed(0)}% Boost
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="80"
+                  step="1"
+                  value={boostPercent}
+                  onChange={handleSliderChange}
+                  className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[var(--color-brand-cyan)]"
+                />
+                <div className="flex justify-between text-[9px] font-mono text-white/30 px-0.5">
+                  <span>0% (Calm)</span>
+                  <span>35% (College Apps)</span>
+                  <span>80% (Reaper 💀)</span>
+                </div>
+              </div>
+
+              {/* Real Senior Life Factors Toggle Chips */}
+              <div className="flex flex-col gap-1.5 pt-1">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-white/40">
+                  Or select your senior realities:
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {SENIOR_FACTORS.map(factor => {
+                    const isSelected = activeFactors.includes(factor.id);
+                    return (
+                      <button
+                        key={factor.id}
+                        type="button"
+                        onClick={() => handleToggleFactor(factor)}
+                        title={factor.desc}
+                        className={`text-[10px] font-mono px-2.5 py-1 rounded-full border transition-all cursor-pointer flex items-center gap-1 ${
+                          isSelected
+                            ? 'border-amber-400/60 bg-amber-950/50 text-amber-200 font-semibold shadow-sm'
+                            : 'border-white/10 bg-white/[0.03] text-white/50 hover:text-white hover:bg-white/10'
+                        }`}
+                      >
+                        <span>{factor.icon}</span>
+                        <span>{factor.shortLabel}</span>
+                        <span className={isSelected ? 'text-amber-300' : 'text-white/40'}>
+                          +{factor.boost}%
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         </section>
