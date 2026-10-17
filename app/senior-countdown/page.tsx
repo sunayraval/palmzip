@@ -818,10 +818,10 @@ export default function SeniorCountdownPage() {
           </p>
         </div>
 
-        {/* 1. TOP SECTION: TWO SEPARATE BOXES SIDE-BY-SIDE */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-          {/* BOX 1: Main Countdown Box (8 Cols) */}
-          <div className="lg:col-span-8 bg-gradient-to-b from-[#0c1015]/95 to-[#07090c]/95 border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden backdrop-blur-xl flex flex-col justify-between gap-6 sm:gap-8">
+        {/* 1. TOP SECTION: MAIN COUNTDOWN CELL + WIDE SENIORITIS CELL BELOW */}
+        <section className="flex flex-col gap-6 w-full">
+          {/* CELL 1: Main Countdown Box */}
+          <div className="w-full bg-gradient-to-b from-[#0c1015]/95 to-[#07090c]/95 border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden backdrop-blur-xl flex flex-col gap-6 sm:gap-7">
             {/* Subtle top cyan line */}
             <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[var(--color-brand-cyan)]/70 to-transparent" />
 
@@ -881,34 +881,29 @@ export default function SeniorCountdownPage() {
             </div>
           </div>
 
-          {/* BOX 2: Senioritis Spicy Pepper Meter in its OWN Separate Box (4 Cols) */}
+          {/* CELL 2: Senioritis Spicy Pepper Meter in a WIDE Full-Width Cell */}
           <div
-            className="lg:col-span-4 rounded-3xl border p-5 sm:p-6 flex flex-col justify-between relative overflow-hidden transition-all duration-700 backdrop-blur-xl shadow-2xl"
+            className="w-full rounded-3xl border p-6 sm:p-8 relative overflow-hidden transition-all duration-700 backdrop-blur-xl shadow-2xl"
             style={{
               borderColor: senioritisData.border,
-              background: `linear-gradient(180deg, ${senioritisData.bgGlow} 0%, rgba(9, 12, 16, 0.96) 100%)`,
+              background: `linear-gradient(135deg, ${senioritisData.bgGlow} 0%, rgba(9, 12, 16, 0.98) 60%, rgba(5, 7, 10, 0.99) 100%)`,
             }}
           >
-            {/* Particle Canvas Behind Pepper */}
-            <canvas
-              ref={canvasRef}
-              width={260}
-              height={260}
-              className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-90"
-            />
-
-            {/* Top Row: Title + Phase + Collective Badge */}
-            <div className="flex items-center justify-between relative z-10 mb-2 gap-2">
-              <span className="text-xs font-mono uppercase tracking-widest text-white/80 font-semibold flex items-center gap-1.5">
-                <span className="text-sm">🌶️</span> Senioritis Meter
-              </span>
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full uppercase tracking-wider font-bold border flex items-center gap-1 bg-black/60 text-cyan-300 border-cyan-500/40 shadow-sm">
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
-                  <span>GLOBAL CLASS</span>
+            {/* Top Bar Across the Wide Card */}
+            <div className="flex flex-wrap items-center justify-between gap-3 relative z-10 pb-4 border-b border-white/10 mb-6">
+              <div className="flex items-center gap-3">
+                <span className="text-sm sm:text-base font-mono uppercase tracking-widest text-white font-bold flex items-center gap-2">
+                  <span className="text-lg">🌶️</span> Senioritis Meter
                 </span>
+                <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full uppercase tracking-wider font-bold border flex items-center gap-1.5 bg-black/60 text-cyan-300 border-cyan-500/40 shadow-sm">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+                  <span>GLOBAL CLASS OF 2027</span>
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2.5">
                 <span
-                  className="text-[11px] font-mono px-2.5 py-0.5 rounded-full uppercase tracking-wider font-bold border transition-colors duration-500 shadow-md"
+                  className="text-xs font-mono px-3 py-1 rounded-full uppercase tracking-wider font-bold border transition-colors duration-500 shadow-md"
                   style={{
                     color: senioritisData.color,
                     borderColor: senioritisData.border,
@@ -917,16 +912,29 @@ export default function SeniorCountdownPage() {
                 >
                   {senioritisData.phaseName}
                 </span>
+                <span className="text-[11px] font-mono text-emerald-400 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/30 border border-emerald-500/20">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Live Sync Active
+                </span>
               </div>
             </div>
 
-            {/* Center: Filling Pepper Chamber Graphic with Live Shaking */}
-            <div className="relative z-10 flex flex-col items-center justify-center py-1 sm:py-2">
-              <div className="relative w-36 h-36 sm:w-44 sm:h-44 flex items-center justify-center">
+            {/* Wide Grid Layout: Left Column (Pepper & Chamber) + Right Column (Collective Stats & Controls) */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center relative z-10">
+              {/* LEFT COLUMN: Pepper Graphic & Chamber (5 Cols on LG) */}
+              <div className="lg:col-span-5 bg-black/50 border border-white/10 rounded-2xl p-5 sm:p-6 relative overflow-hidden flex flex-col items-center justify-center text-center shadow-inner">
+                {/* Particle Canvas Behind Pepper in Left Column */}
+                <canvas
+                  ref={canvasRef}
+                  width={280}
+                  height={280}
+                  className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-80"
+                />
+
                 {/* Dynamic heat halo glow */}
                 <div
-                  className={`absolute inset-2 rounded-full blur-2xl transition-all duration-700 pointer-events-none ${
-                    effectiveHeat >= 75 ? 'animate-ping opacity-35' : 'animate-pulse opacity-60'
+                  className={`absolute inset-4 rounded-full blur-2xl transition-all duration-700 pointer-events-none ${
+                    effectiveHeat >= 75 ? 'animate-ping opacity-30' : 'animate-pulse opacity-50'
                   }`}
                   style={{ backgroundColor: senioritisData.color }}
                 />
@@ -942,327 +950,326 @@ export default function SeniorCountdownPage() {
                   </span>
                 ))}
 
-                {/* Shaking Pepper Wrapper */}
-                <div
-                  className={`w-full h-full relative z-10 flex items-center justify-center transition-transform select-none ${
-                    senioritisData.shakeClass
-                  } ${isJolting ? 'pepper-jolt' : ''}`}
-                  title={userRemainingQuota > 0 ? "Click pepper to add +0.5% to global heat!" : "Daily contribution quota reached"}
-                >
-                  <svg
-                    viewBox="0 0 200 220"
-                    className={`w-full h-full drop-shadow-2xl relative z-10 ${userRemainingQuota > 0 ? 'cursor-pointer' : 'cursor-not-allowed opacity-95'}`}
-                    onClick={() => contributeToGlobalMeter('Pepper Chamber Tap', 0.5)}
+                {/* Shaking Pepper Graphic */}
+                <div className="relative w-40 h-40 sm:w-48 sm:h-48 flex items-center justify-center">
+                  <div
+                    className={`w-full h-full relative z-10 flex items-center justify-center transition-transform select-none ${
+                      senioritisData.shakeClass
+                    } ${isJolting ? 'pepper-jolt' : ''}`}
+                    title={userRemainingQuota > 0 ? "Click pepper to add +0.5% to global heat!" : "Daily contribution quota reached"}
                   >
-                    <title>Global Senioritis Pepper Chamber</title>
-                    <defs>
-                      <clipPath id="pepperChamberOutline">
-                        <path d="M 100 42 C 126 44 136 64 133 86 C 130 110 114 130 100 152 C 96 156 94 156 95 150 C 98 132 89 112 82 94 C 76 76 80 44 100 42 Z" />
-                      </clipPath>
+                    <svg
+                      viewBox="0 0 200 220"
+                      className={`w-full h-full drop-shadow-2xl relative z-10 ${userRemainingQuota > 0 ? 'cursor-pointer' : 'cursor-not-allowed opacity-95'}`}
+                      onClick={() => contributeToGlobalMeter('Pepper Chamber Tap', 0.5)}
+                    >
+                      <title>Global Senioritis Pepper Chamber</title>
+                      <defs>
+                        <clipPath id="pepperChamberOutline">
+                          <path d="M 100 42 C 126 44 136 64 133 86 C 130 110 114 130 100 152 C 96 156 94 156 95 150 C 98 132 89 112 82 94 C 76 76 80 44 100 42 Z" />
+                        </clipPath>
 
-                      <clipPath id="pepperLiquidHeightClip">
-                        <rect
-                          x="0"
-                          y={pepperFill.fillY.toFixed(1)}
-                          width="200"
-                          height={(pepperFill.fillH + 20).toFixed(1)}
-                        />
-                      </clipPath>
+                        <clipPath id="pepperLiquidHeightClip">
+                          <rect
+                            x="0"
+                            y={pepperFill.fillY.toFixed(1)}
+                            width="200"
+                            height={(pepperFill.fillH + 20).toFixed(1)}
+                          />
+                        </clipPath>
 
-                      <linearGradient id="pepperLiquidGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-                        <stop offset="0%" stopColor={senioritisData.color} />
-                        <stop offset="85%" stopColor={senioritisData.color} />
-                        <stop offset="100%" stopColor="#ffffff" stopOpacity="0.9" />
-                      </linearGradient>
+                        <linearGradient id="pepperLiquidGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                          <stop offset="0%" stopColor={senioritisData.color} />
+                          <stop offset="85%" stopColor={senioritisData.color} />
+                          <stop offset="100%" stopColor="#ffffff" stopOpacity="0.9" />
+                        </linearGradient>
 
-                      <filter id="liquidGlowFilter" x="-20%" y="-20%" width="140%" height="140%">
-                        <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor={senioritisData.color} floodOpacity="0.9" />
-                      </filter>
-                    </defs>
+                        <filter id="liquidGlowFilter" x="-20%" y="-20%" width="140%" height="140%">
+                          <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor={senioritisData.color} floodOpacity="0.9" />
+                        </filter>
+                      </defs>
 
-                    {/* Dynamic Steam Wisps rising above Stem when hot */}
-                    {senioritisData.steamCount >= 1 && (
-                      <path
-                        d="M 112 14 Q 118 6 114 0"
-                        stroke="rgba(255,255,255,0.7)"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        fill="none"
-                        className="animate-pulse"
-                      />
-                    )}
-                    {senioritisData.steamCount >= 2 && (
-                      <path
-                        d="M 100 16 Q 94 8 98 1"
-                        stroke="rgba(255,255,255,0.7)"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        fill="none"
-                        className="animate-pulse"
-                      />
-                    )}
-                    {senioritisData.steamCount >= 3 && (
-                      <path
-                        d="M 124 18 Q 130 10 126 3"
-                        stroke={senioritisData.color}
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        fill="none"
-                        className="animate-pulse"
-                      />
-                    )}
-
-                    {/* Stem at top */}
-                    <path
-                      d="M 105 38 C 103 22 110 14 122 10 C 117 15 113 22 109 38 Z"
-                      fill="#10b981"
-                      stroke="#044b36"
-                      strokeWidth="2"
-                    />
-                    <path
-                      d="M 93 40 C 96 33 111 33 114 40 C 111 44 96 44 93 40 Z"
-                      fill="#059669"
-                    />
-
-                    {/* Unfilled Glass Chamber Outline */}
-                    <path
-                      d="M 100 42 C 126 44 136 64 133 86 C 130 110 114 130 100 152 C 96 156 94 156 95 150 C 98 132 89 112 82 94 C 76 76 80 44 100 42 Z"
-                      fill="rgba(255, 255, 255, 0.04)"
-                      stroke="rgba(255, 255, 255, 0.22)"
-                      strokeWidth="2.5"
-                    />
-
-                    {/* Filled Section: Only fills up to effective heat percentage */}
-                    <g clipPath="url(#pepperChamberOutline)">
-                      <g clipPath="url(#pepperLiquidHeightClip)">
-                        <rect
-                          x="0"
-                          y="0"
-                          width="200"
-                          height="220"
-                          fill="url(#pepperLiquidGrad)"
-                          filter="url(#liquidGlowFilter)"
-                        />
-                        {/* Bright meniscus line across liquid level */}
-                        <rect
-                          x="0"
-                          y={(pepperFill.fillY - 1).toFixed(1)}
-                          width="200"
-                          height="3"
-                          fill="#ffffff"
-                          opacity="0.95"
-                        />
-                        {/* Gloss highlight */}
+                      {/* Dynamic Steam Wisps rising above Stem when hot */}
+                      {senioritisData.steamCount >= 1 && (
                         <path
-                          d="M 91 50 C 85 66 84 90 89 115"
-                          stroke="rgba(255,255,255,0.4)"
-                          strokeWidth="3"
+                          d="M 112 14 Q 118 6 114 0"
+                          stroke="rgba(255,255,255,0.7)"
+                          strokeWidth="1.5"
                           strokeLinecap="round"
                           fill="none"
+                          className="animate-pulse"
                         />
-                      </g>
-                    </g>
+                      )}
+                      {senioritisData.steamCount >= 2 && (
+                        <path
+                          d="M 100 16 Q 94 8 98 1"
+                          stroke="rgba(255,255,255,0.7)"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          fill="none"
+                          className="animate-pulse"
+                        />
+                      )}
+                      {senioritisData.steamCount >= 3 && (
+                        <path
+                          d="M 124 18 Q 130 10 126 3"
+                          stroke={senioritisData.color}
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          fill="none"
+                          className="animate-pulse"
+                        />
+                      )}
 
-                    {/* Measurement tick marks along side */}
-                    <line x1="145" y1="145" x2="153" y2="145" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
-                    <text x="157" y="148" fontSize="9" fill="rgba(255,255,255,0.4)" fontFamily="monospace">0%</text>
-
-                    <line x1="147" y1="118" x2="155" y2="118" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
-                    <text x="159" y="121" fontSize="9" fill="rgba(255,255,255,0.4)" fontFamily="monospace">25%</text>
-
-                    <line x1="149" y1="92" x2="157" y2="92" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
-                    <text x="161" y="95" fontSize="9" fill="rgba(255,255,255,0.4)" fontFamily="monospace">50%</text>
-
-                    <line x1="147" y1="66" x2="155" y2="66" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
-                    <text x="159" y="69" fontSize="9" fill="rgba(255,255,255,0.4)" fontFamily="monospace">75%</text>
-
-                    <line x1="142" y1="42" x2="150" y2="42" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
-                    <text x="154" y="45" fontSize="9" fill="rgba(255,255,255,0.4)" fontFamily="monospace">MAX</text>
-                  </svg>
-                </div>
-              </div>
-
-              {/* Tap to boost button right below pepper */}
-              <button
-                type="button"
-                onClick={() => contributeToGlobalMeter('Pepper Tap Heat', 0.5)}
-                disabled={userRemainingQuota <= 0 || isSubmitting}
-                className={`mt-1 text-[11px] font-mono px-3 py-1 rounded-full border transition-all flex items-center gap-1.5 shadow-sm ${
-                  userRemainingQuota > 0
-                    ? 'border-amber-500/40 bg-amber-950/40 text-amber-200 hover:bg-amber-900/60 active:scale-95 cursor-pointer'
-                    : 'border-white/10 bg-white/5 text-white/40 cursor-not-allowed'
-                }`}
-              >
-                <span>{userRemainingQuota > 0 ? '🔥 Boost Global Heat (+0.5%)' : '🔒 Quota Reached (5.0%/5.0%)'}</span>
-                {userRemainingQuota > 0 && (
-                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-400/20 text-amber-300 font-bold">
-                    {Math.round(userRemainingQuota / 0.5)} left
-                  </span>
-                )}
-              </button>
-            </div>
-
-            {/* Bottom Row: Percentage Heat & Breakdown */}
-            <div className="relative z-10 pt-2.5 pb-2 border-t border-white/10 flex flex-col gap-1.5 text-center">
-              <div className="flex items-center justify-center gap-2">
-                <span className="text-2xl sm:text-3xl font-mono font-bold tracking-tight text-white tabular-nums">
-                  {mounted ? `${effectiveHeat.toFixed(1)}%` : '--'}
-                </span>
-                <span
-                  className="text-xs font-mono font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-black/50 border"
-                  style={{ color: senioritisData.color, borderColor: senioritisData.border }}
-                >
-                  GLOBAL HEAT
-                </span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 border border-white/10 text-white/50">
-                  {senioritisData.pepperName}
-                </span>
-              </div>
-
-              {/* Breakdown pill: Base + Collective Boost */}
-              <div className="flex items-center justify-center gap-2 text-[10px] font-mono text-white/50 flex-wrap">
-                <span>Base: {mounted ? `${progressPercent.toFixed(1)}%` : '--'}</span>
-                <span>•</span>
-                <span className="text-cyan-400 font-semibold">
-                  Global Boost: +{globalBoost.toFixed(1)}%
-                </span>
-                <span>•</span>
-                <span className="text-white/40 italic">Shake: {senioritisData.shakeName}</span>
-              </div>
-
-              <p className="text-xs text-white/70 font-sans leading-snug px-1">
-                {senioritisData.tagline}
-              </p>
-            </div>
-
-            {/* Collective Stats & Quota Control Panel */}
-            <div className="relative z-10 mt-2 pt-3 border-t border-white/10 flex flex-col gap-3 bg-black/45 -mx-5 sm:-mx-6 -mb-5 sm:-mb-6 p-4 sm:p-5 rounded-b-3xl">
-              {/* Community Activity Header */}
-              <div className="flex items-center justify-between text-xs font-mono">
-                <span className="text-white/80 font-bold flex items-center gap-1.5 uppercase tracking-wider">
-                  <span>👥</span> Class of 2027 Collective
-                </span>
-                <span className="text-[10px] text-emerald-400 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Live Sync
-                </span>
-              </div>
-
-              {/* Collective Metrics Summary */}
-              <div className="grid grid-cols-2 gap-2 text-center">
-                <div className="bg-white/[0.03] border border-white/10 rounded-xl py-2 px-2.5">
-                  <span className="text-lg font-mono font-bold text-white block">
-                    {totalContributors}
-                  </span>
-                  <span className="text-[9px] font-mono uppercase tracking-wider text-white/50 block">
-                    Seniors Contributed
-                  </span>
-                </div>
-                <div className="bg-white/[0.03] border border-white/10 rounded-xl py-2 px-2.5">
-                  <span className="text-lg font-mono font-bold text-cyan-300 block">
-                    {totalBoosts}
-                  </span>
-                  <span className="text-[9px] font-mono uppercase tracking-wider text-white/50 block">
-                    Collective Boosts
-                  </span>
-                </div>
-              </div>
-
-              {/* Individual Equal Quota Status Bar */}
-              <div className="bg-white/[0.02] border border-white/10 rounded-xl p-2.5 flex flex-col gap-1.5">
-                <div className="flex items-center justify-between text-[11px] font-mono">
-                  <span className="text-white/70 flex items-center gap-1">
-                    <span>⚡ Your Daily Quota:</span>
-                  </span>
-                  <span className={`font-bold ${userRemainingQuota > 0 ? 'text-amber-300' : 'text-emerald-400'}`}>
-                    {userContributed.toFixed(1)}% / {maxDailyQuota.toFixed(1)}%
-                  </span>
-                </div>
-
-                {/* Segmented Quota Bar (10 segments of 0.5%) */}
-                <div className="grid grid-cols-10 gap-1 h-2 w-full bg-black/60 rounded p-0.5 border border-white/10">
-                  {Array.from({ length: 10 }).map((_, idx) => {
-                    const segmentThreshold = (idx + 1) * 0.5;
-                    const isFilled = userContributed >= segmentThreshold;
-                    return (
-                      <div
-                        key={idx}
-                        className={`h-full rounded-sm transition-all duration-300 ${
-                          isFilled
-                            ? 'bg-gradient-to-t from-amber-500 to-amber-300 shadow-[0_0_6px_rgba(245,158,11,0.6)]'
-                            : 'bg-white/10'
-                        }`}
+                      {/* Stem at top */}
+                      <path
+                        d="M 105 38 C 103 22 110 14 122 10 C 117 15 113 22 109 38 Z"
+                        fill="#10b981"
+                        stroke="#044b36"
+                        strokeWidth="2"
                       />
-                    );
-                  })}
+                      <path
+                        d="M 93 40 C 96 33 111 33 114 40 C 111 44 96 44 93 40 Z"
+                        fill="#059669"
+                      />
+
+                      {/* Unfilled Glass Chamber Outline */}
+                      <path
+                        d="M 100 42 C 126 44 136 64 133 86 C 130 110 114 130 100 152 C 96 156 94 156 95 150 C 98 132 89 112 82 94 C 76 76 80 44 100 42 Z"
+                        fill="rgba(255, 255, 255, 0.04)"
+                        stroke="rgba(255, 255, 255, 0.22)"
+                        strokeWidth="2.5"
+                      />
+
+                      {/* Filled Section: Only fills up to effective heat percentage */}
+                      <g clipPath="url(#pepperChamberOutline)">
+                        <g clipPath="url(#pepperLiquidHeightClip)">
+                          <rect
+                            x="0"
+                            y="0"
+                            width="200"
+                            height="220"
+                            fill="url(#pepperLiquidGrad)"
+                            filter="url(#liquidGlowFilter)"
+                          />
+                          {/* Bright meniscus line across liquid level */}
+                          <rect
+                            x="0"
+                            y={(pepperFill.fillY - 1).toFixed(1)}
+                            width="200"
+                            height="3"
+                            fill="#ffffff"
+                            opacity="0.95"
+                          />
+                          {/* Gloss highlight */}
+                          <path
+                            d="M 91 50 C 85 66 84 90 89 115"
+                            stroke="rgba(255,255,255,0.4)"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            fill="none"
+                          />
+                        </g>
+                      </g>
+
+                      {/* Measurement tick marks along side */}
+                      <line x1="145" y1="145" x2="153" y2="145" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
+                      <text x="157" y="148" fontSize="9" fill="rgba(255,255,255,0.4)" fontFamily="monospace">0%</text>
+
+                      <line x1="147" y1="118" x2="155" y2="118" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
+                      <text x="159" y="121" fontSize="9" fill="rgba(255,255,255,0.4)" fontFamily="monospace">25%</text>
+
+                      <line x1="149" y1="92" x2="157" y2="92" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
+                      <text x="161" y="95" fontSize="9" fill="rgba(255,255,255,0.4)" fontFamily="monospace">50%</text>
+
+                      <line x1="147" y1="66" x2="155" y2="66" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
+                      <text x="159" y="69" fontSize="9" fill="rgba(255,255,255,0.4)" fontFamily="monospace">75%</text>
+
+                      <line x1="142" y1="42" x2="150" y2="42" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
+                      <text x="154" y="45" fontSize="9" fill="rgba(255,255,255,0.4)" fontFamily="monospace">MAX</text>
+                    </svg>
+                  </div>
                 </div>
 
-                <div className="flex items-center justify-between text-[9px] font-mono text-white/40">
-                  <span>
-                    {userRemainingQuota > 0
-                      ? `${userRemainingQuota.toFixed(1)}% remaining (${Math.round(userRemainingQuota / 0.5)} boosts left)`
-                      : 'All 5.0% used today! ✓'}
-                  </span>
-                  <span>Resets in {hoursUntilReset.toFixed(1)}h</span>
-                </div>
-              </div>
+                {/* Boost Button directly below Pepper */}
+                <button
+                  type="button"
+                  onClick={() => contributeToGlobalMeter('Pepper Tap Heat', 0.5)}
+                  disabled={userRemainingQuota <= 0 || isSubmitting}
+                  className={`mt-2 text-xs font-mono px-4 py-1.5 rounded-full border transition-all flex items-center gap-2 shadow-sm ${
+                    userRemainingQuota > 0
+                      ? 'border-amber-500/40 bg-amber-950/50 text-amber-200 hover:bg-amber-900/70 active:scale-95 cursor-pointer'
+                      : 'border-white/10 bg-white/5 text-white/40 cursor-not-allowed'
+                  }`}
+                >
+                  <span>{userRemainingQuota > 0 ? '🔥 Tap to Boost Heat (+0.5%)' : '🔒 Daily Quota Reached (5.0%)'}</span>
+                  {userRemainingQuota > 0 && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-bold">
+                      {Math.round(userRemainingQuota / 0.5)} left
+                    </span>
+                  )}
+                </button>
 
-              {/* Quota Message Alert if Limit Reached */}
-              {quotaMessage && (
-                <div className="bg-amber-950/60 border border-amber-500/50 rounded-xl p-2 text-center text-[11px] font-mono text-amber-200 animate-pulse">
-                  {quotaMessage}
-                </div>
-              )}
-
-              {/* Real Senior Life Factors: Each adds +0.5% to Global Meter */}
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-white/50">
-                  Add your senior reality (+0.5% to class heat):
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {SENIOR_FACTORS.map(factor => (
-                    <button
-                      key={factor.id}
-                      type="button"
-                      onClick={() => contributeToGlobalMeter(factor.shortLabel, 0.5)}
-                      disabled={userRemainingQuota <= 0 || isSubmitting}
-                      title={factor.desc}
-                      className={`text-[10px] font-mono px-2.5 py-1 rounded-full border transition-all flex items-center gap-1 ${
-                        userRemainingQuota > 0
-                          ? 'border-white/15 bg-white/[0.04] text-white/80 hover:border-amber-400/60 hover:bg-amber-950/30 hover:text-amber-200 cursor-pointer active:scale-95'
-                          : 'border-white/5 bg-white/[0.02] text-white/30 cursor-not-allowed'
-                      }`}
+                {/* Heat Readout & Tagline */}
+                <div className="mt-3 flex flex-col items-center gap-1.5">
+                  <div className="flex items-center justify-center gap-2 flex-wrap">
+                    <span className="text-2xl sm:text-3xl font-mono font-bold tracking-tight text-white tabular-nums">
+                      {mounted ? `${effectiveHeat.toFixed(1)}%` : '--'}
+                    </span>
+                    <span
+                      className="text-[11px] font-mono font-bold uppercase tracking-widest px-2.5 py-0.5 rounded bg-black/60 border"
+                      style={{ color: senioritisData.color, borderColor: senioritisData.border }}
                     >
-                      <span>{factor.icon}</span>
-                      <span>{factor.shortLabel}</span>
-                      <span className="text-amber-400 font-bold">+0.5%</span>
-                    </button>
-                  ))}
+                      GLOBAL HEAT
+                    </span>
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-white/5 border border-white/10 text-white/60">
+                      {senioritisData.pepperName}
+                    </span>
+                  </div>
+
+                  {/* Base vs Boost detail */}
+                  <div className="flex items-center justify-center gap-2 text-[11px] font-mono text-white/50 flex-wrap">
+                    <span>Base: {mounted ? `${progressPercent.toFixed(1)}%` : '--'}</span>
+                    <span>•</span>
+                    <span className="text-cyan-400 font-semibold">
+                      Boost: +{globalBoost.toFixed(1)}%
+                    </span>
+                    <span>•</span>
+                    <span className="text-white/40 italic">{senioritisData.shakeName}</span>
+                  </div>
+
+                  <p className="text-xs text-white/70 font-sans leading-snug max-w-sm mt-0.5">
+                    {senioritisData.tagline}
+                  </p>
                 </div>
               </div>
 
-              {/* Recent Community Activity Feed */}
-              {recentContributions.length > 0 && (
-                <div className="pt-2 border-t border-white/5 flex flex-col gap-1">
-                  <span className="text-[9px] font-mono uppercase tracking-wider text-white/40">
-                    Live Senior Activity:
+              {/* RIGHT COLUMN: Collective Stats, Quota & Real Senior Factors (7 Cols on LG) */}
+              <div className="lg:col-span-7 flex flex-col gap-4">
+                {/* 3 Metric Cards */}
+                <div className="grid grid-cols-3 gap-2.5 text-center">
+                  <div className="bg-white/[0.03] border border-white/10 rounded-2xl py-3 px-2 sm:px-3 shadow-inner">
+                    <span className="text-xl sm:text-2xl font-mono font-bold text-white block">
+                      {totalContributors}
+                    </span>
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-white/50 block mt-0.5">
+                      Seniors Contributed
+                    </span>
+                  </div>
+                  <div className="bg-white/[0.03] border border-white/10 rounded-2xl py-3 px-2 sm:px-3 shadow-inner">
+                    <span className="text-xl sm:text-2xl font-mono font-bold text-cyan-300 block">
+                      {totalBoosts}
+                    </span>
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-white/50 block mt-0.5">
+                      Collective Boosts
+                    </span>
+                  </div>
+                  <div className="bg-white/[0.03] border border-white/10 rounded-2xl py-3 px-2 sm:px-3 shadow-inner">
+                    <span className="text-xl sm:text-2xl font-mono font-bold text-amber-300 block">
+                      +{globalBoost.toFixed(1)}%
+                    </span>
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-white/50 block mt-0.5">
+                      Class Boost Added
+                    </span>
+                  </div>
+                </div>
+
+                {/* Individual Equal Quota Status Box */}
+                <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4 flex flex-col gap-2">
+                  <div className="flex items-center justify-between text-xs font-mono">
+                    <span className="text-white/80 font-semibold flex items-center gap-1.5">
+                      <span>⚡ Your Daily Contribution Quota:</span>
+                    </span>
+                    <span className={`font-bold ${userRemainingQuota > 0 ? 'text-amber-300' : 'text-emerald-400'}`}>
+                      {userContributed.toFixed(1)}% / {maxDailyQuota.toFixed(1)}%
+                    </span>
+                  </div>
+
+                  {/* 10-step segmented progress bar */}
+                  <div className="grid grid-cols-10 gap-1.5 h-2.5 w-full bg-black/60 rounded-md p-0.5 border border-white/10">
+                    {Array.from({ length: 10 }).map((_, idx) => {
+                      const segmentThreshold = (idx + 1) * 0.5;
+                      const isFilled = userContributed >= segmentThreshold;
+                      return (
+                        <div
+                          key={idx}
+                          className={`h-full rounded-sm transition-all duration-300 ${
+                            isFilled
+                              ? 'bg-gradient-to-t from-amber-500 to-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.7)]'
+                              : 'bg-white/10'
+                          }`}
+                        />
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10px] font-mono text-white/50">
+                    <span>
+                      {userRemainingQuota > 0
+                        ? `${userRemainingQuota.toFixed(1)}% remaining (${Math.round(userRemainingQuota / 0.5)} boosts left)`
+                        : 'All 5.0% used today! Great job senior ✓'}
+                    </span>
+                    <span>Resets in {hoursUntilReset.toFixed(1)}h</span>
+                  </div>
+                </div>
+
+                {/* Quota Message Alert if Limit Reached */}
+                {quotaMessage && (
+                  <div className="bg-amber-950/60 border border-amber-500/50 rounded-xl p-2.5 text-center text-xs font-mono text-amber-200 animate-pulse">
+                    {quotaMessage}
+                  </div>
+                )}
+
+                {/* Real Senior Life Factors: Horizontal Wrapping Chips */}
+                <div className="flex flex-col gap-2">
+                  <span className="text-[11px] font-mono uppercase tracking-wider text-white/60 font-semibold">
+                    Add your senior reality (+0.5% to class heat):
                   </span>
-                  <div className="flex flex-col gap-1 max-h-16 overflow-hidden">
-                    {recentContributions.slice(0, 3).map((item, idx) => (
-                      <div
-                        key={idx}
-                        className="text-[10px] font-mono text-white/60 flex items-center justify-between bg-black/30 px-2 py-0.5 rounded border border-white/5"
+                  <div className="flex flex-wrap gap-2">
+                    {SENIOR_FACTORS.map(factor => (
+                      <button
+                        key={factor.id}
+                        type="button"
+                        onClick={() => contributeToGlobalMeter(factor.shortLabel, 0.5)}
+                        disabled={userRemainingQuota <= 0 || isSubmitting}
+                        title={factor.desc}
+                        className={`text-xs font-mono px-3 py-1.5 rounded-full border transition-all flex items-center gap-1.5 ${
+                          userRemainingQuota > 0
+                            ? 'border-white/15 bg-white/[0.04] text-white/90 hover:border-amber-400/60 hover:bg-amber-950/30 hover:text-amber-200 cursor-pointer active:scale-95 shadow-sm'
+                            : 'border-white/5 bg-white/[0.02] text-white/30 cursor-not-allowed'
+                        }`}
                       >
-                        <span className="flex items-center gap-1 truncate">
-                          <span className="text-amber-400">🔥 +{item.amount}%</span>
-                          <span className="text-white/80 truncate">{item.factor}</span>
-                        </span>
-                        <span className="text-white/40 text-[9px] shrink-0 ml-1">{item.time}</span>
-                      </div>
+                        <span>{factor.icon}</span>
+                        <span>{factor.shortLabel}</span>
+                        <span className="text-amber-400 font-bold">+0.5%</span>
+                      </button>
                     ))}
                   </div>
                 </div>
-              )}
+
+                {/* Recent Community Activity Feed */}
+                {recentContributions.length > 0 && (
+                  <div className="pt-2 border-t border-white/10 flex flex-col gap-1.5">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-white/40">
+                      Live Senior Activity:
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      {recentContributions.slice(0, 3).map((item, idx) => (
+                        <div
+                          key={idx}
+                          className="text-[11px] font-mono text-white/70 flex items-center justify-between bg-black/40 px-2.5 py-1.5 rounded-lg border border-white/10"
+                        >
+                          <span className="flex items-center gap-1.5 truncate">
+                            <span className="text-amber-400 font-bold shrink-0">+{item.amount}%</span>
+                            <span className="text-white/80 truncate">{item.factor}</span>
+                          </span>
+                          <span className="text-white/40 text-[9px] shrink-0 ml-1.5">{item.time}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </section>
