@@ -341,11 +341,22 @@ export default function SeniorCountdownPage() {
   const [now, setNow] = useState<Date>(() => new Date());
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'school' | 'college'>('all');
 
-  // Senior Artificial Boost State
-  const [boostPercent, setBoostPercent] = useState<number>(35); // Defaults to +35% for current college apps season!
-  const [activeFactors, setActiveFactors] = useState<string[]>(['college_apps']);
-  const [activePreset, setActivePreset] = useState<string>('college_apps');
-  const [tapCount, setTapCount] = useState<number>(0);
+  // Collective Global Senioritis & Quota State
+  const [clientToken, setClientToken] = useState<string>('');
+  const [globalBoost, setGlobalBoost] = useState<number>(34.0);
+  const [totalContributors, setTotalContributors] = useState<number>(54);
+  const [totalBoosts, setTotalBoosts] = useState<number>(258);
+  const [maxDailyQuota, setMaxDailyQuota] = useState<number>(5.0);
+  const [userContributed, setUserContributed] = useState<number>(0.0);
+  const [userRemainingQuota, setUserRemainingQuota] = useState<number>(5.0);
+  const [hoursUntilReset, setHoursUntilReset] = useState<number>(24.0);
+  const [recentContributions, setRecentContributions] = useState<Array<{ factor: string; amount: number; time: string }>>([
+    { factor: 'College Apps Crunch', amount: 0.5, time: 'Just now' },
+    { factor: 'Nov 1 EA/ED Panic', amount: 0.5, time: '3m ago' },
+    { factor: 'Skipping 1st Period', amount: 0.5, time: '8m ago' },
+  ]);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [quotaMessage, setQuotaMessage] = useState<string | null>(null);
   const [isJolting, setIsJolting] = useState<boolean>(false);
   const [floatingFlames, setFloatingFlames] = useState<FloatingFlame[]>([]);
 
@@ -356,40 +367,56 @@ export default function SeniorCountdownPage() {
     setMounted(true);
     setNow(new Date());
 
-    // Restore saved senior boost state if available
+    // Generate or retrieve persistent client token for quotas
+    let token = '';
     try {
-      const saved = localStorage.getItem('palmzip_senioritis_boost_state_v3');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (typeof parsed.boostPercent === 'number') setBoostPercent(parsed.boostPercent);
-        if (Array.isArray(parsed.activeFactors)) setActiveFactors(parsed.activeFactors);
-        if (typeof parsed.tapCount === 'number') setTapCount(parsed.tapCount);
-        if (typeof parsed.activePreset === 'string') setActivePreset(parsed.activePreset);
+      token = localStorage.getItem('palmzip_senior_client_token') || '';
+      if (!token) {
+        token = 'senior_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+        localStorage.setItem('palmzip_senior_client_token', token);
       }
+      setClientToken(token);
     } catch {
-      // fallback to initial defaults
+      token = 'senior_guest_' + Date.now();
+      setClientToken(token);
     }
+
+    const fetchGlobal = async (tok: string) => {
+      try {
+        const res = await fetch(`/api/senioritis?clientToken=${encodeURIComponent(tok)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.success) {
+          setGlobalBoost(data.globalBoost);
+          setTotalContributors(data.totalContributors);
+          setTotalBoosts(data.totalBoosts);
+          setMaxDailyQuota(data.maxDailyQuota || 5.0);
+          setUserContributed(data.userContributed ?? 0);
+          setUserRemainingQuota(data.userRemainingQuota ?? 5.0);
+          setHoursUntilReset(data.hoursUntilReset ?? 24.0);
+          if (Array.isArray(data.recentContributions)) {
+            setRecentContributions(data.recentContributions);
+          }
+        }
+      } catch (err) {
+        // graceful offline fallback
+      }
+    };
+
+    fetchGlobal(token);
+    const syncInterval = setInterval(() => {
+      fetchGlobal(token);
+    }, 7000);
 
     const timer = setInterval(() => {
       setNow(new Date());
     }, 1000);
 
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+      clearInterval(syncInterval);
+    };
   }, []);
-
-  const persistBoost = (newBoost: number, factors: string[], taps: number, preset: string) => {
-    try {
-      localStorage.setItem(
-        'palmzip_senioritis_boost_state_v3',
-        JSON.stringify({
-          boostPercent: newBoost,
-          activeFactors: factors,
-          tapCount: taps,
-          activePreset: preset,
-        })
-      );
-    } catch {}
-  };
 
   // 1. Digital Countdown to Graduation (May 28, 2027)
   const gradCountdown = useMemo(() => {
@@ -410,10 +437,10 @@ export default function SeniorCountdownPage() {
     return pct;
   }, [now]);
 
-  // Combined Effective Heat = Base Calendar Progress + Senior Artificial Boost
+  // Combined Effective Heat = Base Calendar Progress + Collective Global Boost
   const effectiveHeat = useMemo(() => {
-    return Math.min(100, Math.max(0, progressPercent + boostPercent));
-  }, [progressPercent, boostPercent]);
+    return Math.min(100, Math.max(0, progressPercent + globalBoost));
+  }, [progressPercent, globalBoost]);
 
   // Dynamic Phase, Color, Particle Rate, and Pepper Shake Intensity based on Heat
   const senioritisData = useMemo(() => {
@@ -508,75 +535,76 @@ export default function SeniorCountdownPage() {
     return { fillY, fillH };
   }, [effectiveHeat]);
 
-  // Senior Boost Event Handlers
-  const handleSelectPreset = (presetId: string, boostVal: number) => {
-    setActivePreset(presetId);
-    setBoostPercent(boostVal);
-    let newFactors: string[] = [];
-    if (presetId === 'college_apps') newFactors = ['college_apps'];
-    else if (presetId === 'ea_ed_rush') newFactors = ['college_apps', 'ea_ed_rush'];
-    else if (presetId === 'senior_slide') newFactors = ['missed_period', 'canvas_slump'];
-    else if (presetId === 'reaper_overload') newFactors = SENIOR_FACTORS.map(f => f.id);
-    setActiveFactors(newFactors);
-    persistBoost(boostVal, newFactors, tapCount, presetId);
-  };
-
-  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = parseFloat(e.target.value);
-    setBoostPercent(val);
-    setActivePreset('custom');
-    persistBoost(val, activeFactors, tapCount, 'custom');
-  };
-
-  const handleToggleFactor = (factor: SeniorFactor) => {
-    let nextFactors: string[];
-    let newBoost: number;
-
-    if (activeFactors.includes(factor.id)) {
-      nextFactors = activeFactors.filter(id => id !== factor.id);
-      newBoost = Math.max(0, boostPercent - factor.boost);
-    } else {
-      nextFactors = [...activeFactors, factor.id];
-      const maxPossible = Math.max(0, 100 - progressPercent);
-      newBoost = Math.min(maxPossible, boostPercent + factor.boost);
+  // Collective Global Boost Contribution Handler with Quota Enforcement
+  const contributeToGlobalMeter = async (factorLabel: string, amount: number = 0.5) => {
+    if (userRemainingQuota <= 0) {
+      setQuotaMessage(
+        `Daily quota reached (${maxDailyQuota.toFixed(1)}% max per senior). Resets in ${hoursUntilReset.toFixed(1)}h.`
+      );
+      setTimeout(() => setQuotaMessage(null), 4000);
+      return;
     }
 
-    setActiveFactors(nextFactors);
-    setBoostPercent(newBoost);
-    setActivePreset('custom');
-    persistBoost(newBoost, nextFactors, tapCount, 'custom');
-  };
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
-  const handleTapToBoost = () => {
-    const newTaps = tapCount + 1;
-    setTapCount(newTaps);
+    const actualAdd = Math.min(amount, userRemainingQuota);
+    const newContributed = parseFloat((userContributed + actualAdd).toFixed(2));
+    const newRemaining = parseFloat(Math.max(0, userRemainingQuota - actualAdd).toFixed(2));
+    const newGlobal = parseFloat(Math.min(80.5, globalBoost + actualAdd).toFixed(2));
 
-    const maxBoost = Math.max(0, 100 - progressPercent);
-    const newBoost = Math.min(maxBoost, boostPercent + 2);
-    setBoostPercent(newBoost);
-    setActivePreset('custom');
-    persistBoost(newBoost, activeFactors, newTaps, 'custom');
+    // Optimistic UI updates
+    setUserContributed(newContributed);
+    setUserRemainingQuota(newRemaining);
+    setGlobalBoost(newGlobal);
+    setTotalBoosts(prev => prev + 1);
 
-    // Jolt animation on click
+    // Jolt pepper on boost
     setIsJolting(true);
     setTimeout(() => setIsJolting(false), 260);
 
     // Spawn floating flame particles
     const id = Date.now() + Math.random();
     const x = 30 + Math.random() * 40;
-    const sprites = ['+2% 🔥', '+2% 🌶️', 'HEAT UP! 🔥', '+2% ⚡', 'BOOST! 🔥'];
+    const sprites = [`+${actualAdd}% 🔥`, `+${actualAdd}% 🌶️`, 'GLOBAL HEAT! 🔥', `+${actualAdd}% ⚡`, 'BOOST! 🔥'];
     const text = sprites[Math.floor(Math.random() * sprites.length)];
     setFloatingFlames(prev => [...prev.slice(-5), { id, x, text }]);
     setTimeout(() => {
       setFloatingFlames(prev => prev.filter(f => f.id !== id));
     }, 950);
-  };
 
-  const handleResetBoost = () => {
-    setBoostPercent(0);
-    setActiveFactors([]);
-    setActivePreset('baseline');
-    persistBoost(0, [], tapCount, 'baseline');
+    try {
+      const res = await fetch('/api/senioritis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientToken,
+          factor: factorLabel,
+          amount: actualAdd,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setGlobalBoost(data.globalBoost);
+        setTotalContributors(data.totalContributors);
+        setTotalBoosts(data.totalBoosts);
+        setUserContributed(data.userContributed);
+        setUserRemainingQuota(data.userRemainingQuota);
+        setHoursUntilReset(data.hoursUntilReset);
+        if (Array.isArray(data.recentContributions)) {
+          setRecentContributions(data.recentContributions);
+        }
+      } else if (data.error === 'Daily quota reached') {
+        setUserRemainingQuota(0);
+        setQuotaMessage(data.message || 'Daily contribution quota reached');
+        setTimeout(() => setQuotaMessage(null), 4000);
+      }
+    } catch (e) {
+      console.error('Failed to post boost:', e);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
 
@@ -869,24 +897,16 @@ export default function SeniorCountdownPage() {
               className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-90"
             />
 
-            {/* Top Row: Title + Phase + Boost Badge */}
+            {/* Top Row: Title + Phase + Collective Badge */}
             <div className="flex items-center justify-between relative z-10 mb-2 gap-2">
               <span className="text-xs font-mono uppercase tracking-widest text-white/80 font-semibold flex items-center gap-1.5">
                 <span className="text-sm">🌶️</span> Senioritis Meter
               </span>
               <div className="flex items-center gap-1.5">
-                {boostPercent > 0 && (
-                  <span
-                    className="text-[10px] font-mono px-2 py-0.5 rounded-full uppercase tracking-wider font-bold border animate-pulse flex items-center gap-1"
-                    style={{
-                      color: senioritisData.color,
-                      borderColor: senioritisData.border,
-                      backgroundColor: 'rgba(0,0,0,0.7)',
-                    }}
-                  >
-                    <span>🔥 +{boostPercent.toFixed(0)}%</span>
-                  </span>
-                )}
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full uppercase tracking-wider font-bold border flex items-center gap-1 bg-black/60 text-cyan-300 border-cyan-500/40 shadow-sm">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+                  <span>GLOBAL CLASS</span>
+                </span>
                 <span
                   className="text-[11px] font-mono px-2.5 py-0.5 rounded-full uppercase tracking-wider font-bold border transition-colors duration-500 shadow-md"
                   style={{
@@ -927,21 +947,19 @@ export default function SeniorCountdownPage() {
                   className={`w-full h-full relative z-10 flex items-center justify-center transition-transform select-none ${
                     senioritisData.shakeClass
                   } ${isJolting ? 'pepper-jolt' : ''}`}
-                  title="Click pepper to boost senior heat!"
+                  title={userRemainingQuota > 0 ? "Click pepper to add +0.5% to global heat!" : "Daily contribution quota reached"}
                 >
                   <svg
                     viewBox="0 0 200 220"
-                    className="w-full h-full drop-shadow-2xl relative z-10 cursor-pointer"
-                    onClick={handleTapToBoost}
+                    className={`w-full h-full drop-shadow-2xl relative z-10 ${userRemainingQuota > 0 ? 'cursor-pointer' : 'cursor-not-allowed opacity-95'}`}
+                    onClick={() => contributeToGlobalMeter('Pepper Chamber Tap', 0.5)}
                   >
-                    <title>Senioritis Pepper Chamber</title>
+                    <title>Global Senioritis Pepper Chamber</title>
                     <defs>
-                      {/* The exact contour of the pepper chamber */}
                       <clipPath id="pepperChamberOutline">
                         <path d="M 100 42 C 126 44 136 64 133 86 C 130 110 114 130 100 152 C 96 156 94 156 95 150 C 98 132 89 112 82 94 C 76 76 80 44 100 42 Z" />
                       </clipPath>
 
-                      {/* Clip rect that rises from bottom based on effectiveHeat */}
                       <clipPath id="pepperLiquidHeightClip">
                         <rect
                           x="0"
@@ -951,7 +969,6 @@ export default function SeniorCountdownPage() {
                         />
                       </clipPath>
 
-                      {/* Liquid fill gradient */}
                       <linearGradient id="pepperLiquidGrad" x1="0%" y1="100%" x2="0%" y2="0%">
                         <stop offset="0%" stopColor={senioritisData.color} />
                         <stop offset="85%" stopColor={senioritisData.color} />
@@ -1068,13 +1085,18 @@ export default function SeniorCountdownPage() {
               {/* Tap to boost button right below pepper */}
               <button
                 type="button"
-                onClick={handleTapToBoost}
-                className="mt-1 text-[11px] font-mono px-3 py-1 rounded-full border border-white/10 bg-black/50 hover:bg-white/10 text-white/80 hover:text-white transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 shadow-sm"
+                onClick={() => contributeToGlobalMeter('Pepper Tap Heat', 0.5)}
+                disabled={userRemainingQuota <= 0 || isSubmitting}
+                className={`mt-1 text-[11px] font-mono px-3 py-1 rounded-full border transition-all flex items-center gap-1.5 shadow-sm ${
+                  userRemainingQuota > 0
+                    ? 'border-amber-500/40 bg-amber-950/40 text-amber-200 hover:bg-amber-900/60 active:scale-95 cursor-pointer'
+                    : 'border-white/10 bg-white/5 text-white/40 cursor-not-allowed'
+                }`}
               >
-                <span>🔥 Tap Pepper to Heat (+2%)</span>
-                {tapCount > 0 && (
-                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 font-bold">
-                    ×{tapCount}
+                <span>{userRemainingQuota > 0 ? '🔥 Boost Global Heat (+0.5%)' : '🔒 Quota Reached (5.0%/5.0%)'}</span>
+                {userRemainingQuota > 0 && (
+                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-400/20 text-amber-300 font-bold">
+                    {Math.round(userRemainingQuota / 0.5)} left
                   </span>
                 )}
               </button>
@@ -1090,19 +1112,19 @@ export default function SeniorCountdownPage() {
                   className="text-xs font-mono font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-black/50 border"
                   style={{ color: senioritisData.color, borderColor: senioritisData.border }}
                 >
-                  HEAT
+                  GLOBAL HEAT
                 </span>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 border border-white/10 text-white/50">
                   {senioritisData.pepperName}
                 </span>
               </div>
 
-              {/* Breakdown pill: Base + Boost */}
-              <div className="flex items-center justify-center gap-2 text-[10px] font-mono text-white/50">
+              {/* Breakdown pill: Base + Collective Boost */}
+              <div className="flex items-center justify-center gap-2 text-[10px] font-mono text-white/50 flex-wrap">
                 <span>Base: {mounted ? `${progressPercent.toFixed(1)}%` : '--'}</span>
                 <span>•</span>
-                <span style={{ color: boostPercent > 0 ? senioritisData.color : 'inherit' }}>
-                  Boost: +{boostPercent.toFixed(1)}%
+                <span className="text-cyan-400 font-semibold">
+                  Global Boost: +{globalBoost.toFixed(1)}%
                 </span>
                 <span>•</span>
                 <span className="text-white/40 italic">Shake: {senioritisData.shakeName}</span>
@@ -1113,99 +1135,134 @@ export default function SeniorCountdownPage() {
               </p>
             </div>
 
-            {/* Senior Interactive Booster Control Panel */}
-            <div className="relative z-10 mt-2 pt-3 border-t border-white/10 flex flex-col gap-3 bg-black/40 -mx-5 sm:-mx-6 -mb-5 sm:-mb-6 p-4 sm:p-5 rounded-b-3xl">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-mono uppercase tracking-wider text-white/80 font-bold flex items-center gap-1.5">
-                  <span>⚡</span> Senior Boost Control
+            {/* Collective Stats & Quota Control Panel */}
+            <div className="relative z-10 mt-2 pt-3 border-t border-white/10 flex flex-col gap-3 bg-black/45 -mx-5 sm:-mx-6 -mb-5 sm:-mb-6 p-4 sm:p-5 rounded-b-3xl">
+              {/* Community Activity Header */}
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="text-white/80 font-bold flex items-center gap-1.5 uppercase tracking-wider">
+                  <span>👥</span> Class of 2027 Collective
                 </span>
-                {boostPercent > 0 && (
-                  <button
-                    type="button"
-                    onClick={handleResetBoost}
-                    className="text-[10px] font-mono text-white/50 hover:text-white/90 underline cursor-pointer"
-                  >
-                    ↺ Reset Base
-                  </button>
-                )}
+                <span className="text-[10px] text-emerald-400 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Live Sync
+                </span>
               </div>
 
-              {/* Quick Situation Presets Row */}
-              <div className="flex flex-wrap gap-1.5">
-                {SENIOR_PRESETS.map(preset => {
-                  const isActive = activePreset === preset.id;
-                  return (
-                    <button
-                      key={preset.id}
-                      type="button"
-                      onClick={() => handleSelectPreset(preset.id, preset.boost)}
-                      className={`text-[10px] font-mono px-2.5 py-1 rounded-lg border transition-all cursor-pointer flex items-center gap-1 ${
-                        isActive
-                          ? 'border-[var(--color-brand-cyan)] bg-cyan-950/40 text-cyan-200 font-bold shadow-[0_0_10px_rgba(6,182,212,0.2)]'
-                          : 'border-white/10 bg-white/5 text-white/60 hover:text-white hover:bg-white/10'
-                      }`}
-                    >
-                      <span>{preset.icon}</span>
-                      <span>{preset.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Drag Rating Slider */}
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between text-[11px] font-mono text-white/70">
-                  <span>Adjust Boost Rating</span>
-                  <span className="font-bold" style={{ color: senioritisData.color }}>
-                    +{boostPercent.toFixed(0)}% Boost
+              {/* Collective Metrics Summary */}
+              <div className="grid grid-cols-2 gap-2 text-center">
+                <div className="bg-white/[0.03] border border-white/10 rounded-xl py-2 px-2.5">
+                  <span className="text-lg font-mono font-bold text-white block">
+                    {totalContributors}
+                  </span>
+                  <span className="text-[9px] font-mono uppercase tracking-wider text-white/50 block">
+                    Seniors Contributed
                   </span>
                 </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="80"
-                  step="1"
-                  value={boostPercent}
-                  onChange={handleSliderChange}
-                  className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[var(--color-brand-cyan)]"
-                />
-                <div className="flex justify-between text-[9px] font-mono text-white/30 px-0.5">
-                  <span>0% (Calm)</span>
-                  <span>35% (College Apps)</span>
-                  <span>80% (Reaper 💀)</span>
+                <div className="bg-white/[0.03] border border-white/10 rounded-xl py-2 px-2.5">
+                  <span className="text-lg font-mono font-bold text-cyan-300 block">
+                    {totalBoosts}
+                  </span>
+                  <span className="text-[9px] font-mono uppercase tracking-wider text-white/50 block">
+                    Collective Boosts
+                  </span>
                 </div>
               </div>
 
-              {/* Real Senior Life Factors Toggle Chips */}
-              <div className="flex flex-col gap-1.5 pt-1">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-white/40">
-                  Or select your senior realities:
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {SENIOR_FACTORS.map(factor => {
-                    const isSelected = activeFactors.includes(factor.id);
+              {/* Individual Equal Quota Status Bar */}
+              <div className="bg-white/[0.02] border border-white/10 rounded-xl p-2.5 flex flex-col gap-1.5">
+                <div className="flex items-center justify-between text-[11px] font-mono">
+                  <span className="text-white/70 flex items-center gap-1">
+                    <span>⚡ Your Daily Quota:</span>
+                  </span>
+                  <span className={`font-bold ${userRemainingQuota > 0 ? 'text-amber-300' : 'text-emerald-400'}`}>
+                    {userContributed.toFixed(1)}% / {maxDailyQuota.toFixed(1)}%
+                  </span>
+                </div>
+
+                {/* Segmented Quota Bar (10 segments of 0.5%) */}
+                <div className="grid grid-cols-10 gap-1 h-2 w-full bg-black/60 rounded p-0.5 border border-white/10">
+                  {Array.from({ length: 10 }).map((_, idx) => {
+                    const segmentThreshold = (idx + 1) * 0.5;
+                    const isFilled = userContributed >= segmentThreshold;
                     return (
-                      <button
-                        key={factor.id}
-                        type="button"
-                        onClick={() => handleToggleFactor(factor)}
-                        title={factor.desc}
-                        className={`text-[10px] font-mono px-2.5 py-1 rounded-full border transition-all cursor-pointer flex items-center gap-1 ${
-                          isSelected
-                            ? 'border-amber-400/60 bg-amber-950/50 text-amber-200 font-semibold shadow-sm'
-                            : 'border-white/10 bg-white/[0.03] text-white/50 hover:text-white hover:bg-white/10'
+                      <div
+                        key={idx}
+                        className={`h-full rounded-sm transition-all duration-300 ${
+                          isFilled
+                            ? 'bg-gradient-to-t from-amber-500 to-amber-300 shadow-[0_0_6px_rgba(245,158,11,0.6)]'
+                            : 'bg-white/10'
                         }`}
-                      >
-                        <span>{factor.icon}</span>
-                        <span>{factor.shortLabel}</span>
-                        <span className={isSelected ? 'text-amber-300' : 'text-white/40'}>
-                          +{factor.boost}%
-                        </span>
-                      </button>
+                      />
                     );
                   })}
                 </div>
+
+                <div className="flex items-center justify-between text-[9px] font-mono text-white/40">
+                  <span>
+                    {userRemainingQuota > 0
+                      ? `${userRemainingQuota.toFixed(1)}% remaining (${Math.round(userRemainingQuota / 0.5)} boosts left)`
+                      : 'All 5.0% used today! ✓'}
+                  </span>
+                  <span>Resets in {hoursUntilReset.toFixed(1)}h</span>
+                </div>
               </div>
+
+              {/* Quota Message Alert if Limit Reached */}
+              {quotaMessage && (
+                <div className="bg-amber-950/60 border border-amber-500/50 rounded-xl p-2 text-center text-[11px] font-mono text-amber-200 animate-pulse">
+                  {quotaMessage}
+                </div>
+              )}
+
+              {/* Real Senior Life Factors: Each adds +0.5% to Global Meter */}
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-white/50">
+                  Add your senior reality (+0.5% to class heat):
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {SENIOR_FACTORS.map(factor => (
+                    <button
+                      key={factor.id}
+                      type="button"
+                      onClick={() => contributeToGlobalMeter(factor.shortLabel, 0.5)}
+                      disabled={userRemainingQuota <= 0 || isSubmitting}
+                      title={factor.desc}
+                      className={`text-[10px] font-mono px-2.5 py-1 rounded-full border transition-all flex items-center gap-1 ${
+                        userRemainingQuota > 0
+                          ? 'border-white/15 bg-white/[0.04] text-white/80 hover:border-amber-400/60 hover:bg-amber-950/30 hover:text-amber-200 cursor-pointer active:scale-95'
+                          : 'border-white/5 bg-white/[0.02] text-white/30 cursor-not-allowed'
+                      }`}
+                    >
+                      <span>{factor.icon}</span>
+                      <span>{factor.shortLabel}</span>
+                      <span className="text-amber-400 font-bold">+0.5%</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Recent Community Activity Feed */}
+              {recentContributions.length > 0 && (
+                <div className="pt-2 border-t border-white/5 flex flex-col gap-1">
+                  <span className="text-[9px] font-mono uppercase tracking-wider text-white/40">
+                    Live Senior Activity:
+                  </span>
+                  <div className="flex flex-col gap-1 max-h-16 overflow-hidden">
+                    {recentContributions.slice(0, 3).map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="text-[10px] font-mono text-white/60 flex items-center justify-between bg-black/30 px-2 py-0.5 rounded border border-white/5"
+                      >
+                        <span className="flex items-center gap-1 truncate">
+                          <span className="text-amber-400">🔥 +{item.amount}%</span>
+                          <span className="text-white/80 truncate">{item.factor}</span>
+                        </span>
+                        <span className="text-white/40 text-[9px] shrink-0 ml-1">{item.time}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </section>
