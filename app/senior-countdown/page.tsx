@@ -322,6 +322,66 @@ const SENIOR_FACTORS: SeniorFactor[] = [
   },
 ];
 
+interface SeniorDeflateFactor {
+  id: string;
+  label: string;
+  shortLabel: string;
+  deflate: number;
+  icon: string;
+  desc: string;
+}
+
+const SENIOR_DEFLATE_FACTORS: SeniorDeflateFactor[] = [
+  {
+    id: 'academic_comeback',
+    label: 'Academic Comeback (Locked In)',
+    shortLabel: 'Academic Comeback',
+    deflate: 0.5,
+    icon: '📚',
+    desc: 'Cramming textbook notes and locking in for GPA recovery',
+  },
+  {
+    id: 'apps_submitted',
+    label: 'College Apps All Submitted!',
+    shortLabel: 'Apps Submitted',
+    deflate: 0.5,
+    icon: '🎓',
+    desc: 'Weight off shoulders, confetti on Common App screen',
+  },
+  {
+    id: 'triple_espresso',
+    label: 'Triple Espresso Shot Kick',
+    shortLabel: 'Espresso Kick',
+    deflate: 0.5,
+    icon: '☕',
+    desc: 'Massive caffeine surge fueling late-night productivity',
+  },
+  {
+    id: 'full_sleep',
+    label: '8 Hours Full Sleep Reset',
+    shortLabel: '8h Full Sleep',
+    deflate: 0.5,
+    icon: '😴',
+    desc: 'Actually woke up refreshed before the alarm went off',
+  },
+  {
+    id: 'touched_grass',
+    label: 'Touched Grass / Mental Reset',
+    shortLabel: 'Touched Grass',
+    deflate: 0.5,
+    icon: '🌿',
+    desc: 'Went outside, breathed fresh air, stress deflated',
+  },
+  {
+    id: 'aced_exam',
+    label: '100% on Tough STEM Exam',
+    shortLabel: 'Aced The Exam',
+    deflate: 0.5,
+    icon: '💯',
+    desc: 'Studied all night and got that clutch A on the test',
+  },
+];
+
 const SENIOR_PRESETS = [
   { id: 'baseline', label: 'Calendar Only', boost: 0, icon: '📅' },
   { id: 'college_apps', label: 'College Apps Crunch', boost: 35, icon: '📝' },
@@ -334,6 +394,7 @@ interface FloatingFlame {
   id: number;
   x: number;
   text: string;
+  color?: string;
 }
 
 export default function SeniorCountdownPage() {
@@ -358,6 +419,8 @@ export default function SeniorCountdownPage() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [quotaMessage, setQuotaMessage] = useState<string | null>(null);
   const [isJolting, setIsJolting] = useState<boolean>(false);
+  const [isChilling, setIsChilling] = useState<boolean>(false);
+  const [factorMode, setFactorMode] = useState<'boost' | 'deflate'>('boost');
   const [floatingFlames, setFloatingFlames] = useState<FloatingFlame[]>([]);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -535,8 +598,12 @@ export default function SeniorCountdownPage() {
     return { fillY, fillH };
   }, [effectiveHeat]);
 
-  // Collective Global Boost Contribution Handler with Quota Enforcement
-  const contributeToGlobalMeter = async (factorLabel: string, amount: number = 0.5) => {
+  // Collective Global Boost/Deflate Contribution Handler with Quota Enforcement
+  const contributeToGlobalMeter = async (
+    factorLabel: string,
+    amount: number = 0.5,
+    action: 'boost' | 'deflate' = 'boost'
+  ) => {
     if (userRemainingQuota <= 0) {
       setQuotaMessage(
         `Daily quota reached (${maxDailyQuota.toFixed(1)}% max per senior). Resets in ${hoursUntilReset.toFixed(1)}h.`
@@ -545,13 +612,26 @@ export default function SeniorCountdownPage() {
       return;
     }
 
+    if (action === 'deflate' && effectiveHeat <= 0) {
+      setQuotaMessage('Heat is already at minimum (0.0%). Cannot deflate further!');
+      setTimeout(() => setQuotaMessage(null), 3000);
+      return;
+    }
+
     if (isSubmitting) return;
     setIsSubmitting(true);
 
-    const actualAdd = Math.min(amount, userRemainingQuota);
-    const newContributed = parseFloat((userContributed + actualAdd).toFixed(2));
-    const newRemaining = parseFloat(Math.max(0, userRemainingQuota - actualAdd).toFixed(2));
-    const newGlobal = parseFloat(Math.min(80.5, globalBoost + actualAdd).toFixed(2));
+    const isDeflate = action === 'deflate';
+    const actualChange = Math.min(amount, userRemainingQuota);
+    const newContributed = parseFloat((userContributed + actualChange).toFixed(2));
+    const newRemaining = parseFloat(Math.max(0, userRemainingQuota - actualChange).toFixed(2));
+    
+    let newGlobal: number;
+    if (isDeflate) {
+      newGlobal = parseFloat(Math.max(0, globalBoost - actualChange).toFixed(2));
+    } else {
+      newGlobal = parseFloat(Math.min(80.5, globalBoost + actualChange).toFixed(2));
+    }
 
     // Optimistic UI updates
     setUserContributed(newContributed);
@@ -559,16 +639,26 @@ export default function SeniorCountdownPage() {
     setGlobalBoost(newGlobal);
     setTotalBoosts(prev => prev + 1);
 
-    // Jolt pepper on boost
-    setIsJolting(true);
-    setTimeout(() => setIsJolting(false), 260);
+    // Jolt pepper on boost, chill on deflate
+    if (isDeflate) {
+      setIsChilling(true);
+      setTimeout(() => setIsChilling(false), 350);
+    } else {
+      setIsJolting(true);
+      setTimeout(() => setIsJolting(false), 260);
+    }
 
-    // Spawn floating flame particles
+    // Spawn floating particles
     const id = Date.now() + Math.random();
     const x = 30 + Math.random() * 40;
-    const sprites = [`+${actualAdd}% 🔥`, `+${actualAdd}% 🌶️`, 'GLOBAL HEAT! 🔥', `+${actualAdd}% ⚡`, 'BOOST! 🔥'];
-    const text = sprites[Math.floor(Math.random() * sprites.length)];
-    setFloatingFlames(prev => [...prev.slice(-5), { id, x, text }]);
+    const boostSprites = [`+${actualChange}% 🔥`, `+${actualChange}% 🌶️`, 'HEAT UP! 🔥', `+${actualChange}% ⚡`, 'BOOST! 🔥'];
+    const deflateSprites = [`-${actualChange}% ❄️`, `-${actualChange}% 🧊`, 'LOCKED IN! 📚', `-${actualChange}% 💨`, 'CHILL! ❄️'];
+    const text = isDeflate
+      ? deflateSprites[Math.floor(Math.random() * deflateSprites.length)]
+      : boostSprites[Math.floor(Math.random() * boostSprites.length)];
+    const color = isDeflate ? 'text-cyan-300' : 'text-amber-300';
+
+    setFloatingFlames(prev => [...prev.slice(-5), { id, x, text, color }]);
     setTimeout(() => {
       setFloatingFlames(prev => prev.filter(f => f.id !== id));
     }, 950);
@@ -580,7 +670,8 @@ export default function SeniorCountdownPage() {
         body: JSON.stringify({
           clientToken,
           factor: factorLabel,
-          amount: actualAdd,
+          amount: actualChange,
+          action,
         }),
       });
 
@@ -601,7 +692,7 @@ export default function SeniorCountdownPage() {
         setTimeout(() => setQuotaMessage(null), 4000);
       }
     } catch (e) {
-      console.error('Failed to post boost:', e);
+      console.error('Failed to post senioritis action:', e);
     } finally {
       setIsSubmitting(false);
     }
@@ -939,11 +1030,13 @@ export default function SeniorCountdownPage() {
                   style={{ backgroundColor: senioritisData.color }}
                 />
 
-                {/* Floating flame particles on tap */}
+                {/* Floating flame / chill particles on tap */}
                 {floatingFlames.map(flame => (
                   <span
                     key={flame.id}
-                    className="absolute pointer-events-none text-xs font-mono font-bold text-amber-300 z-30 animate-float-flame"
+                    className={`absolute pointer-events-none text-xs font-mono font-bold z-30 animate-float-flame ${
+                      flame.color || 'text-amber-300'
+                    }`}
                     style={{ left: `${flame.x}%`, top: '40%' }}
                   >
                     {flame.text}
@@ -955,13 +1048,13 @@ export default function SeniorCountdownPage() {
                   <div
                     className={`w-full h-full relative z-10 flex items-center justify-center transition-transform select-none ${
                       senioritisData.shakeClass
-                    } ${isJolting ? 'pepper-jolt' : ''}`}
-                    title={userRemainingQuota > 0 ? "Click pepper to add +0.5% to global heat!" : "Daily contribution quota reached"}
+                    } ${isJolting ? 'pepper-jolt' : ''} ${isChilling ? 'pepper-chill-jolt' : ''}`}
+                    title={userRemainingQuota > 0 ? "Click pepper to add +0.5% heat, or use buttons below to boost or deflate" : "Daily participation quota reached"}
                   >
                     <svg
                       viewBox="0 0 200 220"
                       className={`w-full h-full drop-shadow-2xl relative z-10 ${userRemainingQuota > 0 ? 'cursor-pointer' : 'cursor-not-allowed opacity-95'}`}
-                      onClick={() => contributeToGlobalMeter('Pepper Chamber Tap', 0.5)}
+                      onClick={() => contributeToGlobalMeter('Pepper Chamber Tap', 0.5, 'boost')}
                     >
                       <title>Global Senioritis Pepper Chamber</title>
                       <defs>
@@ -1091,24 +1184,47 @@ export default function SeniorCountdownPage() {
                   </div>
                 </div>
 
-                {/* Boost Button directly below Pepper */}
-                <button
-                  type="button"
-                  onClick={() => contributeToGlobalMeter('Pepper Tap Heat', 0.5)}
-                  disabled={userRemainingQuota <= 0 || isSubmitting}
-                  className={`mt-2 text-xs font-mono px-4 py-1.5 rounded-full border transition-all flex items-center gap-2 shadow-sm ${
-                    userRemainingQuota > 0
-                      ? 'border-amber-500/40 bg-amber-950/50 text-amber-200 hover:bg-amber-900/70 active:scale-95 cursor-pointer'
-                      : 'border-white/10 bg-white/5 text-white/40 cursor-not-allowed'
-                  }`}
-                >
-                  <span>{userRemainingQuota > 0 ? '🔥 Tap to Boost Heat (+0.5%)' : '🔒 Daily Quota Reached (5.0%)'}</span>
-                  {userRemainingQuota > 0 && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-bold">
-                      {Math.round(userRemainingQuota / 0.5)} left
-                    </span>
+                {/* Dual Boost & Deflate Action Buttons */}
+                <div className="flex items-center gap-2 mt-2 w-full max-w-[280px]">
+                  <button
+                    type="button"
+                    onClick={() => contributeToGlobalMeter('Pepper Tap Heat', 0.5, 'boost')}
+                    disabled={userRemainingQuota <= 0 || isSubmitting}
+                    title="Inflate heat by +0.5%"
+                    className={`flex-1 text-xs font-mono py-1.5 px-2.5 rounded-xl border transition-all flex items-center justify-center gap-1 shadow-sm ${
+                      userRemainingQuota > 0
+                        ? 'border-amber-500/40 bg-amber-950/50 text-amber-200 hover:bg-amber-900/70 active:scale-95 cursor-pointer'
+                        : 'border-white/10 bg-white/5 text-white/40 cursor-not-allowed'
+                    }`}
+                  >
+                    <span>🔥 Boost</span>
+                    <span className="text-[10px] text-amber-400 font-bold">+0.5%</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => contributeToGlobalMeter('Ice Chill Deflate', 0.5, 'deflate')}
+                    disabled={userRemainingQuota <= 0 || isSubmitting || effectiveHeat <= 0}
+                    title="Deflate heat by -0.5%"
+                    className={`flex-1 text-xs font-mono py-1.5 px-2.5 rounded-xl border transition-all flex items-center justify-center gap-1 shadow-sm ${
+                      userRemainingQuota > 0 && effectiveHeat > 0
+                        ? 'border-cyan-500/40 bg-cyan-950/50 text-cyan-200 hover:bg-cyan-900/70 active:scale-95 cursor-pointer'
+                        : 'border-white/10 bg-white/5 text-white/40 cursor-not-allowed'
+                    }`}
+                  >
+                    <span>❄️ Deflate</span>
+                    <span className="text-[10px] text-cyan-300 font-bold">-0.5%</span>
+                  </button>
+                </div>
+
+                {/* Action budget counter */}
+                <div className="text-[10px] font-mono text-white/50 mt-1 flex items-center gap-1.5">
+                  {userRemainingQuota > 0 ? (
+                    <span>⚡ {Math.round(userRemainingQuota / 0.5)} actions left today ({userRemainingQuota.toFixed(1)}%)</span>
+                  ) : (
+                    <span className="text-amber-400">🔒 Daily quota reached (5.0%/5.0%)</span>
                   )}
-                </button>
+                </div>
 
                 {/* Heat Readout & Tagline */}
                 <div className="mt-3 flex flex-col items-center gap-1.5">
@@ -1131,8 +1247,8 @@ export default function SeniorCountdownPage() {
                   <div className="flex items-center justify-center gap-2 text-[11px] font-mono text-white/50 flex-wrap">
                     <span>Base: {mounted ? `${progressPercent.toFixed(1)}%` : '--'}</span>
                     <span>•</span>
-                    <span className="text-cyan-400 font-semibold">
-                      Boost: +{globalBoost.toFixed(1)}%
+                    <span className={globalBoost >= 0 ? "text-cyan-400 font-semibold" : "text-amber-400 font-semibold"}>
+                      Net Influence: {globalBoost >= 0 ? `+${globalBoost.toFixed(1)}%` : `${globalBoost.toFixed(1)}%`}
                     </span>
                     <span>•</span>
                     <span className="text-white/40 italic">{senioritisData.shakeName}</span>
@@ -1161,7 +1277,7 @@ export default function SeniorCountdownPage() {
                       {totalBoosts}
                     </span>
                     <span className="text-[10px] font-mono uppercase tracking-wider text-white/50 block mt-0.5">
-                      Collective Boosts
+                      Collective Actions
                     </span>
                   </div>
                   <div className="bg-white/[0.03] border border-white/10 rounded-2xl py-3 px-2 sm:px-3 shadow-inner">
@@ -1206,7 +1322,7 @@ export default function SeniorCountdownPage() {
                   <div className="flex items-center justify-between text-[10px] font-mono text-white/50">
                     <span>
                       {userRemainingQuota > 0
-                        ? `${userRemainingQuota.toFixed(1)}% remaining (${Math.round(userRemainingQuota / 0.5)} boosts left)`
+                        ? `${userRemainingQuota.toFixed(1)}% remaining (${Math.round(userRemainingQuota / 0.5)} actions left)`
                         : 'All 5.0% used today! Great job senior ✓'}
                     </span>
                     <span>Resets in {hoursUntilReset.toFixed(1)}h</span>
@@ -1220,30 +1336,76 @@ export default function SeniorCountdownPage() {
                   </div>
                 )}
 
-                {/* Real Senior Life Factors: Horizontal Wrapping Chips */}
+                {/* Real Senior Life Factors: Horizontal Wrapping Chips with Boost/Deflate Selector */}
                 <div className="flex flex-col gap-2">
-                  <span className="text-[11px] font-mono uppercase tracking-wider text-white/60 font-semibold">
-                    Add your senior reality (+0.5% to class heat):
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    {SENIOR_FACTORS.map(factor => (
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <span className="text-[11px] font-mono uppercase tracking-wider text-white/60 font-semibold">
+                      Senior Realities ({factorMode === 'boost' ? 'Inflate Heat' : 'Deflate / Lock In'}):
+                    </span>
+                    <div className="flex items-center gap-1 bg-black/60 p-0.5 rounded-lg border border-white/10">
                       <button
-                        key={factor.id}
                         type="button"
-                        onClick={() => contributeToGlobalMeter(factor.shortLabel, 0.5)}
-                        disabled={userRemainingQuota <= 0 || isSubmitting}
-                        title={factor.desc}
-                        className={`text-xs font-mono px-3 py-1.5 rounded-full border transition-all flex items-center gap-1.5 ${
-                          userRemainingQuota > 0
-                            ? 'border-white/15 bg-white/[0.04] text-white/90 hover:border-amber-400/60 hover:bg-amber-950/30 hover:text-amber-200 cursor-pointer active:scale-95 shadow-sm'
-                            : 'border-white/5 bg-white/[0.02] text-white/30 cursor-not-allowed'
+                        onClick={() => setFactorMode('boost')}
+                        className={`text-[10px] font-mono px-2 py-0.5 rounded-md transition-all flex items-center gap-1 ${
+                          factorMode === 'boost'
+                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold shadow-sm'
+                            : 'text-white/40 hover:text-white/70'
                         }`}
                       >
-                        <span>{factor.icon}</span>
-                        <span>{factor.shortLabel}</span>
-                        <span className="text-amber-400 font-bold">+0.5%</span>
+                        <span>🔥 Inflate (+0.5%)</span>
                       </button>
-                    ))}
+                      <button
+                        type="button"
+                        onClick={() => setFactorMode('deflate')}
+                        className={`text-[10px] font-mono px-2 py-0.5 rounded-md transition-all flex items-center gap-1 ${
+                          factorMode === 'deflate'
+                            ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-bold shadow-sm'
+                            : 'text-white/40 hover:text-white/70'
+                        }`}
+                      >
+                        <span>❄️ Deflate (-0.5%)</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {factorMode === 'boost'
+                      ? SENIOR_FACTORS.map(factor => (
+                          <button
+                            key={factor.id}
+                            type="button"
+                            onClick={() => contributeToGlobalMeter(factor.shortLabel, 0.5, 'boost')}
+                            disabled={userRemainingQuota <= 0 || isSubmitting}
+                            title={factor.desc}
+                            className={`text-xs font-mono px-3 py-1.5 rounded-full border transition-all flex items-center gap-1.5 ${
+                              userRemainingQuota > 0
+                                ? 'border-white/15 bg-white/[0.04] text-white/90 hover:border-amber-400/60 hover:bg-amber-950/30 hover:text-amber-200 cursor-pointer active:scale-95 shadow-sm'
+                                : 'border-white/5 bg-white/[0.02] text-white/30 cursor-not-allowed'
+                            }`}
+                          >
+                            <span>{factor.icon}</span>
+                            <span>{factor.shortLabel}</span>
+                            <span className="text-amber-400 font-bold">+0.5%</span>
+                          </button>
+                        ))
+                      : SENIOR_DEFLATE_FACTORS.map(factor => (
+                          <button
+                            key={factor.id}
+                            type="button"
+                            onClick={() => contributeToGlobalMeter(factor.shortLabel, 0.5, 'deflate')}
+                            disabled={userRemainingQuota <= 0 || isSubmitting || effectiveHeat <= 0}
+                            title={factor.desc}
+                            className={`text-xs font-mono px-3 py-1.5 rounded-full border transition-all flex items-center gap-1.5 ${
+                              userRemainingQuota > 0 && effectiveHeat > 0
+                                ? 'border-cyan-500/25 bg-cyan-950/20 text-cyan-100 hover:border-cyan-400/60 hover:bg-cyan-950/40 hover:text-cyan-200 cursor-pointer active:scale-95 shadow-sm'
+                                : 'border-white/5 bg-white/[0.02] text-white/30 cursor-not-allowed'
+                            }`}
+                          >
+                            <span>{factor.icon}</span>
+                            <span>{factor.shortLabel}</span>
+                            <span className="text-cyan-300 font-bold">-0.5%</span>
+                          </button>
+                        ))}
                   </div>
                 </div>
 
@@ -1260,7 +1422,11 @@ export default function SeniorCountdownPage() {
                           className="text-[11px] font-mono text-white/70 flex items-center justify-between bg-black/40 px-2.5 py-1.5 rounded-lg border border-white/10"
                         >
                           <span className="flex items-center gap-1.5 truncate">
-                            <span className="text-amber-400 font-bold shrink-0">+{item.amount}%</span>
+                            {item.amount < 0 ? (
+                              <span className="text-cyan-400 font-bold shrink-0">{item.amount}%</span>
+                            ) : (
+                              <span className="text-amber-400 font-bold shrink-0">+{item.amount}%</span>
+                            )}
                             <span className="text-white/80 truncate">{item.factor}</span>
                           </span>
                           <span className="text-white/40 text-[9px] shrink-0 ml-1.5">{item.time}</span>

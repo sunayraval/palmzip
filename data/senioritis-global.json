@@ -1,13 +1,58 @@
 {
-  "globalBoost": 34.0,
-  "totalContributors": 54,
-  "totalBoosts": 258,
-  "lastUpdated": "2026-10-17T18:00:00.000Z",
+  "globalBoost": 34.5,
+  "totalContributors": 56,
+  "totalBoosts": 261,
+  "lastUpdated": "2026-10-17T18:28:18.540Z",
   "recentContributions": [
-    { "factor": "College Apps Crunch", "amount": 0.5, "time": "Just now" },
-    { "factor": "Nov 1 EA/ED Panic", "amount": 0.5, "time": "3m ago" },
-    { "factor": "Skipping 1st Period", "amount": 0.5, "time": "8m ago" },
-    { "factor": "Tap to Heat", "amount": 0.5, "time": "14m ago" }
+    {
+      "factor": "Nov 1 EA/ED Midnight Panic",
+      "amount": 0.5,
+      "time": "Just now",
+      "timestamp": 1792261698540
+    },
+    {
+      "factor": "Academic Comeback",
+      "amount": -0.5,
+      "time": "Just now",
+      "timestamp": 1792261692076
+    },
+    {
+      "factor": "Class Heat Contribution",
+      "amount": 0.5,
+      "time": "Just now",
+      "timestamp": 1792261685809
+    },
+    {
+      "factor": "College Apps Crunch",
+      "amount": 0.5,
+      "time": "Just now"
+    },
+    {
+      "factor": "Nov 1 EA/ED Panic",
+      "amount": 0.5,
+      "time": "3m ago"
+    },
+    {
+      "factor": "Skipping 1st Period",
+      "amount": 0.5,
+      "time": "8m ago"
+    },
+    {
+      "factor": "Tap to Heat",
+      "amount": 0.5,
+      "time": "14m ago"
+    }
   ],
-  "quotas": {}
+  "quotas": {
+    "ip_::1": {
+      "contributed": 0.5,
+      "resetAt": 1792348085809,
+      "hasContributedBefore": true
+    },
+    "token_node_test": {
+      "contributed": 1,
+      "resetAt": 1792348092076,
+      "hasContributedBefore": true
+    }
+  }
 }

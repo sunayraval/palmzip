@@ -182,7 +182,7 @@ export async function POST(request: Request) {
         body = {};
       }
     }
-    const { clientToken, factor, amount: reqAmount } = body || {};
+    const { clientToken, factor, amount: reqAmount, action } = body || {};
 
     const state = loadState();
     const clientId = getClientIdentifier(request, clientToken);
@@ -224,13 +224,14 @@ export async function POST(request: Request) {
       );
     }
 
-    // Determine safe boost amount
-    const rawBoost = typeof reqAmount === 'number' && reqAmount > 0 ? reqAmount : 0.5;
-    const boundedBoost = Math.min(rawBoost, MAX_SINGLE_BOOST);
-    const actualBoost = Math.min(boundedBoost, remainingQuota);
+    // Determine if boosting or deflating
+    const isDeflate = action === 'deflate' || (typeof reqAmount === 'number' && reqAmount < 0);
+    const rawAmount = Math.abs(typeof reqAmount === 'number' ? reqAmount : 0.5);
+    const boundedAmount = Math.min(rawAmount, MAX_SINGLE_BOOST);
+    const actualChange = Math.min(boundedAmount, remainingQuota);
 
-    // Apply boost to user quota and global total
-    quota.contributed = parseFloat((quota.contributed + actualBoost).toFixed(2));
+    // Apply change to user quota (both boost and deflate count towards fair daily participation)
+    quota.contributed = parseFloat((quota.contributed + actualChange).toFixed(2));
     
     // Check if first-time contributor
     if (!quota.hasContributedBefore) {
@@ -238,16 +239,24 @@ export async function POST(request: Request) {
       state.totalContributors += 1;
     }
 
-    // Global boost capped at +80% (so effective heat doesn't exceed 100%)
-    state.globalBoost = parseFloat(Math.min(80.5, state.globalBoost + actualBoost).toFixed(2));
+    // Apply to globalBoost: deflate reduces down to min 0.0%, boost increases up to max 80.5%
+    if (isDeflate) {
+      state.globalBoost = parseFloat(Math.max(0, state.globalBoost - actualChange).toFixed(2));
+    } else {
+      state.globalBoost = parseFloat(Math.min(80.5, state.globalBoost + actualChange).toFixed(2));
+    }
+
     state.totalBoosts += 1;
     state.lastUpdated = new Date().toISOString();
 
-    // Log recent contribution
-    const factorLabel = factor && typeof factor === 'string' ? factor.trim() : 'Class Heat Contribution';
+    // Log recent contribution with signed amount
+    const signedAmount = isDeflate ? -actualChange : actualChange;
+    const defaultLabel = isDeflate ? 'Class Chill / Deflate' : 'Class Heat Contribution';
+    const factorLabel = factor && typeof factor === 'string' ? factor.trim() : defaultLabel;
+
     state.recentContributions.unshift({
       factor: factorLabel,
-      amount: actualBoost,
+      amount: signedAmount,
       time: 'Just now',
       timestamp: now,
     });
@@ -262,7 +271,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      boostAdded: actualBoost,
+      action: isDeflate ? 'deflate' : 'boost',
+      changeApplied: signedAmount,
+      boostAdded: signedAmount,
       globalBoost: state.globalBoost,
       totalContributors: state.totalContributors,
       totalBoosts: state.totalBoosts,
