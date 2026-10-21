@@ -1438,10 +1438,32 @@ export default function SeniorCountdownPage() {
           <Link href="/story" className="text-white/70 hover:text-white transition-colors px-2 py-1 rounded">
             Story
           </Link>
-          <span className="text-[var(--color-brand-gold)] font-medium px-3 py-1 rounded-full bg-amber-950/30 border border-[var(--color-brand-gold)]/30 flex items-center gap-1.5 shadow-[0_0_15px_rgba(195,154,63,0.15)]">
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-gold)] animate-pulse" />
-            Senior Countdown
-          </span>
+          <div className="relative group">
+            <button
+              type="button"
+              className="text-xs sm:text-sm font-medium text-[var(--color-brand-gold)] px-3 py-1 rounded-full bg-amber-950/30 border border-[var(--color-brand-gold)]/30 flex items-center gap-1.5 shadow-[0_0_15px_rgba(195,154,63,0.15)] cursor-pointer"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-gold)] animate-pulse" />
+              <span>Other</span>
+              <svg className="w-3 h-3 text-[var(--color-brand-gold)] transition-transform duration-200 group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <div className="absolute right-0 top-full pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 min-w-[210px]">
+              <div className="bg-[#0c1015]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-1.5 shadow-2xl flex flex-col gap-1">
+                <Link
+                  href="/senior-countdown"
+                  className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-xs font-medium bg-amber-950/40 border border-[var(--color-brand-gold)]/30 text-[var(--color-brand-gold)] shadow-sm"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-gold)]" />
+                    <span>Senior Countdown</span>
+                  </span>
+                  <span className="text-[10px] font-mono text-[var(--color-brand-gold)]">Active ●</span>
+                </Link>
+              </div>
+            </div>
+          </div>
           <a
             href="https://www.linkedin.com/in/sunay-raval-326215245/"
             target="_blank"
