@@ -182,6 +182,13 @@ const EVENTS: MilestoneEvent[] = [
     category: 'school',
   },
   {
+    id: 'prof-learning-feb',
+    title: 'HCPSS Staff Professional Learning Day (No School)',
+    dateDisplay: 'Feb 3, 2027',
+    startDate: '2027-02-03',
+    category: 'school',
+  },
+  {
     id: 'presidents-day',
     title: "Presidents' Day (No School)",
     dateDisplay: 'Feb 15, 2027',
@@ -255,8 +262,10 @@ const EVENTS: MilestoneEvent[] = [
   },
 ];
 
-// HCPSS off-days for school day countdown
+// HCPSS off-days for school day countdown (from official 2026-2027 HCPSS Calendar PDF)
 const HCPSS_OFF_DAYS = [
+  '2026-09-07',
+  '2026-09-21',
   '2026-10-16',
   '2026-10-28',
   '2026-11-03',
@@ -264,11 +273,179 @@ const HCPSS_OFF_DAYS = [
   '2026-12-24', '2026-12-25', '2026-12-28', '2026-12-29', '2026-12-30', '2026-12-31', '2027-01-01',
   '2027-01-18',
   '2027-01-19',
+  '2027-02-03',
   '2027-02-15',
   '2027-03-09',
   '2027-03-22', '2027-03-23', '2027-03-24', '2027-03-25', '2027-03-26', '2027-03-29',
   '2027-05-31',
+  '2027-06-18',
 ];
+
+// Detailed reason map for closed days (from 2026-2027 HCPSS Calendar PDF)
+const HCPSS_CLOSED_REASONS: Record<string, string> = {
+  '2026-09-07': 'Labor Day — Schools & Offices Closed',
+  '2026-09-21': 'Yom Kippur — Schools & Offices Closed',
+  '2026-10-16': 'Staff Workday — Schools Closed for Students',
+  '2026-10-28': 'Staff Professional Learning/Workday — Schools Closed for Students',
+  '2026-11-03': 'Election Day — Schools & Offices Closed',
+  '2026-11-25': 'Parent/Teacher Conferences — Schools Closed for Students',
+  '2026-11-26': 'Thanksgiving Holiday — Schools & Offices Closed',
+  '2026-11-27': 'Thanksgiving Holiday — Schools & Offices Closed',
+  '2026-12-24': 'Winter Break — Schools & Offices Closed',
+  '2026-12-25': 'Winter Break — Schools & Offices Closed',
+  '2026-12-28': 'Winter Break — Schools Closed',
+  '2026-12-29': 'Winter Break — Schools Closed',
+  '2026-12-30': 'Winter Break — Schools Closed',
+  '2026-12-31': 'Winter Break — Schools Closed',
+  '2027-01-01': 'Winter Break — Schools & Offices Closed',
+  '2027-01-18': 'Martin Luther King Jr. Day — Schools & Offices Closed',
+  '2027-01-19': 'Staff Professional Workday — Schools Closed for Students',
+  '2027-02-03': 'Staff Professional Learning Day — Schools Closed for Students',
+  '2027-02-15': "Presidents' Day — Schools & Offices Closed",
+  '2027-03-09': 'Eid al-Fitr / Staff Professional Learning — Schools Closed for Students',
+  '2027-03-22': 'Spring Break — Schools Closed',
+  '2027-03-23': 'Spring Break — Schools Closed',
+  '2027-03-24': 'Spring Break — Schools Closed',
+  '2027-03-25': 'Spring Break — Schools Closed',
+  '2027-03-26': 'Spring Break — Schools & Offices Closed',
+  '2027-03-29': 'Spring Break — Schools & Offices Closed',
+  '2027-05-31': 'Memorial Day — Schools & Offices Closed',
+  '2027-06-18': 'Juneteenth (Observed) — Schools & Offices Closed',
+};
+
+// High School 3-Hour Early Dismissal Dates (from 2026-2027 HCPSS Calendar PDF)
+const HCPSS_EARLY_DISMISSAL_DATES: Record<string, string> = {
+  '2026-09-30': 'Staff Professional Learning/Workday',
+  '2026-11-23': 'HS Staff Professional Day / Conferences',
+  '2026-11-24': 'Parent/Teacher Conferences',
+  '2026-12-09': 'Staff Professional Learning/Workday',
+  '2027-04-08': 'Staff Professional Learning/Workday',
+  '2027-05-17': 'Staff Professional Learning/Workday',
+  '2027-06-02': 'Staff Professional Learning/Workday',
+  '2027-06-07': 'Staff Professional Workday',
+  '2027-06-08': 'Last Scheduled Day of School',
+};
+
+type ScheduleTypeKey = 'daily' | 'flex' | 'two_hour_delay' | 'early_dismissal';
+
+interface BellPeriod {
+  id: string;
+  shortLabel: string;
+  defaultLabel: string;
+  startMinutes: number; // minutes from midnight
+  endMinutes: number;   // minutes from midnight
+  timeDisplay: string;
+}
+
+interface BellScheduleConfig {
+  key: ScheduleTypeKey;
+  name: string;
+  shortBadge: string;
+  warningBellMinutes: number;
+  warningBellDisplay: string;
+  periods: BellPeriod[];
+}
+
+const BELL_SCHEDULES: Record<ScheduleTypeKey, BellScheduleConfig> = {
+  daily: {
+    key: 'daily',
+    name: 'Daily Schedule (Mon, Tue, Thu, Fri)',
+    shortBadge: 'Daily Schedule',
+    warningBellMinutes: 7 * 60 + 45, // 7:45 AM
+    warningBellDisplay: '7:45 AM',
+    periods: [
+      { id: '1', shortLabel: '1', defaultLabel: 'Period 1', startMinutes: 7 * 60 + 50, endMinutes: 8 * 60 + 45, timeDisplay: '7:50 – 8:45 AM' },
+      { id: '2', shortLabel: '2', defaultLabel: 'Period 2', startMinutes: 8 * 60 + 50, endMinutes: 9 * 60 + 40, timeDisplay: '8:50 – 9:40 AM' },
+      { id: '3', shortLabel: '3', defaultLabel: 'Period 3', startMinutes: 9 * 60 + 45, endMinutes: 10 * 60 + 40, timeDisplay: '9:45 – 10:40 AM' },
+      { id: '4A', shortLabel: '4A', defaultLabel: 'Period 4A', startMinutes: 10 * 60 + 45, endMinutes: 11 * 60 + 15, timeDisplay: '10:45 – 11:15 AM' },
+      { id: '4B', shortLabel: '4B', defaultLabel: 'Period 4B', startMinutes: 11 * 60 + 30, endMinutes: 12 * 60 + 0, timeDisplay: '11:30 AM – 12:00 PM' },
+      { id: '4C', shortLabel: '4C', defaultLabel: 'Period 4C', startMinutes: 12 * 60 + 15, endMinutes: 12 * 60 + 45, timeDisplay: '12:15 – 12:45 PM' },
+      { id: '5', shortLabel: '5', defaultLabel: 'Period 5', startMinutes: 12 * 60 + 50, endMinutes: 13 * 60 + 40, timeDisplay: '12:50 – 1:40 PM' },
+      { id: '6', shortLabel: '6', defaultLabel: 'Period 6', startMinutes: 13 * 60 + 45, endMinutes: 14 * 60 + 35, timeDisplay: '1:45 – 2:35 PM' },
+    ],
+  },
+  flex: {
+    key: 'flex',
+    name: 'FLEX (Wednesday)',
+    shortBadge: 'FLEX (Wed)',
+    warningBellMinutes: 7 * 60 + 45, // 7:45 AM
+    warningBellDisplay: '7:45 AM',
+    periods: [
+      { id: '1', shortLabel: '1', defaultLabel: 'Period 1', startMinutes: 7 * 60 + 50, endMinutes: 8 * 60 + 35, timeDisplay: '7:50 – 8:35 AM' },
+      { id: '2', shortLabel: '2', defaultLabel: 'Period 2', startMinutes: 8 * 60 + 40, endMinutes: 9 * 60 + 25, timeDisplay: '8:40 – 9:25 AM' },
+      { id: 'flex', shortLabel: 'FLEX', defaultLabel: 'FLEX', startMinutes: 9 * 60 + 25, endMinutes: 9 * 60 + 55, timeDisplay: '9:25 – 9:55 AM' },
+      { id: '3', shortLabel: '3', defaultLabel: 'Period 3', startMinutes: 10 * 60 + 0, endMinutes: 10 * 60 + 50, timeDisplay: '10:00 – 10:50 AM' },
+      { id: '4A', shortLabel: '4A', defaultLabel: 'Period 4A', startMinutes: 10 * 60 + 55, endMinutes: 11 * 60 + 25, timeDisplay: '10:55 – 11:25 AM' },
+      { id: '4B', shortLabel: '4B', defaultLabel: 'Period 4B', startMinutes: 11 * 60 + 40, endMinutes: 12 * 60 + 10, timeDisplay: '11:40 AM – 12:10 PM' },
+      { id: '4C', shortLabel: '4C', defaultLabel: 'Period 4C', startMinutes: 12 * 60 + 25, endMinutes: 12 * 60 + 55, timeDisplay: '12:25 – 12:55 PM' },
+      { id: '5', shortLabel: '5', defaultLabel: 'Period 5', startMinutes: 13 * 60 + 0, endMinutes: 13 * 60 + 45, timeDisplay: '1:00 – 1:45 PM' },
+      { id: '6', shortLabel: '6', defaultLabel: 'Period 6', startMinutes: 13 * 60 + 50, endMinutes: 14 * 60 + 35, timeDisplay: '1:50 – 2:35 PM' },
+    ],
+  },
+  two_hour_delay: {
+    key: 'two_hour_delay',
+    name: '2-Hour Delay Schedule',
+    shortBadge: '2-Hour Delay',
+    warningBellMinutes: 9 * 60 + 45, // 9:45 AM
+    warningBellDisplay: '9:45 AM',
+    periods: [
+      { id: '1', shortLabel: '1', defaultLabel: 'Period 1', startMinutes: 9 * 60 + 50, endMinutes: 10 * 60 + 20, timeDisplay: '9:50 – 10:20 AM' },
+      { id: '2', shortLabel: '2', defaultLabel: 'Period 2', startMinutes: 10 * 60 + 25, endMinutes: 10 * 60 + 55, timeDisplay: '10:25 – 10:55 AM' },
+      { id: '3', shortLabel: '3', defaultLabel: 'Period 3', startMinutes: 11 * 60 + 0, endMinutes: 11 * 60 + 30, timeDisplay: '11:00 – 11:30 AM' },
+      { id: '4A', shortLabel: '4A', defaultLabel: 'Period 4A', startMinutes: 11 * 60 + 35, endMinutes: 12 * 60 + 5, timeDisplay: '11:35 AM – 12:05 PM' },
+      { id: '4B', shortLabel: '4B', defaultLabel: 'Period 4B', startMinutes: 12 * 60 + 20, endMinutes: 12 * 60 + 50, timeDisplay: '12:20 – 12:50 PM' },
+      { id: '4C', shortLabel: '4C', defaultLabel: 'Period 4C', startMinutes: 13 * 60 + 5, endMinutes: 13 * 60 + 35, timeDisplay: '1:05 – 1:35 PM' },
+      { id: '5', shortLabel: '5', defaultLabel: 'Period 5', startMinutes: 13 * 60 + 40, endMinutes: 14 * 60 + 5, timeDisplay: '1:40 – 2:05 PM' },
+      { id: '6', shortLabel: '6', defaultLabel: 'Period 6', startMinutes: 14 * 60 + 10, endMinutes: 14 * 60 + 35, timeDisplay: '2:10 – 2:35 PM' },
+    ],
+  },
+  early_dismissal: {
+    key: 'early_dismissal',
+    name: '3-Hour Early Dismissal',
+    shortBadge: '3-Hr Early Dismissal',
+    warningBellMinutes: 7 * 60 + 45, // 7:45 AM
+    warningBellDisplay: '7:45 AM',
+    periods: [
+      { id: '1', shortLabel: '1', defaultLabel: 'Period 1', startMinutes: 7 * 60 + 50, endMinutes: 8 * 60 + 20, timeDisplay: '7:50 – 8:20 AM' },
+      { id: '2', shortLabel: '2', defaultLabel: 'Period 2', startMinutes: 8 * 60 + 25, endMinutes: 8 * 60 + 55, timeDisplay: '8:25 – 8:55 AM' },
+      { id: '3', shortLabel: '3', defaultLabel: 'Period 3', startMinutes: 9 * 60 + 0, endMinutes: 9 * 60 + 35, timeDisplay: '9:00 – 9:35 AM' },
+      { id: '4', shortLabel: '4', defaultLabel: 'Period 4', startMinutes: 9 * 60 + 40, endMinutes: 10 * 60 + 10, timeDisplay: '9:40 – 10:10 AM' },
+      { id: '5', shortLabel: '5', defaultLabel: 'Period 5', startMinutes: 10 * 60 + 15, endMinutes: 10 * 60 + 45, timeDisplay: '10:15 – 10:45 AM' },
+      { id: '6', shortLabel: '6', defaultLabel: 'Period 6', startMinutes: 10 * 60 + 50, endMinutes: 11 * 60 + 20, timeDisplay: '10:50 – 11:20 AM' },
+      { id: 'BREAK', shortLabel: 'Break', defaultLabel: 'Break', startMinutes: 11 * 60 + 20, endMinutes: 11 * 60 + 35, timeDisplay: '11:20 – 11:35 AM' },
+    ],
+  },
+};
+
+const EDITABLE_PERIOD_FIELDS = [
+  { id: '1', label: 'Period 1', placeholder: 'e.g., AP Calculus BC' },
+  { id: '2', label: 'Period 2', placeholder: 'e.g., AP English Lit' },
+  { id: 'flex', label: 'FLEX', placeholder: 'e.g., Study Hall / Club' },
+  { id: '3', label: 'Period 3', placeholder: 'e.g., AP Physics C' },
+  { id: '4A', label: 'Period 4A', placeholder: 'e.g., A Lunch or Class' },
+  { id: '4B', label: 'Period 4B', placeholder: 'e.g., B Lunch or Class' },
+  { id: '4C', label: 'Period 4C', placeholder: 'e.g., C Lunch or Class' },
+  { id: '5', label: 'Period 5', placeholder: 'e.g., AP Gov / Econ' },
+  { id: '6', label: 'Period 6', placeholder: 'e.g., Computer Science' },
+];
+
+function formatLocalDateIso(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function formatDurationLeft(totalSecs: number): string {
+  const s = Math.max(0, Math.floor(totalSecs));
+  const hrs = Math.floor(s / 3600);
+  const mins = Math.floor((s % 3600) / 60);
+  const secs = s % 60;
+  if (hrs > 0) {
+    return `${hrs}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  }
+  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
 
 interface SeniorFactor {
   id: string;
@@ -423,12 +600,69 @@ export default function SeniorCountdownPage() {
   const [factorMode, setFactorMode] = useState<'boost' | 'deflate'>('boost');
   const [floatingFlames, setFloatingFlames] = useState<FloatingFlame[]>([]);
 
+  // Bell Schedule & Custom Class Names State (Saved in localStorage cache)
+  const [classNames, setClassNames] = useState<Record<string, string>>({});
+  const [isEditingClasses, setIsEditingClasses] = useState<boolean>(false);
+  const [scheduleOverride, setScheduleOverride] = useState<'auto' | ScheduleTypeKey>('auto');
+  const [hcpssStatus, setHcpssStatus] = useState<{
+    source: 'live' | 'fallback';
+    statusDate: string | null;
+    statusDateIso: string | null;
+    statusTitle: string;
+    statusDescription: string;
+    statusCode: 'normal' | 'two_hour_delay' | 'early_dismissal' | 'closed';
+  }>({
+    source: 'fallback',
+    statusDate: null,
+    statusDateIso: null,
+    statusTitle: 'Normal Operations',
+    statusDescription: 'Staff and students report in accordance with the HCPSS calendar.',
+    statusCode: 'normal',
+  });
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     document.title = "Senior Countdown | Sunay Raval";
     setMounted(true);
     setNow(new Date());
+
+    // Load saved period class names from localStorage cache
+    try {
+      const savedClasses = localStorage.getItem('palmzip_senior_class_names_v1');
+      if (savedClasses) {
+        const parsed = JSON.parse(savedClasses);
+        if (parsed && typeof parsed === 'object') {
+          setClassNames(parsed);
+        }
+      }
+    } catch {
+      // ignore storage errors
+    }
+
+    // Fetch live operational status from status.hcpss.org via our API route
+    const fetchHcpssStatus = async () => {
+      try {
+        const res = await fetch('/api/hcpss-status');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data && data.statusTitle) {
+          setHcpssStatus({
+            source: data.source || 'live',
+            statusDate: data.statusDate || null,
+            statusDateIso: data.statusDateIso || null,
+            statusTitle: data.statusTitle,
+            statusDescription: data.statusDescription || '',
+            statusCode: data.statusCode || 'normal',
+          });
+        }
+      } catch {
+        // fallback to embedded 2026-2027 HCPSS calendar PDF data
+      }
+    };
+
+    fetchHcpssStatus();
+    const hcpssInterval = setInterval(fetchHcpssStatus, 180000); // check every 3 mins
 
     // Generate or retrieve persistent client token for quotas
     let token = '';
@@ -478,8 +712,344 @@ export default function SeniorCountdownPage() {
     return () => {
       clearInterval(timer);
       clearInterval(syncInterval);
+      clearInterval(hcpssInterval);
     };
   }, []);
+
+  const updateClassName = (periodId: string, value: string) => {
+    setClassNames(prev => {
+      const updated = { ...prev, [periodId]: value };
+      try {
+        localStorage.setItem('palmzip_senior_class_names_v1', JSON.stringify(updated));
+      } catch {
+        // ignore storage write errors
+      }
+      return updated;
+    });
+  };
+
+  const getCustomClassName = (periodId: string): string => {
+    const direct = classNames[periodId]?.trim();
+    if (direct) return direct;
+    // On 3-Hour Early Dismissal, Period 4 isn't split into 4A/4B/4C; inherit non-lunch 4A/4B/4C class name if set
+    if (periodId === '4') {
+      const candidates = [classNames['4A'], classNames['4B'], classNames['4C']]
+        .map(c => c?.trim())
+        .filter((c): c is string => Boolean(c));
+      const nonLunch = candidates.find(c => !/lunch/i.test(c));
+      if (nonLunch) return nonLunch;
+      if (candidates[0]) return candidates[0];
+    }
+    return '';
+  };
+
+  // Determine schedule for any given Date using HCPSS live status + 2026-2027 Calendar PDF
+  const resolveDaySchedule = useMemo(() => {
+    return (targetDate: Date, isToday: boolean) => {
+      const iso = formatLocalDateIso(targetDate);
+      const dayOfWeek = targetDate.getDay(); // 0 Sun .. 6 Sat
+
+      if (isToday && scheduleOverride !== 'auto') {
+        return {
+          isClosed: false,
+          closedReason: null as string | null,
+          schedule: BELL_SCHEDULES[scheduleOverride],
+          reasonNote: 'Manual Schedule Preview',
+          isLiveOverride: false,
+        };
+      }
+
+      // Check live status.hcpss.org override for today
+      if (isToday && hcpssStatus.statusCode !== 'normal') {
+        const matchesToday = !hcpssStatus.statusDateIso || hcpssStatus.statusDateIso === iso;
+        if (matchesToday) {
+          if (hcpssStatus.statusCode === 'closed') {
+            return {
+              isClosed: true,
+              closedReason: `${hcpssStatus.statusTitle} (Live HCPSS Status)`,
+              schedule: null,
+              reasonNote: hcpssStatus.statusDescription,
+              isLiveOverride: true,
+            };
+          }
+          if (hcpssStatus.statusCode === 'two_hour_delay') {
+            return {
+              isClosed: false,
+              closedReason: null,
+              schedule: BELL_SCHEDULES.two_hour_delay,
+              reasonNote: `${hcpssStatus.statusTitle} (status.hcpss.org)`,
+              isLiveOverride: true,
+            };
+          }
+          if (hcpssStatus.statusCode === 'early_dismissal') {
+            return {
+              isClosed: false,
+              closedReason: null,
+              schedule: BELL_SCHEDULES.early_dismissal,
+              reasonNote: `${hcpssStatus.statusTitle} (status.hcpss.org)`,
+              isLiveOverride: true,
+            };
+          }
+        }
+      }
+
+      // Check Weekends
+      if (dayOfWeek === 0 || dayOfWeek === 6) {
+        return {
+          isClosed: true,
+          closedReason: 'Weekend — Schools Closed',
+          schedule: null,
+          reasonNote: 'Enjoy your weekend!',
+          isLiveOverride: false,
+        };
+      }
+
+      // Check before/after school year (Aug 24, 2026 – June 8, 2027)
+      if (iso < '2026-08-24') {
+        return {
+          isClosed: true,
+          closedReason: 'Summer Break — First Day is Aug 24, 2026',
+          schedule: null,
+          reasonNote: 'HCPSS 2026–2027 Calendar',
+          isLiveOverride: false,
+        };
+      }
+      if (iso > '2027-06-08') {
+        return {
+          isClosed: true,
+          closedReason: 'School Year Complete',
+          schedule: null,
+          reasonNote: 'HCPSS 2026–2027 Calendar',
+          isLiveOverride: false,
+        };
+      }
+
+      // Check HCPSS Calendar PDF Closed Days
+      if (HCPSS_CLOSED_REASONS[iso]) {
+        return {
+          isClosed: true,
+          closedReason: HCPSS_CLOSED_REASONS[iso],
+          schedule: null,
+          reasonNote: 'HCPSS 2026–2027 Calendar',
+          isLiveOverride: false,
+        };
+      }
+
+      // Check HCPSS Calendar PDF 3-Hour Early Dismissal Days
+      if (HCPSS_EARLY_DISMISSAL_DATES[iso]) {
+        return {
+          isClosed: false,
+          closedReason: null,
+          schedule: BELL_SCHEDULES.early_dismissal,
+          reasonNote: `3-Hr Early Dismissal • ${HCPSS_EARLY_DISMISSAL_DATES[iso]}`,
+          isLiveOverride: false,
+        };
+      }
+
+      // Wednesdays -> FLEX
+      if (dayOfWeek === 3) {
+        return {
+          isClosed: false,
+          closedReason: null,
+          schedule: BELL_SCHEDULES.flex,
+          reasonNote: 'Wednesday FLEX Bell Schedule',
+          isLiveOverride: false,
+        };
+      }
+
+      // Mon, Tue, Thu, Fri -> Daily Schedule
+      return {
+        isClosed: false,
+        closedReason: null,
+        schedule: BELL_SCHEDULES.daily,
+        reasonNote: 'Regular Daily Bell Schedule',
+        isLiveOverride: false,
+      };
+    };
+  }, [scheduleOverride, hcpssStatus]);
+
+  // Live Bell Schedule State (Current Period, Time Left, Progress %, Next Period)
+  const bellState = useMemo(() => {
+    const todayInfo = resolveDaySchedule(now, true);
+
+    // Helper to find next school day's schedule & Period 1
+    const getNextSchoolDayInfo = () => {
+      const cursor = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      for (let i = 1; i <= 14; i++) {
+        cursor.setDate(cursor.getDate() + 1);
+        const info = resolveDaySchedule(cursor, false);
+        if (!info.isClosed && info.schedule) {
+          const dayName = cursor.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+          const firstPeriod = info.schedule.periods[0];
+          return {
+            dayLabel: i === 1 ? `Tomorrow (${dayName})` : dayName,
+            scheduleName: info.schedule.shortBadge,
+            firstPeriod,
+          };
+        }
+      }
+      return null;
+    };
+
+    if (todayInfo.isClosed || !todayInfo.schedule) {
+      const nextDay = getNextSchoolDayInfo();
+      const displaySchedule = BELL_SCHEDULES.daily;
+      return {
+        phase: 'no_school' as const,
+        todayInfo,
+        activeSchedule: displaySchedule,
+        currentPeriod: null as BellPeriod | null,
+        nextPeriod: nextDay?.firstPeriod || null,
+        nextPeriodContext: nextDay ? `${nextDay.dayLabel} • ${nextDay.scheduleName}` : 'Upcoming School Day',
+        secondsLeft: 0,
+        progressPct: 100,
+        statusHeading: 'No School Today',
+        statusSubheading: todayInfo.closedReason || 'Schools Closed',
+        windowStartDisplay: '--',
+        windowEndDisplay: '--',
+      };
+    }
+
+    const sched = todayInfo.schedule;
+    const periods = sched.periods;
+    const currentSeconds = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+    const warningBellSec = sched.warningBellMinutes * 60;
+    const firstStartSec = periods[0].startMinutes * 60;
+    const lastEndSec = periods[periods.length - 1].endMinutes * 60;
+
+    // 1. Before Warning Bell
+    if (currentSeconds < warningBellSec) {
+      const morningBaseSec = Math.max(0, warningBellSec - 2 * 3600); // 2h lead-in progress bar
+      const pct = Math.min(100, Math.max(0, ((currentSeconds - morningBaseSec) / (firstStartSec - morningBaseSec)) * 100));
+      return {
+        phase: 'before_school' as const,
+        todayInfo,
+        activeSchedule: sched,
+        currentPeriod: null as BellPeriod | null,
+        nextPeriod: periods[0],
+        nextPeriodContext: `Starts at ${periods[0].timeDisplay.split('–')[0].trim()}`,
+        secondsLeft: firstStartSec - currentSeconds,
+        progressPct: pct,
+        statusHeading: 'Before School',
+        statusSubheading: `Warning Bell at ${sched.warningBellDisplay} • Period 1 at ${periods[0].timeDisplay.split('–')[0].trim()}`,
+        windowStartDisplay: sched.warningBellDisplay,
+        windowEndDisplay: periods[0].timeDisplay.split('–')[0].trim(),
+      };
+    }
+
+    // 2. Warning Bell Window (e.g., 7:45 - 7:50 AM)
+    if (currentSeconds >= warningBellSec && currentSeconds < firstStartSec) {
+      const windowTotal = firstStartSec - warningBellSec;
+      const elapsed = currentSeconds - warningBellSec;
+      const pct = Math.min(100, Math.max(0, (elapsed / windowTotal) * 100));
+      return {
+        phase: 'warning_bell' as const,
+        todayInfo,
+        activeSchedule: sched,
+        currentPeriod: null as BellPeriod | null,
+        nextPeriod: periods[0],
+        nextPeriodContext: periods[0].timeDisplay,
+        secondsLeft: firstStartSec - currentSeconds,
+        progressPct: pct,
+        statusHeading: 'Warning Bell',
+        statusSubheading: `Heading to ${periods[0].defaultLabel}`,
+        windowStartDisplay: sched.warningBellDisplay,
+        windowEndDisplay: periods[0].timeDisplay.split('–')[0].trim(),
+      };
+    }
+
+    // 3. Check each Period and Passing Window
+    for (let i = 0; i < periods.length; i++) {
+      const p = periods[i];
+      const pStart = p.startMinutes * 60;
+      const pEnd = p.endMinutes * 60;
+
+      if (currentSeconds >= pStart && currentSeconds < pEnd) {
+        const total = pEnd - pStart;
+        const elapsed = currentSeconds - pStart;
+        const pct = Math.min(100, Math.max(0, (elapsed / total) * 100));
+        const nextP = i + 1 < periods.length ? periods[i + 1] : null;
+        const [startStr, endStr] = p.timeDisplay.split('–').map(s => s.trim());
+
+        return {
+          phase: 'in_period' as const,
+          todayInfo,
+          activeSchedule: sched,
+          currentPeriod: p,
+          nextPeriod: nextP,
+          nextPeriodContext: nextP ? nextP.timeDisplay : 'School Dismissal',
+          secondsLeft: pEnd - currentSeconds,
+          progressPct: pct,
+          statusHeading: p.defaultLabel,
+          statusSubheading: p.timeDisplay,
+          windowStartDisplay: startStr || '',
+          windowEndDisplay: endStr || '',
+        };
+      }
+
+      // Check passing period between period i and period i + 1
+      if (i + 1 < periods.length) {
+        const nextP = periods[i + 1];
+        const nextStart = nextP.startMinutes * 60;
+        if (currentSeconds >= pEnd && currentSeconds < nextStart) {
+          const total = nextStart - pEnd;
+          const elapsed = currentSeconds - pEnd;
+          const pct = Math.min(100, Math.max(0, (elapsed / total) * 100));
+          const prevEndStr = p.timeDisplay.split('–')[1]?.trim() || '';
+          const nextStartStr = nextP.timeDisplay.split('–')[0]?.trim() || '';
+
+          return {
+            phase: 'passing' as const,
+            todayInfo,
+            activeSchedule: sched,
+            currentPeriod: null as BellPeriod | null,
+            nextPeriod: nextP,
+            nextPeriodContext: nextP.timeDisplay,
+            secondsLeft: nextStart - currentSeconds,
+            progressPct: pct,
+            statusHeading: `Passing Period`,
+            statusSubheading: `Heading to ${nextP.defaultLabel}`,
+            windowStartDisplay: prevEndStr,
+            windowEndDisplay: nextStartStr,
+          };
+        }
+      }
+    }
+
+    // 4. After Dismissal
+    if (currentSeconds >= lastEndSec) {
+      const nextDay = getNextSchoolDayInfo();
+      return {
+        phase: 'after_school' as const,
+        todayInfo,
+        activeSchedule: sched,
+        currentPeriod: null as BellPeriod | null,
+        nextPeriod: nextDay?.firstPeriod || null,
+        nextPeriodContext: nextDay ? `${nextDay.dayLabel} • ${nextDay.scheduleName}` : 'Tomorrow',
+        secondsLeft: 0,
+        progressPct: 100,
+        statusHeading: 'School Dismissed',
+        statusSubheading: `Bell schedule finished at ${periods[periods.length - 1].timeDisplay.split('–')[1]?.trim()}`,
+        windowStartDisplay: periods[0].timeDisplay.split('–')[0]?.trim() || '7:50 AM',
+        windowEndDisplay: periods[periods.length - 1].timeDisplay.split('–')[1]?.trim() || '2:35 PM',
+      };
+    }
+
+    return {
+      phase: 'after_school' as const,
+      todayInfo,
+      activeSchedule: sched,
+      currentPeriod: null as BellPeriod | null,
+      nextPeriod: null as BellPeriod | null,
+      nextPeriodContext: '',
+      secondsLeft: 0,
+      progressPct: 100,
+      statusHeading: 'School Dismissed',
+      statusSubheading: '',
+      windowStartDisplay: '',
+      windowEndDisplay: '',
+    };
+  }, [now, resolveDaySchedule]);
 
   // 1. Digital Countdown to Graduation (May 28, 2027)
   const gradCountdown = useMemo(() => {
@@ -778,7 +1348,7 @@ export default function SeniorCountdownPage() {
 
   // Quick Stats: Next Deadline
   const nextEvent = useMemo(() => {
-    const todayStr = now.toISOString().split('T')[0];
+    const todayStr = formatLocalDateIso(now);
     for (const ev of EVENTS) {
       const compareDate = ev.endDate || ev.startDate;
       if (compareDate >= todayStr) {
@@ -802,7 +1372,7 @@ export default function SeniorCountdownPage() {
     while (temp <= grad) {
       const dayOfWeek = temp.getDay();
       if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-        const iso = temp.toISOString().split('T')[0];
+        const iso = formatLocalDateIso(temp);
         if (!offSet.has(iso)) {
           days++;
         }
@@ -835,7 +1405,7 @@ export default function SeniorCountdownPage() {
     return EVENTS.filter(e => e.category === selectedFilter);
   }, [selectedFilter]);
 
-  const todayStr = useMemo(() => now.toISOString().split('T')[0], [now]);
+  const todayStr = useMemo(() => formatLocalDateIso(now), [now]);
 
   return (
     <main className="min-h-screen bg-[#050505] text-white selection:bg-[var(--color-brand-cyan)] selection:text-white flex flex-col relative overflow-x-hidden">
@@ -909,7 +1479,7 @@ export default function SeniorCountdownPage() {
           </p>
         </div>
 
-        {/* 1. TOP SECTION: MAIN COUNTDOWN CELL + WIDE SENIORITIS CELL BELOW */}
+        {/* 1. TOP SECTION: MAIN COUNTDOWN CELL + BELL SCHEDULE BOX + WIDE SENIORITIS CELL BELOW */}
         <section className="flex flex-col gap-6 w-full">
           {/* CELL 1: Main Countdown Box */}
           <div className="w-full bg-gradient-to-b from-[#0c1015]/95 to-[#07090c]/95 border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden backdrop-blur-xl flex flex-col gap-6 sm:gap-7">
@@ -970,6 +1540,322 @@ export default function SeniorCountdownPage() {
                 />
               </div>
             </div>
+          </div>
+
+          {/* CELL 1.5: Live Bell Schedule Box (Single Clean Box Right Underneath Senior Clock) */}
+          <div className="w-full bg-gradient-to-b from-[#0c1015]/95 to-[#07090c]/95 border border-white/10 rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden backdrop-blur-xl flex flex-col gap-5">
+            {/* Subtle top gold/cyan accent line */}
+            <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[var(--color-brand-gold)]/70 to-transparent" />
+
+            {/* Top Header Row: Schedule Badge, HCPSS Live Status, Current Clock & Edit Classes Button */}
+            <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-white/10 pb-3.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs sm:text-sm font-mono uppercase tracking-widest text-white font-bold flex items-center gap-2">
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      bellState.phase === 'in_period'
+                        ? 'bg-emerald-400 animate-pulse'
+                        : bellState.phase === 'passing' || bellState.phase === 'warning_bell'
+                        ? 'bg-amber-400 animate-ping'
+                        : 'bg-cyan-400'
+                    }`}
+                  />
+                  Bell Schedule
+                </span>
+
+                {/* Active Day Schedule Type Badge */}
+                <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-amber-950/40 border border-[var(--color-brand-gold)]/40 text-[var(--color-brand-gold)] font-semibold">
+                  {mounted
+                    ? bellState.todayInfo.isClosed
+                      ? 'No School'
+                      : bellState.activeSchedule.shortBadge
+                    : 'Loading...'}
+                </span>
+
+                {/* Live HCPSS Status Pill */}
+                <a
+                  href="https://status.hcpss.org/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={hcpssStatus.statusDescription}
+                  className={`text-[10px] font-mono px-2.5 py-0.5 rounded-full border transition-colors flex items-center gap-1.5 ${
+                    hcpssStatus.statusCode === 'normal'
+                      ? 'bg-emerald-950/30 border-emerald-500/25 text-emerald-300/90 hover:border-emerald-400/50'
+                      : 'bg-amber-950/50 border-amber-500/50 text-amber-200 font-bold'
+                  }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                  <span>HCPSS: {hcpssStatus.statusTitle}</span>
+                </a>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <span className="text-xs font-mono text-white/60 tabular-nums hidden sm:inline">
+                  {mounted
+                    ? now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' })
+                    : '--:--:--'}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => setIsEditingClasses(prev => !prev)}
+                  className={`text-xs font-mono px-3 py-1 rounded-full border transition-all cursor-pointer flex items-center gap-1.5 ${
+                    isEditingClasses
+                      ? 'bg-[var(--color-brand-cyan)] text-black border-[var(--color-brand-cyan)] font-bold shadow-[0_0_15px_rgba(6,182,212,0.4)]'
+                      : 'bg-white/[0.04] hover:bg-white/10 text-white/80 hover:text-white border-white/15'
+                  }`}
+                >
+                  <span>{isEditingClasses ? '✓ Done' : '✏️ Edit Classes'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Main Live Period Status + Progress Bar + Next Period */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-center">
+              {/* CURRENT PERIOD & PROGRESS (8 Cols on LG) */}
+              <div className="lg:col-span-8 bg-black/50 border border-white/10 rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-4 shadow-inner">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-white/10 text-cyan-300 font-bold">
+                        {bellState.phase === 'in_period'
+                          ? 'CURRENT PERIOD'
+                          : bellState.phase === 'passing'
+                          ? 'PASSING PERIOD'
+                          : bellState.phase === 'warning_bell'
+                          ? 'WARNING BELL'
+                          : bellState.phase === 'before_school'
+                          ? 'BEFORE SCHOOL'
+                          : bellState.phase === 'no_school'
+                          ? 'NO SCHOOL TODAY'
+                          : 'AFTER SCHOOL'}
+                      </span>
+                      <span className="text-xs font-mono text-white/50">
+                        {mounted ? bellState.statusSubheading : ''}
+                      </span>
+                    </div>
+
+                    <h3 className="text-xl sm:text-3xl font-bold text-white tracking-tight flex flex-wrap items-baseline gap-2">
+                      {mounted ? (
+                        bellState.currentPeriod ? (
+                          <>
+                            <span>{bellState.currentPeriod.defaultLabel}</span>
+                            {getCustomClassName(bellState.currentPeriod.id) ? (
+                              <span className="text-[var(--color-brand-cyan)] font-semibold">
+                                • {getCustomClassName(bellState.currentPeriod.id)}
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setIsEditingClasses(true)}
+                                className="text-xs font-mono text-white/35 hover:text-cyan-300 transition-colors cursor-pointer underline decoration-dotted underline-offset-4"
+                              >
+                                + name this class
+                              </button>
+                            )}
+                          </>
+                        ) : (
+                          <span>{bellState.statusHeading}</span>
+                        )
+                      ) : (
+                        <span>Loading Schedule...</span>
+                      )}
+                    </h3>
+                  </div>
+
+                  {/* Digital Time Left Readout */}
+                  {mounted && bellState.secondsLeft > 0 && (
+                    <div className="text-left sm:text-right bg-white/[0.03] border border-white/10 rounded-xl px-3.5 py-2 shrink-0">
+                      <div className="text-2xl sm:text-3xl font-mono font-bold text-white tabular-nums tracking-tight leading-none">
+                        {formatDurationLeft(bellState.secondsLeft)}
+                      </div>
+                      <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-brand-cyan)] block mt-1">
+                        {bellState.phase === 'in_period' ? 'Time Left' : 'Starts In'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Progress Bar */}
+                <div className="flex flex-col gap-1.5">
+                  <div className="h-3 w-full bg-black/80 border border-white/10 rounded-full overflow-hidden p-0.5 relative">
+                    <div
+                      className="h-full rounded-full transition-all duration-1000 relative"
+                      style={{
+                        width: mounted ? `${bellState.progressPct}%` : '0%',
+                        background:
+                          bellState.phase === 'passing' || bellState.phase === 'warning_bell'
+                            ? 'linear-gradient(90deg, #d97706 0%, #fbbf24 100%)'
+                            : 'linear-gradient(90deg, #044b36 0%, #06b6d4 65%, #c39a3f 100%)',
+                        boxShadow: '0 0 12px rgba(6, 182, 212, 0.45)',
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] font-mono text-white/50">
+                    <span>{mounted ? bellState.windowStartDisplay : '--'}</span>
+                    <span className="text-white/75 font-semibold">
+                      {mounted
+                        ? bellState.secondsLeft > 0
+                          ? `${bellState.progressPct.toFixed(0)}% Elapsed`
+                          : bellState.todayInfo.reasonNote
+                        : ''}
+                    </span>
+                    <span>{mounted ? bellState.windowEndDisplay : '--'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* NEXT PERIOD BOX (4 Cols on LG) */}
+              <div className="lg:col-span-4 bg-white/[0.03] border border-white/10 rounded-2xl p-4 sm:p-5 flex flex-col justify-between h-full">
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-brand-gold)] font-bold">
+                      UP NEXT
+                    </span>
+                    <span className="text-[11px] font-mono text-white/50">
+                      {mounted ? bellState.nextPeriodContext : ''}
+                    </span>
+                  </div>
+
+                  {mounted && bellState.nextPeriod ? (
+                    <div>
+                      <div className="text-lg sm:text-xl font-bold text-white leading-snug">
+                        {bellState.nextPeriod.defaultLabel}
+                      </div>
+                      <div className="text-sm font-medium text-cyan-300 mt-0.5 truncate">
+                        {getCustomClassName(bellState.nextPeriod.id) || 'No class name set'}
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="text-lg sm:text-xl font-bold text-white leading-snug">
+                        Dismissal (End of Day)
+                      </div>
+                      <div className="text-xs text-white/50 mt-0.5">
+                        Last period of the day in progress
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-3 mt-3 border-t border-white/10 flex items-center justify-between text-[11px] font-mono text-white/50">
+                  <span>Warning Bell: {bellState.activeSchedule.warningBellDisplay}</span>
+                  <span>
+                    Dismissal: {bellState.activeSchedule.periods[bellState.activeSchedule.periods.length - 1].timeDisplay.split('–')[1]?.trim()}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Compact Day Timeline Pills (Shows all periods for the active schedule) */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:items-stretch gap-2">
+              {bellState.activeSchedule.periods.map(period => {
+                const isCurrent = mounted && bellState.currentPeriod?.id === period.id;
+                const isNext = mounted && !bellState.currentPeriod && bellState.nextPeriod?.id === period.id;
+                const nowMins = now.getHours() * 60 + now.getMinutes();
+                const isDone =
+                  mounted &&
+                  !bellState.todayInfo.isClosed &&
+                  nowMins >= period.endMinutes;
+                const custom = getCustomClassName(period.id);
+
+                return (
+                  <button
+                    key={period.id}
+                    type="button"
+                    onClick={() => setIsEditingClasses(true)}
+                    title="Click to customize class names"
+                    className={`lg:flex-1 lg:min-w-0 text-left rounded-xl px-3 py-2 border transition-all cursor-pointer flex flex-col justify-between ${
+                      isCurrent
+                        ? 'bg-cyan-950/40 border-[var(--color-brand-cyan)] shadow-[0_0_15px_rgba(6,182,212,0.2)] ring-1 ring-[var(--color-brand-cyan)]/40'
+                        : isNext
+                        ? 'bg-amber-950/30 border-[var(--color-brand-gold)]/50'
+                        : isDone
+                        ? 'bg-black/40 border-white/5 opacity-50 hover:opacity-80'
+                        : 'bg-black/40 border-white/10 hover:border-white/25'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1 w-full">
+                      <span
+                        className={`text-xs font-mono font-bold ${
+                          isCurrent ? 'text-cyan-300' : isNext ? 'text-[var(--color-brand-gold)]' : 'text-white'
+                        }`}
+                      >
+                        {period.shortLabel}
+                      </span>
+                      <span className="text-[9px] font-mono text-white/45 truncate">
+                        {period.timeDisplay.replace(/\s*(AM|PM)/g, '')}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-white/80 font-medium truncate mt-1 w-full">
+                      {custom || <span className="text-white/30 italic">{period.defaultLabel}</span>}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Collapsible Inline Class Editor (Saved automatically in localStorage cache) */}
+            {isEditingClasses && (
+              <div className="pt-4 border-t border-white/10 flex flex-col gap-4 animate-fadeIn">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-mono uppercase tracking-wider text-white font-bold">
+                      Customize Your Class Schedule (Saved in Browser Cache)
+                    </h4>
+                    <p className="text-[11px] text-white/50">
+                      Set your class or lunch shift names for each period. Automatically saved locally on this device.
+                    </p>
+                  </div>
+
+                  {/* Schedule Type Override / Preview Selector */}
+                  <div className="flex flex-wrap items-center gap-1 bg-black/60 p-1 rounded-xl border border-white/10">
+                    {[
+                      { id: 'auto', label: 'Auto (HCPSS)' },
+                      { id: 'daily', label: 'Daily' },
+                      { id: 'flex', label: 'FLEX' },
+                      { id: 'two_hour_delay', label: '2-Hr Delay' },
+                      { id: 'early_dismissal', label: '3-Hr Early' },
+                    ].map(mode => (
+                      <button
+                        key={mode.id}
+                        type="button"
+                        onClick={() => setScheduleOverride(mode.id as any)}
+                        className={`text-[10px] font-mono px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                          scheduleOverride === mode.id
+                            ? 'bg-[var(--color-brand-gold)] text-black font-bold'
+                            : 'text-white/60 hover:text-white'
+                        }`}
+                      >
+                        {mode.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+                  {EDITABLE_PERIOD_FIELDS.map(field => (
+                    <label
+                      key={field.id}
+                      className="bg-black/60 border border-white/10 focus-within:border-[var(--color-brand-cyan)] rounded-xl px-3 py-2 flex flex-col gap-1 transition-colors"
+                    >
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-300 font-semibold">
+                        {field.label}
+                      </span>
+                      <input
+                        type="text"
+                        value={classNames[field.id] || ''}
+                        onChange={e => updateClassName(field.id, e.target.value)}
+                        placeholder={field.placeholder}
+                        maxLength={40}
+                        className="bg-transparent text-xs sm:text-sm text-white placeholder:text-white/25 focus:outline-none w-full"
+                      />
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* CELL 2: Senioritis Spicy Pepper Meter in a WIDE Full-Width Cell */}
