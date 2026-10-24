@@ -36,13 +36,13 @@ export function CreativeSection({ content = contentData, beats }: { content?: an
     subtitle: "Founder & President",
     summary: "Built a student-led organization at Howard High to help peers make educated financial decisions and prepare for the realities of college. Hosted guest sessions featuring business teachers, industry leaders, and college professors to unpack real-world wealth mechanics.",
     stats: [
-      { value: "300+", label: "Students Impacted" },
+      { value: "150+", label: "Students Impacted" },
       { value: "20+", label: "Meetings Held" },
       { value: "3", label: "Large Community Events" }
     ],
     tickerItems: [
       "SPY $582.40 ▲ +0.65%",
-      "HFLC [Impact] 300+ Students",
+      "HFLC [Impact] 150+ Students",
       "QQQ $495.10 ▲ +0.92%",
       "COMM [Outreach] 3 Large Community Events",
       "DIA $421.15 ▲ +0.31%",
