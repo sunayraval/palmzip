@@ -1,7 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  async redirects() {
+    return [
+      {
+        source: "/umich",
+        destination: "https://youtu.be/aji7tYSTURc",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
