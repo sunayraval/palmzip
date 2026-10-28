@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
         destination: "https://youtu.be/aji7tYSTURc",
         permanent: false,
       },
+      {
+        source: "/washu",
+        destination: "https://youtu.be/aji7tYSTURc",
+        permanent: false,
+      },
     ];
   },
 };
