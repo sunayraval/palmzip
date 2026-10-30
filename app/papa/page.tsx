@@ -27,6 +27,7 @@ const PASSCODE = '2008';
 const AUTH_STORAGE_KEY = 'palmzip_papa_auth_v1';
 const SENDER_STORAGE_KEY = 'palmzip_papa_sender_v1';
 const SOUND_STORAGE_KEY = 'palmzip_papa_sound_v1';
+const MESSAGES_CACHE_KEY = 'palmzip_papa_messages_v1';
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 B';
@@ -83,6 +84,43 @@ function renderTextWithLinks(text: string) {
   });
 }
 
+function mergeMessageLists(
+  currentList: PapaMessage[],
+  incomingList: PapaMessage[]
+): PapaMessage[] {
+  const map = new Map<string, PapaMessage>();
+
+  // Keep optimistic in-flight messages
+  for (const msg of currentList) {
+    if (msg.isSending) {
+      map.set(msg.id, msg);
+    }
+  }
+
+  // Add / overwrite with server-confirmed messages
+  for (const msg of incomingList) {
+    // If incoming message matches an optimistic message, remove the optimistic placeholder
+    for (const [key, curr] of Array.from(map.entries())) {
+      if (
+        curr.isSending &&
+        curr.sender === msg.sender &&
+        curr.text === msg.text &&
+        Math.abs(curr.timestamp - msg.timestamp) < 15000
+      ) {
+        map.delete(key);
+      }
+    }
+    map.set(msg.id, msg);
+  }
+
+  // Sort chronologically and take max 10
+  const sorted = Array.from(map.values())
+    .sort((a, b) => a.timestamp - b.timestamp)
+    .slice(-10);
+
+  return sorted;
+}
+
 export default function PapaChatPage() {
   // Authentication State
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -98,21 +136,34 @@ export default function PapaChatPage() {
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState<boolean>(false);
-  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [isConnected, setIsConnected] = useState<boolean>(true);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [isDraggingOver, setIsDraggingOver] = useState<boolean>(false);
   const [confirmClearOpen, setConfirmClearOpen] = useState<boolean>(false);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
-  // Refs
+  // Refs for stable listeners (prevent reconnect storms & chime loops)
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const lastMessageCountRef = useRef<number>(0);
   const dragCounterRef = useRef<number>(0);
+  const isFetchingRef = useRef<boolean>(false);
+  const seenMessageIdsRef = useRef<Set<string>>(new Set());
+  const initialLoadedRef = useRef<boolean>(false);
+  const currentSenderRef = useRef<'Sunay' | 'Papa'>('Sunay');
+  const soundEnabledRef = useRef<boolean>(true);
 
-  // Check saved credentials & preferences on mount
+  // Keep refs in sync with state
+  useEffect(() => {
+    currentSenderRef.current = currentSender;
+  }, [currentSender]);
+
+  useEffect(() => {
+    soundEnabledRef.current = soundEnabled;
+  }, [soundEnabled]);
+
+  // Check saved preferences on mount
   useEffect(() => {
     const savedAuth = localStorage.getItem(AUTH_STORAGE_KEY);
     if (savedAuth === PASSCODE) {
@@ -122,11 +173,14 @@ export default function PapaChatPage() {
     const savedSender = localStorage.getItem(SENDER_STORAGE_KEY);
     if (savedSender === 'Papa' || savedSender === 'Sunay') {
       setCurrentSender(savedSender);
+      currentSenderRef.current = savedSender;
     }
 
     const savedSound = localStorage.getItem(SOUND_STORAGE_KEY);
     if (savedSound !== null) {
-      setSoundEnabled(savedSound === 'true');
+      const isSound = savedSound === 'true';
+      setSoundEnabled(isSound);
+      soundEnabledRef.current = isSound;
     }
   }, []);
 
@@ -137,49 +191,94 @@ export default function PapaChatPage() {
     });
   }, []);
 
+  // Merge and apply incoming messages without clobbering or looping
+  const applyIncomingMessages = useCallback((incoming: PapaMessage[]) => {
+    if (!Array.isArray(incoming)) return;
+
+    // Check if new incoming message from the other person
+    if (initialLoadedRef.current) {
+      for (const m of incoming) {
+        if (!seenMessageIdsRef.current.has(m.id)) {
+          if (m.sender !== currentSenderRef.current && soundEnabledRef.current) {
+            playNotificationChime();
+          }
+        }
+      }
+    }
+
+    // Mark as seen
+    for (const m of incoming) {
+      seenMessageIdsRef.current.add(m.id);
+    }
+    initialLoadedRef.current = true;
+
+    setMessages((prev) => {
+      const merged = mergeMessageLists(prev, incoming);
+      try {
+        localStorage.setItem(MESSAGES_CACHE_KEY, JSON.stringify(merged));
+      } catch {
+        // ignore storage quota error
+      }
+      return merged;
+    });
+    setIsConnected(true);
+  }, []);
+
   // Fetch messages from backend
   const fetchMessages = useCallback(async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+
     try {
       const res = await fetch(`/api/papa/messages?auth=${PASSCODE}`, {
         cache: 'no-store',
         headers: { 'x-papa-auth': PASSCODE },
       });
+
       if (res.status === 401) {
         setIsAuthenticated(false);
         localStorage.removeItem(AUTH_STORAGE_KEY);
         return;
       }
+
       if (res.ok) {
         const data = await res.json();
         if (data.messages && Array.isArray(data.messages)) {
-          // Check if new incoming message from the OTHER person
-          if (
-            lastMessageCountRef.current > 0 &&
-            data.messages.length > lastMessageCountRef.current
-          ) {
-            const newestMsg = data.messages[data.messages.length - 1];
-            if (newestMsg && newestMsg.sender !== currentSender && soundEnabled) {
-              playNotificationChime();
-            }
-          }
-          lastMessageCountRef.current = data.messages.length;
-          setMessages(data.messages);
-          setIsConnected(true);
+          applyIncomingMessages(data.messages);
         }
       }
     } catch (err) {
       console.warn('Failed to fetch messages:', err);
       setIsConnected(false);
+    } finally {
+      isFetchingRef.current = false;
     }
-  }, [currentSender, soundEnabled]);
+  }, [applyIncomingMessages]);
 
-  // Set up Live SSE Stream + fallback polling when authenticated
+  // Set up live sync when authenticated
   useEffect(() => {
     if (!isAuthenticated) return;
 
+    // 1. Immediately load cached messages from localStorage for zero-lag display
+    try {
+      const cached = localStorage.getItem(MESSAGES_CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(parsed);
+          for (const m of parsed) {
+            seenMessageIdsRef.current.add(m.id);
+          }
+        }
+      }
+    } catch {
+      // ignore
+    }
+
+    // 2. Initial fetch from server
     fetchMessages();
 
-    // 1. Establish SSE Live Connection
+    // 3. Connect to live SSE Stream
     let eventSource: EventSource | null = null;
     try {
       eventSource = new EventSource(`/api/papa/stream?auth=${PASSCODE}`);
@@ -192,36 +291,24 @@ export default function PapaChatPage() {
         try {
           const payload = JSON.parse(event.data);
           if (payload.messages && Array.isArray(payload.messages)) {
-            if (
-              lastMessageCountRef.current > 0 &&
-              payload.messages.length > lastMessageCountRef.current
-            ) {
-              const latest = payload.messages[payload.messages.length - 1];
-              if (latest && latest.sender !== currentSender && soundEnabled) {
-                playNotificationChime();
-              }
-            }
-            lastMessageCountRef.current = payload.messages.length;
-            setMessages(payload.messages);
-            setIsConnected(true);
+            applyIncomingMessages(payload.messages);
           }
         } catch {
-          // ignore heartbeat ping
+          // ignore ping
         }
       };
 
       eventSource.onerror = () => {
-        setIsConnected(false);
-        // Will rely on fallback polling below
+        // Falls back to polling
       };
-    } catch (e) {
-      console.warn('SSE not supported or failed to initialize:', e);
+    } catch {
+      // ignore
     }
 
-    // 2. High-reliability Polling Fallback (every 2 seconds)
+    // 4. Fallback Polling every 3 seconds
     const pollInterval = setInterval(() => {
       fetchMessages();
-    }, 2000);
+    }, 3000);
 
     return () => {
       if (eventSource) {
@@ -229,7 +316,7 @@ export default function PapaChatPage() {
       }
       clearInterval(pollInterval);
     };
-  }, [isAuthenticated, fetchMessages, currentSender, soundEnabled]);
+  }, [isAuthenticated, fetchMessages, applyIncomingMessages]);
 
   // Auto-scroll on initial load or message addition
   useEffect(() => {
@@ -367,6 +454,7 @@ export default function PapaChatPage() {
   // Toggle Sender Identity
   const handleToggleSender = (sender: 'Sunay' | 'Papa') => {
     setCurrentSender(sender);
+    currentSenderRef.current = sender;
     localStorage.setItem(SENDER_STORAGE_KEY, sender);
   };
 
@@ -374,6 +462,7 @@ export default function PapaChatPage() {
   const handleToggleSound = () => {
     const next = !soundEnabled;
     setSoundEnabled(next);
+    soundEnabledRef.current = next;
     localStorage.setItem(SOUND_STORAGE_KEY, String(next));
   };
 
@@ -406,7 +495,15 @@ export default function PapaChatPage() {
         : undefined,
     };
 
-    setMessages((prev) => [...prev, optimisticMessage]);
+    seenMessageIdsRef.current.add(tempId);
+    setMessages((prev) => {
+      const next = [...prev, optimisticMessage].slice(-10);
+      try {
+        localStorage.setItem(MESSAGES_CACHE_KEY, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+
     setInputText('');
     setPendingFile(null);
     setIsUploading(true);
@@ -443,11 +540,10 @@ export default function PapaChatPage() {
       if (res.ok) {
         const data = await res.json();
         if (data.messages) {
-          lastMessageCountRef.current = data.messages.length;
-          setMessages(data.messages);
+          applyIncomingMessages(data.messages);
         }
       } else {
-        // Rollback optimistic message if failed
+        // Rollback optimistic message if delivery failed
         setMessages((prev) => prev.filter((m) => m.id !== tempId));
         alert('Could not deliver message. Please retry.');
       }
@@ -462,17 +558,19 @@ export default function PapaChatPage() {
 
   // Delete Individual Message
   const handleDeleteMessage = async (id: string) => {
+    setMessages((prev) => {
+      const next = prev.filter((m) => m.id !== id);
+      try {
+        localStorage.setItem(MESSAGES_CACHE_KEY, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+
     try {
-      const res = await fetch(`/api/papa/messages?id=${id}&auth=${PASSCODE}`, {
+      await fetch(`/api/papa/messages?id=${id}&auth=${PASSCODE}`, {
         method: 'DELETE',
         headers: { 'x-papa-auth': PASSCODE },
       });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.messages) {
-          setMessages(data.messages);
-        }
-      }
     } catch (err) {
       console.error('Failed to delete message:', err);
     }
@@ -480,15 +578,17 @@ export default function PapaChatPage() {
 
   // Clear Entire Chat
   const handleClearAll = async () => {
+    setMessages([]);
     try {
-      const res = await fetch(`/api/papa/messages?all=true&auth=${PASSCODE}`, {
+      localStorage.removeItem(MESSAGES_CACHE_KEY);
+    } catch {}
+    setConfirmClearOpen(false);
+
+    try {
+      await fetch(`/api/papa/messages?all=true&auth=${PASSCODE}`, {
         method: 'DELETE',
         headers: { 'x-papa-auth': PASSCODE },
       });
-      if (res.ok) {
-        setMessages([]);
-        setConfirmClearOpen(false);
-      }
     } catch (err) {
       console.error('Failed to clear chat:', err);
     }
@@ -808,7 +908,7 @@ export default function PapaChatPage() {
                 </span>
               </div>
               <span className="text-[11px] text-white/45">
-                Private family drop • Live instant updates
+                Private family channel • Synced across devices
               </span>
             </div>
           </div>
@@ -927,7 +1027,7 @@ export default function PapaChatPage() {
         {/* Storage Info Banner */}
         <div className="mx-auto text-center px-4 py-2 rounded-2xl bg-white/[0.02] border border-white/5 max-w-md">
           <p className="text-[11px] text-white/40 leading-relaxed">
-            💬 <strong>Rolling Memory:</strong> To keep things tidy and fast, the 10 most recent messages are kept. Older items rotate out automatically.
+            💬 <strong>Rolling Memory:</strong> Messages stay active and persistent across your devices. The 10 most recent items are kept.
           </p>
         </div>
 
@@ -998,7 +1098,7 @@ export default function PapaChatPage() {
                 {msg.isSending && (
                   <div className="absolute top-2 right-2 flex items-center gap-1 text-[10px] text-white/50">
                     <span className="w-2.5 h-2.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                    <span>Delivering...</span>
+                    <span>Sending...</span>
                   </div>
                 )}
 
@@ -1016,6 +1116,8 @@ export default function PapaChatPage() {
                       <a
                         href={msg.attachment.url}
                         download={msg.attachment.originalName}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="px-2.5 py-1 rounded-lg bg-black/75 hover:bg-black text-[11px] font-medium text-white border border-white/20 backdrop-blur-md shadow-lg"
                       >
                         ⬇ Download
@@ -1061,6 +1163,8 @@ export default function PapaChatPage() {
                       <a
                         href={msg.attachment.url}
                         download={msg.attachment.originalName}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="shrink-0 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold border border-white/15 transition-colors cursor-pointer flex items-center gap-1"
                       >
                         <span>⬇</span>

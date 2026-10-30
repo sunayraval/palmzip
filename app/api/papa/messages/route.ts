@@ -3,13 +3,14 @@ import fs from 'fs';
 import path from 'path';
 import {
   verifyPassword,
-  loadPapaState,
-  addPapaMessage,
-  deletePapaMessage,
-  clearAllPapaMessages,
+  loadPapaStateAsync,
+  addPapaMessageAsync,
+  deletePapaMessageAsync,
+  clearAllPapaMessagesAsync,
   getUploadsDir,
   PapaAttachment,
   MAX_MESSAGES,
+  CLOUD_TOPIC,
 } from '@/lib/papa-storage';
 
 export const dynamic = 'force-dynamic';
@@ -31,7 +32,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const state = loadPapaState();
+  const state = await loadPapaStateAsync();
   return NextResponse.json({
     success: true,
     messages: state.messages,
@@ -72,7 +73,37 @@ export async function POST(request: Request) {
         const filePath = path.join(uploadsDir, storageFilename);
 
         const arrayBuffer = await file.arrayBuffer();
-        fs.writeFileSync(filePath, Buffer.from(arrayBuffer));
+        const buffer = Buffer.from(arrayBuffer);
+
+        // Save local copy
+        try {
+          fs.writeFileSync(filePath, buffer);
+        } catch {
+          // ignore write errors in restricted environments
+        }
+
+        let publicFileUrl = `/api/papa/files?file=${encodeURIComponent(storageFilename)}&name=${encodeURIComponent(originalName)}&auth=2008`;
+
+        // Also upload to cloud file host for instant multi-device / mobile access
+        try {
+          const catboxForm = new FormData();
+          catboxForm.append('reqtype', 'fileupload');
+          catboxForm.append('fileToUpload', new Blob([buffer], { type: file.type || 'application/octet-stream' }), originalName);
+
+          const catboxRes = await fetch('https://catbox.moe/user/api.php', {
+            method: 'POST',
+            body: catboxForm,
+          });
+
+          if (catboxRes.ok) {
+            const uploadedUrl = (await catboxRes.text()).trim();
+            if (uploadedUrl.startsWith('http')) {
+              publicFileUrl = uploadedUrl;
+            }
+          }
+        } catch (err) {
+          console.warn('Fallback to local file route for attachment:', err);
+        }
 
         attachment = {
           id: uniqueId,
@@ -80,7 +111,7 @@ export async function POST(request: Request) {
           storageFilename,
           mimeType: file.type || 'application/octet-stream',
           size: file.size,
-          url: `/api/papa/files?file=${encodeURIComponent(storageFilename)}&name=${encodeURIComponent(originalName)}&auth=2008`,
+          url: publicFileUrl,
         };
       }
     } else {
@@ -96,7 +127,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { message, messages } = addPapaMessage(sender, text, attachment);
+    const { message, messages } = await addPapaMessageAsync(sender, text, attachment);
 
     return NextResponse.json({
       success: true,
@@ -128,7 +159,7 @@ export async function DELETE(request: Request) {
   const messageId = searchParams.get('id');
 
   if (clearAll) {
-    const messages = clearAllPapaMessages();
+    const messages = await clearAllPapaMessagesAsync();
     return NextResponse.json({
       success: true,
       message: 'All messages cleared',
@@ -143,7 +174,7 @@ export async function DELETE(request: Request) {
     );
   }
 
-  const messages = deletePapaMessage(messageId);
+  const messages = await deletePapaMessageAsync(messageId);
   return NextResponse.json({
     success: true,
     message: 'Message deleted',
