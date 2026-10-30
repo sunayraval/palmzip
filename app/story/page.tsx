@@ -364,18 +364,6 @@ export function StoryPageView({
                     '27
                   </span>
                 </Link>
-                <Link
-                  href="/papa"
-                  className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors group/item"
-                >
-                  <span className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-cyan)]" />
-                    <span>Papa Drop</span>
-                  </span>
-                  <span className="text-[10px] font-mono text-[var(--color-brand-cyan)] bg-cyan-950/40 px-1.5 py-0.5 rounded border border-[var(--color-brand-cyan)]/30">
-                    🔒 2008
-                  </span>
-                </Link>
               </div>
             </div>
           </div>
