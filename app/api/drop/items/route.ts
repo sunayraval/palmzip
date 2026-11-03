@@ -3,20 +3,20 @@ import fs from 'fs';
 import path from 'path';
 import {
   verifyPassword,
-  loadPapaStateAsync,
-  addPapaMessageAsync,
-  deletePapaMessageAsync,
-  clearAllPapaMessagesAsync,
+  loadDropStateAsync,
+  addDropItemAsync,
+  deleteDropItemAsync,
+  clearAllDropsAsync,
   getUploadsDir,
-  PapaAttachment,
-  MAX_MESSAGES,
-  CLOUD_TOPIC,
-} from '@/lib/papa-storage';
+  DropAttachment,
+  DropType,
+  MAX_DROPS,
+} from '@/lib/drop-storage';
 
 export const dynamic = 'force-dynamic';
 
 function getAuthToken(request: Request): string | null {
-  const headerToken = request.headers.get('x-papa-auth');
+  const headerToken = request.headers.get('x-drop-auth');
   if (headerToken) return headerToken;
 
   const { searchParams } = new URL(request.url);
@@ -32,12 +32,12 @@ export async function GET(request: Request) {
     );
   }
 
-  const state = await loadPapaStateAsync();
+  const state = await loadDropStateAsync();
   return NextResponse.json({
     success: true,
-    messages: state.messages,
-    maxMessages: MAX_MESSAGES,
-    totalMessages: state.messages.length,
+    drops: state.drops,
+    maxDrops: MAX_DROPS,
+    totalDrops: state.drops.length,
     lastUpdated: state.lastUpdated,
   });
 }
@@ -53,16 +53,21 @@ export async function POST(request: Request) {
 
   try {
     const contentType = request.headers.get('content-type') || '';
-    let sender = 'Sunay';
-    let text = '';
-    let attachment: PapaAttachment | undefined = undefined;
+    let content = '';
+    let title: string | undefined = undefined;
+    let device = 'Device';
+    let type: DropType | undefined = undefined;
+    let attachment: DropAttachment | undefined = undefined;
 
     if (contentType.includes('multipart/form-data')) {
       const formData = await request.formData();
-      sender = (formData.get('sender') as string) || 'Sunay';
-      text = (formData.get('text') as string) || '';
-      const file = formData.get('file') as File | null;
+      content = (formData.get('content') as string) || (formData.get('text') as string) || '';
+      title = (formData.get('title') as string) || undefined;
+      device = (formData.get('device') as string) || 'Device';
+      const customType = formData.get('type') as string | null;
+      if (customType) type = customType as DropType;
 
+      const file = formData.get('file') as File | null;
       if (file && file.size > 0) {
         const uploadsDir = getUploadsDir();
         const originalName = file.name || 'attachment';
@@ -82,13 +87,17 @@ export async function POST(request: Request) {
           // ignore write errors in restricted environments
         }
 
-        let publicFileUrl = `/api/papa/files?file=${encodeURIComponent(storageFilename)}&name=${encodeURIComponent(originalName)}&auth=2008`;
+        let publicFileUrl = `/api/drop/files?file=${encodeURIComponent(storageFilename)}&name=${encodeURIComponent(originalName)}&auth=2008`;
 
-        // Also upload to cloud file host for instant multi-device / mobile access
+        // Upload to cloud host for seamless cross-device mobile/desktop access
         try {
           const catboxForm = new FormData();
           catboxForm.append('reqtype', 'fileupload');
-          catboxForm.append('fileToUpload', new Blob([buffer], { type: file.type || 'application/octet-stream' }), originalName);
+          catboxForm.append(
+            'fileToUpload',
+            new Blob([buffer], { type: file.type || 'application/octet-stream' }),
+            originalName
+          );
 
           const catboxRes = await fetch('https://catbox.moe/user/api.php', {
             method: 'POST',
@@ -102,7 +111,7 @@ export async function POST(request: Request) {
             }
           }
         } catch (err) {
-          console.warn('Fallback to local file route for attachment:', err);
+          console.warn('Fallback to local file route for drop:', err);
         }
 
         attachment = {
@@ -113,33 +122,44 @@ export async function POST(request: Request) {
           size: file.size,
           url: publicFileUrl,
         };
+
+        if (!content.trim()) {
+          content = originalName;
+        }
       }
     } else {
       const json = await request.json().catch(() => ({}));
-      sender = json.sender || 'Sunay';
-      text = json.text || '';
+      content = json.content || json.text || '';
+      title = json.title;
+      device = json.device || 'Device';
+      type = json.type;
     }
 
-    if (!text.trim() && !attachment) {
+    if (!content.trim() && !attachment) {
       return NextResponse.json(
-        { success: false, error: 'Message cannot be completely empty' },
+        { success: false, error: 'Cannot drop empty item' },
         { status: 400 }
       );
     }
 
-    const { message, messages } = await addPapaMessageAsync(sender, text, attachment);
+    const { drop, drops } = await addDropItemAsync(content, {
+      type,
+      title,
+      device,
+      attachment,
+    });
 
     return NextResponse.json({
       success: true,
-      message,
-      messages,
-      totalMessages: messages.length,
-      maxMessages: MAX_MESSAGES,
+      drop,
+      drops,
+      totalDrops: drops.length,
+      maxDrops: MAX_DROPS,
     });
   } catch (err: any) {
-    console.error('Error posting papa message:', err);
+    console.error('Error posting drop item:', err);
     return NextResponse.json(
-      { success: false, error: err?.message || 'Failed to post message' },
+      { success: false, error: err?.message || 'Failed to post drop' },
       { status: 500 }
     );
   }
@@ -156,28 +176,28 @@ export async function DELETE(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const clearAll = searchParams.get('all') === 'true';
-  const messageId = searchParams.get('id');
+  const dropId = searchParams.get('id');
 
   if (clearAll) {
-    const messages = await clearAllPapaMessagesAsync();
+    const drops = await clearAllDropsAsync();
     return NextResponse.json({
       success: true,
-      message: 'All messages cleared',
-      messages,
+      message: 'Drop can cleared',
+      drops,
     });
   }
 
-  if (!messageId) {
+  if (!dropId) {
     return NextResponse.json(
-      { success: false, error: 'Message ID required for deletion' },
+      { success: false, error: 'Drop ID required for deletion' },
       { status: 400 }
     );
   }
 
-  const messages = await deletePapaMessageAsync(messageId);
+  const drops = await deleteDropItemAsync(dropId);
   return NextResponse.json({
     success: true,
-    message: 'Message deleted',
-    messages,
+    message: 'Drop item deleted',
+    drops,
   });
 }

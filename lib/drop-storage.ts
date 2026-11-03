@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-export interface PapaAttachment {
+export interface DropAttachment {
   id: string;
   originalName: string;
   storageFilename: string;
@@ -11,46 +11,50 @@ export interface PapaAttachment {
   url: string;
 }
 
-export interface PapaMessage {
+export type DropType = 'file' | 'image' | 'text' | 'link' | 'chat';
+
+export interface DropItem {
   id: string;
-  sender: 'Sunay' | 'Papa' | string;
-  text: string;
+  type: DropType;
+  title?: string;
+  content: string;
   createdAt: string;
   timestamp: number;
-  attachment?: PapaAttachment;
+  device?: string;
+  attachment?: DropAttachment;
 }
 
-export interface PapaState {
-  messages: PapaMessage[];
+export interface DropState {
+  drops: DropItem[];
   lastUpdated: string;
 }
 
-export const PAPA_PASSWORD = '2008';
-export const MAX_MESSAGES = 10;
-export const CLOUD_TOPIC = 'palmzip_papa_sunay_vault_2008_prod';
+export const DROP_PASSWORD = '2008';
+export const MAX_DROPS = 10;
+export const CLOUD_TOPIC = 'palmzip_drop_vault_2008_prod';
 
-// Local storage fallback paths (in os.tmpdir so file changes never trigger Next.js Turbopack watcher loops)
-const FALLBACK_PATH = path.join(os.tmpdir(), 'palmzip-papa-messages.json');
-const FALLBACK_UPLOADS_DIR = path.join(os.tmpdir(), 'palmzip-papa-uploads');
+// Local storage fallback paths in os.tmpdir so file changes never trigger Next.js Turbopack watcher loops
+const FALLBACK_PATH = path.join(os.tmpdir(), 'palmzip-drop-vault.json');
+const FALLBACK_UPLOADS_DIR = path.join(os.tmpdir(), 'palmzip-drop-uploads');
 
-let cachedState: PapaState | null = null;
+let cachedState: DropState | null = null;
 let lastCloudSyncTime = 0;
 
 // SSE Listeners
-type MessageListener = (data: { type: string; messages: PapaMessage[] }) => void;
-const listeners = new Set<MessageListener>();
+type DropListener = (data: { type: string; drops: DropItem[] }) => void;
+const listeners = new Set<DropListener>();
 
-export function subscribeMessages(listener: MessageListener): () => void {
+export function subscribeDrops(listener: DropListener): () => void {
   listeners.add(listener);
   return () => {
     listeners.delete(listener);
   };
 }
 
-export function notifyUpdate(messages: PapaMessage[]): void {
+export function notifyUpdate(drops: DropItem[]): void {
   for (const listener of listeners) {
     try {
-      listener({ type: 'update', messages });
+      listener({ type: 'update', drops });
     } catch {
       // ignore
     }
@@ -59,7 +63,7 @@ export function notifyUpdate(messages: PapaMessage[]): void {
 
 export function verifyPassword(pwd?: string | null): boolean {
   if (!pwd) return false;
-  return pwd.trim() === PAPA_PASSWORD;
+  return pwd.trim() === DROP_PASSWORD;
 }
 
 function ensureDirectoryExists(dirPath: string): boolean {
@@ -80,15 +84,27 @@ export function getUploadsDir(): string {
 
 export function getAttachmentFilePath(storageFilename: string): string | null {
   const cleanName = path.basename(storageFilename);
-  const fallbackFile = path.join(os.tmpdir(), 'palmzip-papa-uploads', cleanName);
+  const fallbackFile = path.join(os.tmpdir(), 'palmzip-drop-uploads', cleanName);
   if (fs.existsSync(fallbackFile)) {
     return fallbackFile;
   }
   return null;
 }
 
-// Fetch canonical message history from the cloud topic
-export async function syncFromCloud(): Promise<PapaMessage[]> {
+function inferDropType(content: string, attachment?: DropAttachment): DropType {
+  if (attachment) {
+    if (attachment.mimeType.startsWith('image/')) return 'image';
+    return 'file';
+  }
+  const trimmed = content.trim();
+  if (/^https?:\/\/[^\s]+$/i.test(trimmed)) {
+    return 'link';
+  }
+  return 'text';
+}
+
+// Fetch canonical drop history from the cloud topic
+export async function syncFromCloud(): Promise<DropItem[]> {
   try {
     const res = await fetch(`https://ntfy.sh/${CLOUD_TOPIC}/json?poll=1&since=all`, {
       cache: 'no-store',
@@ -99,7 +115,7 @@ export async function syncFromCloud(): Promise<PapaMessage[]> {
 
     const text = await res.text();
     const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
-    const messages: PapaMessage[] = [];
+    const drops: DropItem[] = [];
     const deletedIds = new Set<string>();
     let clearAllTimestamp = 0;
 
@@ -120,24 +136,26 @@ export async function syncFromCloud(): Promise<PapaMessage[]> {
           continue;
         }
 
-        let msg: PapaMessage | null = null;
+        let item: DropItem | null = null;
         try {
-          msg = JSON.parse(evt.message);
+          item = JSON.parse(evt.message);
         } catch {
-          msg = {
+          const content = evt.message || '';
+          item = {
             id: evt.id,
-            sender: evt.title === 'Papa' ? 'Papa' : 'Sunay',
-            text: evt.message || '',
+            type: inferDropType(content),
+            content,
             createdAt: new Date(evt.time * 1000).toLocaleTimeString([], {
               hour: '2-digit',
               minute: '2-digit',
             }),
             timestamp: evt.time * 1000,
+            device: evt.title || 'Device',
           };
         }
 
-        if (msg && evt.attachment) {
-          msg.attachment = {
+        if (item && evt.attachment) {
+          item.attachment = {
             id: evt.id,
             originalName: evt.attachment.name || 'file',
             storageFilename: evt.id,
@@ -145,42 +163,43 @@ export async function syncFromCloud(): Promise<PapaMessage[]> {
             size: evt.attachment.size || 0,
             url: evt.attachment.url,
           };
+          item.type = item.attachment.mimeType.startsWith('image/') ? 'image' : 'file';
         }
 
-        if (msg && msg.id) {
-          messages.push(msg);
+        if (item && item.id) {
+          drops.push(item);
         }
       } catch {
         // ignore parse error on bad line
       }
     }
 
-    // Filter out cleared or deleted messages
-    const active = messages.filter((m) => {
-      if (clearAllTimestamp && m.timestamp <= clearAllTimestamp) return false;
-      if (deletedIds.has(m.id)) return false;
+    // Filter out cleared or deleted drops
+    const active = drops.filter((d) => {
+      if (clearAllTimestamp && d.timestamp <= clearAllTimestamp) return false;
+      if (deletedIds.has(d.id)) return false;
       return true;
     });
 
     // Deduplicate by ID
-    const uniqueMap = new Map<string, PapaMessage>();
-    for (const m of active) {
-      uniqueMap.set(m.id, m);
+    const uniqueMap = new Map<string, DropItem>();
+    for (const d of active) {
+      uniqueMap.set(d.id, d);
     }
 
     const sorted = Array.from(uniqueMap.values())
       .sort((a, b) => a.timestamp - b.timestamp)
-      .slice(-MAX_MESSAGES);
+      .slice(-MAX_DROPS);
 
     return sorted;
   } catch (err) {
-    console.warn('Could not sync with cloud topic:', err);
+    console.warn('Could not sync with drop cloud topic:', err);
     return [];
   }
 }
 
 // Load state from memory, cloud sync, or fallback
-export async function loadPapaStateAsync(): Promise<PapaState> {
+export async function loadDropStateAsync(): Promise<DropState> {
   const now = Date.now();
 
   // If cached and synced recently (within 2 seconds), return immediately
@@ -189,11 +208,11 @@ export async function loadPapaStateAsync(): Promise<PapaState> {
   }
 
   // Sync from cloud
-  const cloudMessages = await syncFromCloud();
+  const cloudDrops = await syncFromCloud();
 
-  if (cloudMessages.length > 0) {
+  if (cloudDrops.length > 0) {
     cachedState = {
-      messages: cloudMessages,
+      drops: cloudDrops,
       lastUpdated: new Date().toISOString(),
     };
     lastCloudSyncTime = now;
@@ -209,7 +228,7 @@ export async function loadPapaStateAsync(): Promise<PapaState> {
   return cachedState;
 }
 
-export function loadPapaState(): PapaState {
+export function loadDropState(): DropState {
   if (cachedState) {
     return cachedState;
   }
@@ -217,14 +236,14 @@ export function loadPapaState(): PapaState {
   return cachedState;
 }
 
-function loadFromFallback(): PapaState {
+function loadFromFallback(): DropState {
   try {
     if (fs.existsSync(FALLBACK_PATH)) {
       const raw = fs.readFileSync(FALLBACK_PATH, 'utf-8');
       const parsed = JSON.parse(raw);
-      if (parsed && Array.isArray(parsed.messages)) {
+      if (parsed && Array.isArray(parsed.drops)) {
         return {
-          messages: parsed.messages.slice(-MAX_MESSAGES),
+          drops: parsed.drops.slice(-MAX_DROPS),
           lastUpdated: parsed.lastUpdated || new Date().toISOString(),
         };
       }
@@ -234,20 +253,22 @@ function loadFromFallback(): PapaState {
   }
 
   return {
-    messages: [
+    drops: [
       {
-        id: 'welcome-1',
-        sender: 'Sunay',
-        text: 'Hey Dad! Welcome to our private portal. You can drop photos, documents, or notes here anytime! 🚀',
+        id: 'welcome-drop-1',
+        type: 'text',
+        title: 'Welcome to Drop Can',
+        content: 'Drop Can is ready! Drag files onto this screen or paste (Ctrl+V) text, links, or screenshots here. Any device with password 2008 can instantly grab it.',
         createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         timestamp: Date.now(),
+        device: 'System',
       },
     ],
     lastUpdated: new Date().toISOString(),
   };
 }
 
-function saveToFallback(state: PapaState): void {
+function saveToFallback(state: DropState): void {
   try {
     fs.writeFileSync(FALLBACK_PATH, JSON.stringify(state, null, 2), 'utf-8');
   } catch {
@@ -255,106 +276,69 @@ function saveToFallback(state: PapaState): void {
   }
 }
 
-// Add a new message and broadcast it to both cloud & local
-export async function addPapaMessageAsync(
-  sender: 'Sunay' | 'Papa' | string,
-  text: string,
-  attachment?: PapaAttachment
-): Promise<{ message: PapaMessage; messages: PapaMessage[] }> {
+// Add a new drop item and broadcast it to both cloud & local
+export async function addDropItemAsync(
+  content: string,
+  options?: {
+    type?: DropType;
+    title?: string;
+    device?: string;
+    attachment?: DropAttachment;
+  }
+): Promise<{ drop: DropItem; drops: DropItem[] }> {
   const now = new Date();
-  const state = await loadPapaStateAsync();
+  const state = await loadDropStateAsync();
 
-  const newMessage: PapaMessage = {
-    id: `msg-${now.getTime()}-${Math.random().toString(36).slice(2, 7)}`,
-    sender: sender === 'Papa' ? 'Papa' : 'Sunay',
-    text: text.trim(),
+  const dropType = options?.type || inferDropType(content, options?.attachment);
+
+  const newDrop: DropItem = {
+    id: `drop-${now.getTime()}-${Math.random().toString(36).slice(2, 7)}`,
+    type: dropType,
+    title: options?.title?.trim() || undefined,
+    content: content.trim(),
     createdAt: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     timestamp: now.getTime(),
-    attachment,
+    device: options?.device?.trim() || 'Device',
+    attachment: options?.attachment,
   };
 
-  state.messages.push(newMessage);
+  state.drops.push(newDrop);
 
   // Maintain rolling 10
-  if (state.messages.length > MAX_MESSAGES) {
-    state.messages = state.messages.slice(-MAX_MESSAGES);
+  if (state.drops.length > MAX_DROPS) {
+    state.drops = state.drops.slice(-MAX_DROPS);
   }
 
   state.lastUpdated = now.toISOString();
   cachedState = state;
   saveToFallback(state);
-  notifyUpdate(state.messages);
+  notifyUpdate(state.drops);
 
   // Broadcast to cloud topic in background so all instances & devices see it instantly
   try {
     fetch(`https://ntfy.sh/${CLOUD_TOPIC}`, {
       method: 'POST',
       headers: {
-        Title: newMessage.sender,
-        'X-Tags': 'chat_message',
+        Title: newDrop.device || 'Device',
+        'X-Tags': `drop_item,${newDrop.type}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(newMessage),
+      body: JSON.stringify(newDrop),
     }).catch(() => {});
   } catch {
     // ignore
   }
 
-  return { message: newMessage, messages: state.messages };
+  return { drop: newDrop, drops: state.drops };
 }
 
-export function addPapaMessage(
-  sender: 'Sunay' | 'Papa' | string,
-  text: string,
-  attachment?: PapaAttachment
-): { message: PapaMessage; messages: PapaMessage[] } {
-  const now = new Date();
-  const state = loadPapaState();
-
-  const newMessage: PapaMessage = {
-    id: `msg-${now.getTime()}-${Math.random().toString(36).slice(2, 7)}`,
-    sender: sender === 'Papa' ? 'Papa' : 'Sunay',
-    text: text.trim(),
-    createdAt: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    timestamp: now.getTime(),
-    attachment,
-  };
-
-  state.messages.push(newMessage);
-
-  if (state.messages.length > MAX_MESSAGES) {
-    state.messages = state.messages.slice(-MAX_MESSAGES);
-  }
-
-  state.lastUpdated = now.toISOString();
-  cachedState = state;
-  saveToFallback(state);
-  notifyUpdate(state.messages);
-
-  try {
-    fetch(`https://ntfy.sh/${CLOUD_TOPIC}`, {
-      method: 'POST',
-      headers: {
-        Title: newMessage.sender,
-        'X-Tags': 'chat_message',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(newMessage),
-    }).catch(() => {});
-  } catch {
-    // ignore
-  }
-
-  return { message: newMessage, messages: state.messages };
-}
-
-export async function deletePapaMessageAsync(messageId: string): Promise<PapaMessage[]> {
-  const state = await loadPapaStateAsync();
-  state.messages = state.messages.filter((m) => m.id !== messageId);
+export async function deleteDropItemAsync(dropId: string): Promise<DropItem[]> {
+  const state = await loadDropStateAsync();
+  state.drops = state.drops.filter((d) => d.id !== dropId);
   state.lastUpdated = new Date().toISOString();
   cachedState = state;
   saveToFallback(state);
-  notifyUpdate(state.messages);
+  notifyUpdate(state.drops);
 
   // Broadcast delete signal to cloud topic
   try {
@@ -364,22 +348,22 @@ export async function deletePapaMessageAsync(messageId: string): Promise<PapaMes
         Title: 'System',
         'X-Tags': 'action_delete',
       },
-      body: messageId,
+      body: dropId,
     }).catch(() => {});
   } catch {
     // ignore
   }
 
-  return state.messages;
+  return state.drops;
 }
 
-export async function clearAllPapaMessagesAsync(): Promise<PapaMessage[]> {
-  const state = await loadPapaStateAsync();
-  state.messages = [];
+export async function clearAllDropsAsync(): Promise<DropItem[]> {
+  const state = await loadDropStateAsync();
+  state.drops = [];
   state.lastUpdated = new Date().toISOString();
   cachedState = state;
   saveToFallback(state);
-  notifyUpdate(state.messages);
+  notifyUpdate(state.drops);
 
   // Broadcast clear signal to cloud topic
   try {
@@ -395,5 +379,5 @@ export async function clearAllPapaMessagesAsync(): Promise<PapaMessage[]> {
     // ignore
   }
 
-  return state.messages;
+  return state.drops;
 }

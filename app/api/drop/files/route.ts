@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import { verifyPassword, getAttachmentFilePath } from '@/lib/papa-storage';
+import { verifyPassword, getAttachmentFilePath } from '@/lib/drop-storage';
 
 export const dynamic = 'force-dynamic';
 
 function getAuthToken(request: Request): string | null {
-  const headerToken = request.headers.get('x-papa-auth');
+  const headerToken = request.headers.get('x-drop-auth');
   if (headerToken) return headerToken;
 
   const { searchParams } = new URL(request.url);
@@ -34,7 +34,6 @@ export async function GET(request: Request) {
     );
   }
 
-  // Prevent path traversal
   const safeFilename = path.basename(file);
   const filePath = getAttachmentFilePath(safeFilename);
 
@@ -85,7 +84,7 @@ export async function GET(request: Request) {
       },
     });
   } catch (err: any) {
-    console.error('Error reading attachment file:', err);
+    console.error('Error reading drop attachment file:', err);
     return NextResponse.json(
       { success: false, error: 'Error streaming file' },
       { status: 500 }

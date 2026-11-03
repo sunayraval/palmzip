@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { verifyPassword, loadPapaState, subscribeMessages } from '@/lib/papa-storage';
+import { verifyPassword, loadDropStateAsync, subscribeDrops } from '@/lib/drop-storage';
 
 export const dynamic = 'force-dynamic';
 
 function getAuthToken(request: Request): string | null {
-  const headerToken = request.headers.get('x-papa-auth');
+  const headerToken = request.headers.get('x-drop-auth');
   if (headerToken) return headerToken;
 
   const { searchParams } = new URL(request.url);
@@ -20,18 +20,18 @@ export async function GET(request: Request) {
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
-    start(controller) {
-      // Send current state right away
-      const state = loadPapaState();
+    async start(controller) {
+      // Send initial state
       try {
+        const state = await loadDropStateAsync();
         controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ type: 'init', messages: state.messages })}\n\n`)
+          encoder.encode(`data: ${JSON.stringify({ type: 'init', drops: state.drops })}\n\n`)
         );
       } catch {
-        // ignore initial send error
+        // ignore initial error
       }
 
-      // Heartbeat to keep connection open through reverse proxies
+      // Heartbeat ping
       const heartbeatTimer = setInterval(() => {
         try {
           controller.enqueue(encoder.encode(`: ping\n\n`));
@@ -40,8 +40,8 @@ export async function GET(request: Request) {
         }
       }, 15000);
 
-      // Listen for updates from other clients/requests
-      const unsubscribe = subscribeMessages((data) => {
+      // Subscribe to local updates
+      const unsubscribe = subscribeDrops((data) => {
         try {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
         } catch {

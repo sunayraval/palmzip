@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { verifyPassword } from '@/lib/papa-storage';
+import { verifyPassword } from '@/lib/drop-storage';
 
 export const dynamic = 'force-dynamic';
 
