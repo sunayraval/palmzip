@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   const token = getAuthToken(request);
   if (!verifyPassword(token)) {
     return NextResponse.json(
-      { success: false, error: 'Unauthorized. Passcode 2008 required.' },
+      { success: false, error: 'Unauthorized. Passcode required.' },
       { status: 401 }
     );
   }

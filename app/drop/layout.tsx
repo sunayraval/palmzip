@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Drop Can | Universal Clipboard & Vault',
-  description: 'Private universal clipboard and drop can. Instantly drop files, links, notes, and photos across your devices.',
+  title: 'Drop Can',
+  description: 'Private universal clipboard and drop vault.',
 };
 
 export default function DropLayout({

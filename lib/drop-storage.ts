@@ -29,9 +29,9 @@ export interface DropState {
   lastUpdated: string;
 }
 
-export const DROP_PASSWORD = '2008';
+export const DROP_PASSWORD = '197577';
 export const MAX_DROPS = 10;
-export const CLOUD_TOPIC = 'palmzip_drop_vault_2008_prod';
+export const CLOUD_TOPIC = 'palmzip_drop_vault_197577_prod';
 
 // Local storage fallback paths in os.tmpdir so file changes never trigger Next.js Turbopack watcher loops
 const FALLBACK_PATH = path.join(os.tmpdir(), 'palmzip-drop-vault.json');
@@ -258,7 +258,7 @@ function loadFromFallback(): DropState {
         id: 'welcome-drop-1',
         type: 'text',
         title: 'Welcome to Drop Can',
-        content: 'Drop Can is ready! Drag files onto this screen or paste (Ctrl+V) text, links, or screenshots here. Any device with password 2008 can instantly grab it.',
+        content: 'Drop Can is ready! Drag files onto this screen or paste (Ctrl+V) text, links, or screenshots here. Any authorized device can instantly grab it.',
         createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         timestamp: Date.now(),
         device: 'System',

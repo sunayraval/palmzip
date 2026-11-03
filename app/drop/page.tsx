@@ -27,11 +27,11 @@ interface DropItem {
   isSending?: boolean;
 }
 
-const PASSCODE = '2008';
-const AUTH_STORAGE_KEY = 'palmzip_drop_auth_v1';
+const PASSCODE = '197577';
+const AUTH_STORAGE_KEY = 'palmzip_drop_auth_v2';
 const DEVICE_STORAGE_KEY = 'palmzip_drop_device_v1';
 const SOUND_STORAGE_KEY = 'palmzip_drop_sound_v1';
-const DROPS_CACHE_KEY = 'palmzip_drops_cache_v1';
+const DROPS_CACHE_KEY = 'palmzip_drops_cache_v2';
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 B';
@@ -53,7 +53,34 @@ function detectDefaultDevice(): string {
   return 'Browser';
 }
 
-function playNotificationChime() {
+// Subtle tactile mechanical touch click feedback
+function playTactileClick() {
+  try {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(1400, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(350, ctx.currentTime + 0.015);
+
+    gain.gain.setValueAtTime(0.04, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.02);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 0.02);
+  } catch {
+    // Ignore audio permission or restriction errors
+  }
+}
+
+// Chime on new drop received from another device
+function playDropNotificationChime() {
   try {
     const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioCtx) return;
@@ -62,10 +89,10 @@ function playNotificationChime() {
     const gain = ctx.createGain();
 
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.12); // A5
+    osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+    osc.frequency.exponentialRampToValueAtTime(783.99, ctx.currentTime + 0.12); // G5
 
-    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.setValueAtTime(0.07, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
 
     osc.connect(gain);
@@ -75,6 +102,20 @@ function playNotificationChime() {
     osc.stop(ctx.currentTime + 0.25);
   } catch {
     // Ignore audio permission or restriction errors
+  }
+}
+
+// Haptic feedback trigger for touch screens
+function triggerHaptic(type: 'tap' | 'success' | 'error' = 'tap') {
+  playTactileClick();
+  if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+    try {
+      if (type === 'tap') navigator.vibrate(12);
+      else if (type === 'success') navigator.vibrate([15, 40, 25]);
+      else if (type === 'error') navigator.vibrate([40, 60, 40]);
+    } catch {
+      // ignore
+    }
   }
 }
 
@@ -90,7 +131,7 @@ function renderTextWithLinks(text: string) {
           href={part}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[var(--color-brand-cyan)] underline underline-offset-2 hover:opacity-80 transition-opacity break-all font-medium"
+          className="text-[var(--color-brand-cyan)] underline underline-offset-2 hover:opacity-80 transition-opacity break-all font-mono"
         >
           {part}
         </a>
@@ -103,14 +144,12 @@ function renderTextWithLinks(text: string) {
 function mergeDropLists(currentList: DropItem[], incomingList: DropItem[]): DropItem[] {
   const map = new Map<string, DropItem>();
 
-  // Keep optimistic in-flight drops
   for (const item of currentList) {
     if (item.isSending) {
       map.set(item.id, item);
     }
   }
 
-  // Add / overwrite with server-confirmed drops
   for (const item of incomingList) {
     for (const [key, curr] of Array.from(map.entries())) {
       if (
@@ -124,7 +163,6 @@ function mergeDropLists(currentList: DropItem[], incomingList: DropItem[]): Drop
     map.set(item.id, item);
   }
 
-  // Sort chronologically (oldest to newest for chat, newest first for clipboard)
   const sorted = Array.from(map.values())
     .sort((a, b) => a.timestamp - b.timestamp)
     .slice(-10);
@@ -138,7 +176,7 @@ export default function DropPage() {
   const [inputPasscode, setInputPasscode] = useState<string>('');
   const [passError, setPassError] = useState<string>('');
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
-  const [showPass, setShowPass] = useState<boolean>(false);
+  const [shakeKey, setShakeKey] = useState<number>(0);
 
   // View Mode: 'can' (Clipboard / Drop Can) vs 'chat' (Secondary Live Chat)
   const [viewMode, setViewMode] = useState<'can' | 'chat'>('can');
@@ -173,7 +211,6 @@ export default function DropPage() {
   const deviceNameRef = useRef<string>('Device');
   const soundEnabledRef = useRef<boolean>(true);
 
-  // Keep refs updated
   useEffect(() => {
     deviceNameRef.current = deviceName;
   }, [deviceName]);
@@ -182,7 +219,12 @@ export default function DropPage() {
     soundEnabledRef.current = soundEnabled;
   }, [soundEnabled]);
 
-  // Check saved preferences on mount
+  // Set clean document title on mount (absolutely NO PIN digits in browser tab)
+  useEffect(() => {
+    document.title = 'Drop Vault';
+  }, []);
+
+  // Check saved credentials & preferences on mount
   useEffect(() => {
     const savedAuth = localStorage.getItem(AUTH_STORAGE_KEY);
     if (savedAuth === PASSCODE) {
@@ -222,7 +264,7 @@ export default function DropPage() {
       for (const d of incoming) {
         if (!seenDropIdsRef.current.has(d.id)) {
           if (d.device !== deviceNameRef.current && soundEnabledRef.current) {
-            playNotificationChime();
+            playDropNotificationChime();
           }
         }
       }
@@ -238,7 +280,7 @@ export default function DropPage() {
       try {
         localStorage.setItem(DROPS_CACHE_KEY, JSON.stringify(merged));
       } catch {
-        // ignore storage error
+        // ignore storage quota error
       }
       return merged;
     });
@@ -280,7 +322,6 @@ export default function DropPage() {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    // 1. Immediately load cached drops for instant display
     try {
       const cached = localStorage.getItem(DROPS_CACHE_KEY);
       if (cached) {
@@ -296,10 +337,8 @@ export default function DropPage() {
       // ignore
     }
 
-    // 2. Initial fetch
     fetchDrops();
 
-    // 3. Connect to live SSE Stream
     let eventSource: EventSource | null = null;
     try {
       eventSource = new EventSource(`/api/drop/stream?auth=${PASSCODE}`);
@@ -315,18 +354,17 @@ export default function DropPage() {
             applyIncomingDrops(payload.drops);
           }
         } catch {
-          // ignore heartbeat ping
+          // heartbeat ping
         }
       };
 
       eventSource.onerror = () => {
-        // Falls back to polling
+        // Fallback polling handles it
       };
     } catch {
       // ignore
     }
 
-    // 4. Polling fallback every 2.5s
     const pollInterval = setInterval(() => {
       fetchDrops();
     }, 2500);
@@ -339,14 +377,12 @@ export default function DropPage() {
     };
   }, [isAuthenticated, fetchDrops, applyIncomingDrops]);
 
-  // Auto-scroll on chat mode
   useEffect(() => {
     if (viewMode === 'chat' && drops.length > 0) {
       scrollToBottom();
     }
   }, [viewMode, drops.length, scrollToBottom]);
 
-  // Handle file preview URL
   useEffect(() => {
     if (!pendingFile) {
       setFilePreviewUrl(null);
@@ -395,6 +431,7 @@ export default function DropPage() {
       if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
         const file = e.dataTransfer.files[0];
         setPendingFile(file);
+        triggerHaptic('success');
       }
     };
 
@@ -411,12 +448,11 @@ export default function DropPage() {
     };
   }, [isAuthenticated]);
 
-  // Window-wide Paste handler (files, images, or text)
+  // Window-wide Paste handler
   useEffect(() => {
     if (!isAuthenticated) return;
 
     const handlePaste = (e: ClipboardEvent) => {
-      // If user is actively typing in a textarea or input, allow normal paste inside it
       const activeEl = document.activeElement;
       const isInput =
         activeEl instanceof HTMLInputElement || activeEl instanceof HTMLTextAreaElement;
@@ -424,23 +460,23 @@ export default function DropPage() {
       const items = e.clipboardData?.items;
       if (!items) return;
 
-      // 1. Check for file or image paste
       for (let i = 0; i < items.length; i++) {
         if (items[i].kind === 'file') {
           const file = items[i].getAsFile();
           if (file) {
             e.preventDefault();
             setPendingFile(file);
+            triggerHaptic('success');
             return;
           }
         }
       }
 
-      // 2. If not focusing an input, paste text directly as a drop item
       if (!isInput) {
         const text = e.clipboardData?.getData('text');
         if (text && text.trim()) {
           e.preventDefault();
+          triggerHaptic('tap');
           handleDirectDropText(text.trim());
         }
       }
@@ -450,7 +486,7 @@ export default function DropPage() {
     return () => window.removeEventListener('paste', handlePaste);
   }, [isAuthenticated]);
 
-  // Handle Passcode Submission
+  // Handle 6-Digit Passcode Verification
   const handlePasscodeSubmit = async (codeToTry = inputPasscode) => {
     setPassError('');
     if (!codeToTry.trim()) return;
@@ -465,22 +501,52 @@ export default function DropPage() {
 
       const data = await res.json();
       if (res.ok && data.authorized) {
+        triggerHaptic('success');
         setIsAuthenticated(true);
         localStorage.setItem(AUTH_STORAGE_KEY, PASSCODE);
         setInputPasscode('');
       } else {
-        setPassError('Incorrect passcode. Try again.');
+        triggerHaptic('error');
+        setPassError('Access Denied • Invalid Code');
         setInputPasscode('');
+        setShakeKey((prev) => prev + 1);
       }
     } catch {
-      setPassError('Network error. Check connection.');
+      triggerHaptic('error');
+      setPassError('Connection error. Retry.');
     } finally {
       setIsVerifying(false);
     }
   };
 
+  // Numpad key tap handler for 6-digit pin
+  const handleKeypadPress = (key: string) => {
+    triggerHaptic('tap');
+    if (key === 'C') {
+      setInputPasscode('');
+      setPassError('');
+    } else if (key === '⌫') {
+      setInputPasscode((prev) => prev.slice(0, -1));
+      setPassError('');
+    } else if (key === '➔') {
+      if (inputPasscode.length === 6) {
+        handlePasscodeSubmit(inputPasscode);
+      }
+    } else {
+      if (inputPasscode.length < 6) {
+        const next = inputPasscode + key;
+        setInputPasscode(next);
+        setPassError('');
+        if (next.length === 6) {
+          handlePasscodeSubmit(next);
+        }
+      }
+    }
+  };
+
   // Lock Vault
   const handleLockVault = () => {
+    triggerHaptic('tap');
     localStorage.removeItem(AUTH_STORAGE_KEY);
     setIsAuthenticated(false);
     setInputPasscode('');
@@ -489,6 +555,7 @@ export default function DropPage() {
 
   // Toggle Sound
   const handleToggleSound = () => {
+    triggerHaptic('tap');
     const next = !soundEnabled;
     setSoundEnabled(next);
     soundEnabledRef.current = next;
@@ -497,6 +564,7 @@ export default function DropPage() {
 
   // Save Custom Device Name
   const handleSaveDeviceName = (name: string) => {
+    triggerHaptic('tap');
     const trimmed = name.trim() || 'Device';
     setDeviceName(trimmed);
     deviceNameRef.current = trimmed;
@@ -513,6 +581,7 @@ export default function DropPage() {
   // Execute drop / upload
   const executeDrop = async (textToSend: string, fileToSend: File | null, customType?: DropType) => {
     if ((!textToSend && !fileToSend) || isUploading) return;
+    triggerHaptic('tap');
 
     const tempId = `temp-${Date.now()}`;
     const optimisticDrop: DropItem = {
@@ -584,15 +653,18 @@ export default function DropPage() {
       }
 
       if (res.ok) {
+        triggerHaptic('success');
         const data = await res.json();
         if (data.drops) {
           applyIncomingDrops(data.drops);
         }
       } else {
+        triggerHaptic('error');
         setDrops((prev) => prev.filter((d) => d.id !== tempId));
         alert('Could not deliver drop. Please retry.');
       }
     } catch (err) {
+      triggerHaptic('error');
       console.error('Failed to drop:', err);
       setDrops((prev) => prev.filter((d) => d.id !== tempId));
     } finally {
@@ -603,14 +675,13 @@ export default function DropPage() {
     }
   };
 
-  // Submit form drop
   const handleDropSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     executeDrop(inputText.trim(), pendingFile, viewMode === 'chat' ? 'chat' : undefined);
   };
 
-  // Delete Individual Drop
   const handleDeleteDrop = async (id: string) => {
+    triggerHaptic('tap');
     setDrops((prev) => {
       const next = prev.filter((d) => d.id !== id);
       try {
@@ -629,8 +700,8 @@ export default function DropPage() {
     }
   };
 
-  // Clear Entire Can
   const handleClearAll = async () => {
+    triggerHaptic('error');
     setDrops([]);
     try {
       localStorage.removeItem(DROPS_CACHE_KEY);
@@ -647,8 +718,8 @@ export default function DropPage() {
     }
   };
 
-  // Copy Content / URL to clipboard
   const handleCopyToClipboard = (text: string, id: string) => {
+    triggerHaptic('success');
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => {
@@ -656,8 +727,8 @@ export default function DropPage() {
     }, 2000);
   };
 
-  // Paste from device clipboard into drop input
   const handleReadClipboard = async () => {
+    triggerHaptic('tap');
     try {
       const text = await navigator.clipboard.readText();
       if (text) {
@@ -665,156 +736,170 @@ export default function DropPage() {
         textareaRef.current?.focus();
       }
     } catch {
-      alert('Clipboard read permission denied. Use Ctrl+V / Cmd+V to paste directly!');
+      alert('Clipboard access blocked. Use Ctrl+V / Cmd+V directly on the page!');
     }
   };
 
   /* ======================================================================== */
-  /*                         1. PASSWORD GATE SCREEN                          */
+  /*                         1. BLACK GRIDDY AUTH SCREEN                      */
   /* ======================================================================== */
   if (!isAuthenticated) {
     return (
-      <main className="relative min-h-screen bg-[#06080d] flex items-center justify-center p-4 selection:bg-[var(--color-brand-cyan)] selection:text-white overflow-hidden">
-        {/* Background Ambient Glows */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(6,182,212,0.12)_0%,transparent_70%)] pointer-events-none blur-3xl" />
-        <div className="absolute bottom-10 right-10 w-[400px] h-[400px] bg-[radial-gradient(circle,rgba(4,75,54,0.15)_0%,transparent_70%)] pointer-events-none blur-3xl" />
+      <main className="relative min-h-screen bg-[#000000] text-white flex items-center justify-center p-4 selection:bg-cyan-500 selection:text-black overflow-hidden touch-manipulation font-sans">
+        {/* Black Precision Tactical Grid Background (Only on /drop) */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundColor: '#000000',
+            backgroundImage: `
+              linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px)
+            `,
+            backgroundSize: '24px 24px',
+            backgroundPosition: 'center center',
+          }}
+        />
 
+        {/* Ambient Focal Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.12)_0%,transparent_65%)] pointer-events-none blur-3xl" />
+
+        {/* Tactical Crosshair Accents */}
+        <div className="absolute top-6 left-6 font-mono text-[10px] text-white/30 tracking-widest uppercase select-none hidden sm:block">
+          SYS.NODE // 1975-ENCRYPT
+        </div>
+        <div className="absolute top-6 right-6 font-mono text-[10px] text-cyan-400/50 tracking-widest uppercase select-none hidden sm:block">
+          ● AIRDROP_VAULT: ARMED
+        </div>
+        <div className="absolute bottom-6 left-6 font-mono text-[10px] text-white/20 tracking-widest uppercase select-none hidden sm:block">
+          COORD [39.18° N, 76.82° W]
+        </div>
+        <div className="absolute bottom-6 right-6 font-mono text-[10px] text-white/20 tracking-widest uppercase select-none hidden sm:block">
+          VER 2.4.0 // TACTICAL
+        </div>
+
+        {/* Lock Card Container */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="relative z-10 w-full max-w-md bg-[#0c1017]/90 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 sm:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.8)] text-center flex flex-col items-center gap-6"
+          key={shakeKey}
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{
+            opacity: 1,
+            scale: 1,
+            x: passError ? [-10, 10, -8, 8, -4, 4, 0] : 0,
+          }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+          className="relative z-10 w-full max-w-sm bg-[#050507]/95 backdrop-blur-2xl border border-white/15 rounded-3xl p-6 sm:p-8 shadow-[0_25px_80px_rgba(0,0,0,0.95)] flex flex-col items-center gap-6"
+          style={{
+            boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 20px 60px rgba(0,0,0,0.9)',
+          }}
         >
-          {/* Top Back Link */}
+          {/* Top Brand Return */}
           <Link
             href="/"
-            className="text-xs text-white/40 hover:text-white/80 transition-colors flex items-center gap-1.5 font-mono uppercase tracking-wider mb-1"
+            onClick={() => triggerHaptic('tap')}
+            className="text-xs text-white/40 hover:text-white transition-colors flex items-center gap-1.5 font-mono uppercase tracking-wider active:scale-95 duration-75"
           >
-            <span>←</span> Back to Palmzip
+            <span>←</span> Return to Palmzip
           </Link>
 
-          {/* Glowing Drop Can Vault Icon */}
+          {/* Tactical Vault Icon */}
           <div className="relative">
-            <div className="absolute -inset-2 bg-gradient-to-r from-[var(--color-brand-cyan)] to-[var(--color-brand-emerald)] rounded-2xl opacity-40 blur-lg animate-pulse" />
-            <div className="relative w-16 h-16 rounded-2xl bg-black/60 border border-white/20 flex items-center justify-center text-3xl shadow-xl">
-              📥
+            <div className="absolute -inset-2 bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-2xl opacity-40 blur-md animate-pulse" />
+            <div className="relative w-16 h-16 rounded-2xl bg-black border border-cyan-500/40 flex items-center justify-center text-3xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15)]">
+              🔒
             </div>
           </div>
 
-          {/* Heading */}
-          <div className="flex flex-col gap-1.5">
-            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-              Drop Can
+          {/* Heading (Zero PIN numbers revealed!) */}
+          <div className="flex flex-col items-center gap-1 text-center">
+            <h1 className="text-2xl font-black text-white tracking-tight font-mono uppercase">
+              DROP VAULT
             </h1>
-            <p className="text-xs sm:text-sm text-white/60">
-              Universal clipboard & drop vault. Drop on one device, grab from any other.
+            <p className="text-xs text-white/50 tracking-tight">
+              Enter 6-digit passcode to unlock clipboard
             </p>
           </div>
 
-          {/* Passcode Form */}
+          {/* 6 Digit Dot Indicators */}
+          <div className="flex items-center gap-3.5 my-1">
+            {[0, 1, 2, 3, 4, 5].map((idx) => {
+              const isFilled = inputPasscode.length > idx;
+              return (
+                <motion.div
+                  key={idx}
+                  animate={{
+                    scale: isFilled ? [1, 1.25, 1] : 1,
+                  }}
+                  transition={{ duration: 0.15 }}
+                  className={`w-3.5 h-3.5 rounded-full border transition-all duration-150 ${
+                    isFilled
+                      ? 'bg-cyan-400 border-cyan-300 shadow-[0_0_14px_rgba(6,182,212,0.9)]'
+                      : 'bg-white/[0.04] border-white/20'
+                  }`}
+                />
+              );
+            })}
+          </div>
+
+          {/* Hidden Form for Direct Keyboard Entry */}
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              handlePasscodeSubmit();
+              if (inputPasscode.length === 6) {
+                handlePasscodeSubmit(inputPasscode);
+              }
             }}
-            className="w-full flex flex-col items-center gap-4"
+            className="w-full"
           >
-            <div className="w-full relative">
-              <input
-                type={showPass ? 'text' : 'password'}
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={8}
-                autoFocus
-                placeholder="Enter passcode (2008)"
-                value={inputPasscode}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setInputPasscode(val);
-                  setPassError('');
-                  if (val === PASSCODE) {
-                    handlePasscodeSubmit(val);
-                  }
-                }}
-                className={`w-full bg-black/50 border ${
-                  passError
-                    ? 'border-red-500/80 shadow-[0_0_20px_rgba(239,68,68,0.3)]'
-                    : 'border-white/15 focus:border-[var(--color-brand-cyan)] shadow-inner'
-                } rounded-2xl px-5 py-4 text-center text-2xl font-mono tracking-[0.3em] text-white placeholder:text-white/25 placeholder:text-sm placeholder:tracking-normal outline-none transition-all`}
-              />
-
-              {inputPasscode && (
-                <button
-                  type="button"
-                  onClick={() => setShowPass(!showPass)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-xs px-2 py-1 rounded transition-colors"
-                >
-                  {showPass ? 'Hide' : 'Show'}
-                </button>
-              )}
-            </div>
-
-            {/* Error Message */}
-            {passError && (
-              <motion.div
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-xs text-red-400 font-medium flex items-center gap-1.5 bg-red-950/40 border border-red-500/30 px-3 py-1.5 rounded-xl"
-              >
-                <span>⚠️</span>
-                <span>{passError}</span>
-              </motion.div>
-            )}
-
-            {/* Numeric Quick Pad for Mobile */}
-            <div className="grid grid-cols-3 gap-2 w-full max-w-[280px] my-1">
-              {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '➔'].map((key) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => {
-                    if (key === 'C') {
-                      setInputPasscode('');
-                      setPassError('');
-                    } else if (key === '➔') {
-                      handlePasscodeSubmit();
-                    } else {
-                      const next = inputPasscode + key;
-                      setInputPasscode(next);
-                      if (next === PASSCODE) {
-                        handlePasscodeSubmit(next);
-                      }
-                    }
-                  }}
-                  className="h-11 rounded-xl bg-white/[0.04] hover:bg-white/[0.12] active:scale-95 border border-white/5 text-white font-mono font-medium text-base transition-all flex items-center justify-center cursor-pointer shadow-sm"
-                >
-                  {key}
-                </button>
-              ))}
-            </div>
-
-            {/* Unlock Button */}
-            <button
-              type="submit"
-              disabled={isVerifying || !inputPasscode}
-              className="w-full mt-2 py-3.5 rounded-2xl bg-gradient-to-r from-[var(--color-brand-cyan)] to-[var(--color-brand-emerald)] hover:opacity-95 active:scale-[0.98] text-white font-semibold text-sm tracking-wide transition-all shadow-[0_0_25px_rgba(6,182,212,0.3)] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
-            >
-              {isVerifying ? (
-                <>
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Opening Can...</span>
-                </>
-              ) : (
-                <>
-                  <span>Unlock Drop Can</span>
-                  <span>→</span>
-                </>
-              )}
-            </button>
+            <input
+              type="password"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              autoFocus
+              placeholder="••••••"
+              value={inputPasscode}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                setInputPasscode(val);
+                setPassError('');
+                triggerHaptic('tap');
+                if (val.length === 6) {
+                  handlePasscodeSubmit(val);
+                }
+              }}
+              className="w-full bg-black/60 border border-white/10 focus:border-cyan-500 rounded-xl px-4 py-2 text-center text-lg font-mono tracking-[0.5em] text-cyan-300 placeholder:text-white/20 outline-none transition-all shadow-inner"
+            />
           </form>
 
-          <div className="text-[11px] text-white/35 font-mono">
-            PIN 2008 required • Encrypted Universal Sync
+          {/* Error Banner */}
+          {passError && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-xs text-red-400 font-mono flex items-center gap-1.5 bg-red-950/40 border border-red-500/30 px-3 py-1.5 rounded-xl"
+            >
+              <span>⚠️</span>
+              <span>{passError}</span>
+            </motion.div>
+          )}
+
+          {/* Touch-Sensitive Keypad */}
+          <div className="grid grid-cols-3 gap-2.5 w-full max-w-[280px]">
+            {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '⌫'].map((key) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => handleKeypadPress(key)}
+                className="h-12 rounded-2xl bg-white/[0.03] hover:bg-white/[0.08] active:bg-cyan-500/20 border border-white/10 hover:border-cyan-500/40 active:border-cyan-400 active:scale-[0.92] text-white active:text-cyan-300 font-mono font-semibold text-lg transition-all duration-75 flex items-center justify-center cursor-pointer shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] select-none"
+              >
+                {key}
+              </button>
+            ))}
+          </div>
+
+          {/* Subtext - Absolutely NO pin revealed */}
+          <div className="text-[11px] text-white/30 font-mono tracking-wider uppercase">
+            Encrypted 6-digit clearance
           </div>
         </motion.div>
       </main>
@@ -822,13 +907,29 @@ export default function DropPage() {
   }
 
   /* ======================================================================== */
-  /*                       2. MAIN DROP CAN & VAULT UI                        */
+  /*               2. BLACK GRIDDY TOUCH-SENSITIVE VAULT UI                   */
   /* ======================================================================== */
-  // Sort drops: newest first for clipboard grid, chronological for chat
   const clipboardDrops = [...drops].reverse();
 
   return (
-    <main className="relative min-h-screen bg-[#07090e] text-white flex flex-col selection:bg-[var(--color-brand-cyan)] selection:text-white">
+    <main className="relative min-h-screen bg-[#000000] text-white flex flex-col selection:bg-cyan-500 selection:text-black font-sans touch-manipulation">
+      {/* Precision Tactical Grid Background Layer */}
+      <div
+        className="fixed inset-0 pointer-events-none z-0"
+        style={{
+          backgroundColor: '#000000',
+          backgroundImage: `
+            linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px)
+          `,
+          backgroundSize: '24px 24px',
+          backgroundPosition: 'center center',
+        }}
+      />
+
+      {/* Subtle Cyan Center Illumination */}
+      <div className="fixed top-20 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-[radial-gradient(ellipse_at_top,rgba(6,182,212,0.08)_0%,transparent_70%)] pointer-events-none blur-3xl z-0" />
+
       {/* Drag & Drop Fullscreen Overlay */}
       <AnimatePresence>
         {isDraggingOver && (
@@ -836,18 +937,20 @@ export default function DropPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-[#07090e]/92 backdrop-blur-xl flex flex-col items-center justify-center border-4 border-dashed border-[var(--color-brand-cyan)] p-6 pointer-events-none"
+            className="fixed inset-0 z-50 bg-[#000000]/95 backdrop-blur-2xl flex flex-col items-center justify-center border-4 border-dashed border-cyan-400 p-6 pointer-events-none"
           >
             <motion.div
-              animate={{ scale: [1, 1.08, 1], rotate: [0, -3, 3, 0] }}
-              transition={{ repeat: Infinity, duration: 1.6 }}
-              className="w-28 h-28 rounded-3xl bg-[var(--color-brand-cyan)]/20 border border-[var(--color-brand-cyan)]/50 flex items-center justify-center text-5xl mb-4 shadow-[0_0_60px_rgba(6,182,212,0.4)]"
+              animate={{ scale: [1, 1.08, 1] }}
+              transition={{ repeat: Infinity, duration: 1.5 }}
+              className="w-28 h-28 rounded-3xl bg-cyan-950/40 border border-cyan-400 flex items-center justify-center text-5xl mb-4 shadow-[0_0_60px_rgba(6,182,212,0.6)]"
             >
               📥
             </motion.div>
-            <h2 className="text-3xl font-black text-white mb-2">Drop it in the Can!</h2>
-            <p className="text-sm text-white/70 text-center max-w-sm">
-              Release to instantly send this item to all your connected devices.
+            <h2 className="text-3xl font-black text-white font-mono uppercase tracking-tight mb-2">
+              Drop into the Can
+            </h2>
+            <p className="text-sm text-cyan-300/80 font-mono text-center max-w-sm">
+              Release to instantly sync across all your authorized devices.
             </p>
           </motion.div>
         )}
@@ -861,21 +964,27 @@ export default function DropPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setLightboxImage(null)}
-            className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 cursor-zoom-out"
+            className="fixed inset-0 z-50 bg-black/95 backdrop-blur-2xl flex flex-col items-center justify-center p-4 cursor-zoom-out"
           >
             <div className="absolute top-4 right-4 flex items-center gap-3 z-10">
               <a
                 href={lightboxImage}
                 download
-                onClick={(e) => e.stopPropagation()}
-                className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold border border-white/15 flex items-center gap-1.5 transition-colors cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  triggerHaptic('tap');
+                }}
+                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs font-mono border border-white/20 flex items-center gap-1.5 transition-all cursor-pointer"
               >
                 <span>⬇ Download</span>
               </a>
               <button
                 type="button"
-                onClick={() => setLightboxImage(null)}
-                className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-sm font-bold border border-white/15 transition-colors cursor-pointer"
+                onClick={() => {
+                  triggerHaptic('tap');
+                  setLightboxImage(null);
+                }}
+                className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 active:scale-90 text-white flex items-center justify-center text-sm font-bold border border-white/20 transition-all cursor-pointer"
               >
                 ✕
               </button>
@@ -883,7 +992,7 @@ export default function DropPage() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={lightboxImage}
-              alt="Full preview"
+              alt="Preview"
               className="max-w-[95vw] max-h-[85vh] object-contain rounded-2xl shadow-2xl border border-white/10"
               onClick={(e) => e.stopPropagation()}
             />
@@ -898,32 +1007,37 @@ export default function DropPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
           >
-            <div className="bg-[#0f141d] border border-white/15 rounded-3xl p-6 max-w-sm w-full flex flex-col gap-4 text-center shadow-2xl">
-              <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 text-xl flex items-center justify-center mx-auto">
+            <div className="bg-[#050508] border border-red-500/30 rounded-3xl p-6 max-w-sm w-full flex flex-col gap-4 text-center shadow-2xl">
+              <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 text-xl flex items-center justify-center mx-auto">
                 🗑️
               </div>
               <div className="flex flex-col gap-1">
-                <h3 className="text-lg font-bold text-white">Empty Drop Can?</h3>
-                <p className="text-xs text-white/60">
-                  This will clear all 10 stored drops across all your devices.
+                <h3 className="text-lg font-bold text-white font-mono uppercase">
+                  Empty Drop Can?
+                </h3>
+                <p className="text-xs text-white/50">
+                  This will wipe all 10 stored drops across all your devices.
                 </p>
               </div>
               <div className="flex items-center gap-2 pt-2">
                 <button
                   type="button"
-                  onClick={() => setConfirmClearOpen(false)}
-                  className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-medium border border-white/10 transition-colors cursor-pointer"
+                  onClick={() => {
+                    triggerHaptic('tap');
+                    setConfirmClearOpen(false);
+                  }}
+                  className="flex-1 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] active:scale-95 text-white text-xs font-mono border border-white/10 transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={handleClearAll}
-                  className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-semibold shadow-lg shadow-red-900/40 transition-colors cursor-pointer"
+                  className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 active:scale-95 text-white text-xs font-mono font-semibold shadow-lg shadow-red-900/40 transition-all cursor-pointer"
                 >
-                  Yes, Empty Can
+                  Confirm Empty
                 </button>
               </div>
             </div>
@@ -932,14 +1046,15 @@ export default function DropPage() {
       </AnimatePresence>
 
       {/* ==================================================================== */}
-      {/* 2A. TOP NAVIGATION BAR                                               */}
+      {/* 2A. TACTICAL HUD TOP NAVIGATION                                      */}
       {/* ==================================================================== */}
-      <header className="sticky top-0 z-40 bg-[#07090e]/85 backdrop-blur-xl border-b border-white/10 px-3 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <header className="sticky top-0 z-40 bg-[#000000]/85 backdrop-blur-xl border-b border-white/10 px-3 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-[0_4px_25px_rgba(0,0,0,0.8)]">
         {/* Left: Branding */}
         <div className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-3">
           <Link
             href="/"
-            className="text-xs text-white/50 hover:text-white transition-colors flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-white/5"
+            onClick={() => triggerHaptic('tap')}
+            className="text-xs text-white/40 hover:text-white transition-colors flex items-center gap-1 px-2.5 py-1 rounded-xl hover:bg-white/[0.05] active:scale-95 duration-75 font-mono"
             title="Return to Palmzip"
           >
             <span>←</span>
@@ -948,30 +1063,30 @@ export default function DropPage() {
 
           <div className="flex items-center gap-2.5">
             <div className="relative">
-              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[var(--color-brand-cyan)] to-[var(--color-brand-emerald)] p-[1.5px] shadow-md">
-                <div className="w-full h-full bg-[#0c1017] rounded-[14px] flex items-center justify-center text-sm">
-                  📥
-                </div>
+              <div className="w-9 h-9 rounded-2xl bg-black border border-cyan-500/40 p-[1.5px] shadow-[0_0_15px_rgba(6,182,212,0.25)] flex items-center justify-center text-sm">
+                📥
               </div>
               {isConnected && (
                 <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border-2 border-[#07090e]" />
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-400 border-2 border-black" />
                 </span>
               )}
             </div>
 
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <span className="font-bold text-sm sm:text-base tracking-tight text-white">
+                <span className="font-bold text-sm tracking-tight text-white font-mono uppercase">
                   Drop Can
                 </span>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Live Sync
+                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-950/60 text-cyan-300 border border-cyan-500/40 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                  GRID SYNC
                 </span>
               </div>
-              <span className="text-[11px] text-white/45">Universal Clipboard & Vault</span>
+              <span className="text-[10px] text-white/40 font-mono tracking-wider">
+                UNIVERSAL CLIPBOARD
+              </span>
             </div>
           </div>
 
@@ -980,9 +1095,9 @@ export default function DropPage() {
             <button
               type="button"
               onClick={handleToggleSound}
-              className={`p-1.5 rounded-lg border text-xs transition-colors ${
+              className={`p-2 rounded-xl border text-xs active:scale-90 transition-all ${
                 soundEnabled
-                  ? 'border-white/10 text-white/80 bg-white/5'
+                  ? 'border-white/15 text-white bg-white/[0.05]'
                   : 'border-white/5 text-white/30'
               }`}
               title={soundEnabled ? 'Sound On' : 'Muted'}
@@ -992,7 +1107,7 @@ export default function DropPage() {
             <button
               type="button"
               onClick={handleLockVault}
-              className="p-1.5 rounded-lg border border-white/10 text-white/60 hover:text-white text-xs bg-white/5"
+              className="p-2 rounded-xl border border-white/15 text-white/60 hover:text-white text-xs bg-white/[0.05] active:scale-90 transition-all"
               title="Lock vault"
             >
               🔒
@@ -1000,47 +1115,52 @@ export default function DropPage() {
           </div>
         </div>
 
-        {/* Center: Mode Switcher Pill (Drop Can vs Chat Mode) */}
-        <div className="flex items-center p-1 rounded-2xl bg-black/50 border border-white/10 shadow-inner">
+        {/* Center: Tactile Mode Switcher Pill */}
+        <div className="flex items-center p-1 rounded-2xl bg-[#08080c] border border-white/10 shadow-inner">
           <button
             type="button"
-            onClick={() => setViewMode('can')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+            onClick={() => {
+              triggerHaptic('tap');
+              setViewMode('can');
+            }}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-semibold transition-all duration-75 cursor-pointer active:scale-95 flex items-center gap-1.5 ${
               viewMode === 'can'
-                ? 'bg-gradient-to-r from-[var(--color-brand-cyan)] to-teal-500 text-white shadow-[0_0_15px_rgba(6,182,212,0.4)]'
+                ? 'bg-cyan-500 text-black shadow-[0_0_20px_rgba(6,182,212,0.4)]'
                 : 'text-white/60 hover:text-white'
             }`}
           >
             <span>📥</span>
-            <span>Drop Can (Clipboard)</span>
+            <span>Drop Can</span>
           </button>
           <button
             type="button"
-            onClick={() => setViewMode('chat')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+            onClick={() => {
+              triggerHaptic('tap');
+              setViewMode('chat');
+            }}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-semibold transition-all duration-75 cursor-pointer active:scale-95 flex items-center gap-1.5 ${
               viewMode === 'chat'
-                ? 'bg-gradient-to-r from-teal-500 to-[var(--color-brand-emerald)] text-white shadow-[0_0_15px_rgba(4,75,54,0.4)]'
+                ? 'bg-cyan-500 text-black shadow-[0_0_20px_rgba(6,182,212,0.4)]'
                 : 'text-white/60 hover:text-white'
             }`}
           >
             <span>💬</span>
-            <span>Live Chat</span>
+            <span>Chat Mode</span>
           </button>
         </div>
 
-        {/* Right: Storage Meter + Device Badge + Actions */}
-        <div className="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-2 sm:gap-3 overflow-x-auto pb-1 sm:pb-0">
-          {/* Storage Meter */}
+        {/* Right: Storage Gauge + Device + Actions */}
+        <div className="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-2 sm:gap-2.5 overflow-x-auto pb-1 sm:pb-0">
+          {/* Storage Capacity Gauge */}
           <div
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/10 text-[11px] text-white/70"
-            title="Keeps the last 10 drops rolling automatically"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/[0.04] border border-white/10 text-[11px] font-mono text-white/70"
+            title="Rolling memory: holds past 10 drops"
           >
             <span className="text-cyan-400">💾</span>
-            <span className="font-mono text-white font-medium">{drops.length}/10</span>
-            <span className="hidden md:inline text-white/40">items</span>
+            <span className="text-white font-bold">{drops.length}/10</span>
           </div>
 
-          {/* Device Label / Rename Pill */}
+          {/* Device Rename Pill */}
           {editingDevice ? (
             <form
               onSubmit={(e) => {
@@ -1055,31 +1175,29 @@ export default function DropPage() {
                 maxLength={20}
                 value={tempDeviceInput}
                 onChange={(e) => setTempDeviceInput(e.target.value)}
-                placeholder="Device name"
-                className="bg-black/60 border border-[var(--color-brand-cyan)] rounded-xl px-2 py-0.5 text-xs text-white outline-none w-24"
+                placeholder="Device label"
+                className="bg-black border border-cyan-400 rounded-xl px-2 py-0.5 text-xs text-white outline-none w-24 font-mono"
               />
               <button
                 type="submit"
-                className="text-[10px] text-cyan-400 hover:text-white px-1.5 py-0.5 rounded bg-white/10"
+                className="text-[10px] font-mono text-cyan-300 hover:text-white px-2 py-0.5 rounded-lg bg-white/10"
               >
-                Save
+                Set
               </button>
             </form>
           ) : (
             <button
               type="button"
               onClick={() => {
+                triggerHaptic('tap');
                 setTempDeviceInput(deviceName);
                 setEditingDevice(true);
               }}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.1] border border-white/10 text-[11px] text-white/75 hover:text-white transition-colors cursor-pointer"
-              title="Click to rename this device"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] active:scale-95 border border-white/10 text-[11px] font-mono text-white/80 transition-all cursor-pointer"
+              title="Click to rename device label"
             >
-              <span className="text-white/40">📱</span>
-              <span className="font-medium truncate max-w-[80px] sm:max-w-[120px]">
-                {deviceName}
-              </span>
-              <span className="text-[9px] text-white/30">✎</span>
+              <span className="text-cyan-400">⚡</span>
+              <span className="truncate max-w-[80px] sm:max-w-[120px]">{deviceName}</span>
             </button>
           )}
 
@@ -1088,12 +1206,12 @@ export default function DropPage() {
             <button
               type="button"
               onClick={handleToggleSound}
-              className={`p-2 rounded-xl border text-xs transition-colors cursor-pointer ${
+              className={`p-2 rounded-xl border text-xs active:scale-90 transition-all cursor-pointer ${
                 soundEnabled
-                  ? 'border-white/15 text-white/90 bg-white/5 hover:bg-white/10'
+                  ? 'border-white/15 text-white bg-white/[0.04] hover:bg-white/[0.08]'
                   : 'border-white/5 text-white/30 hover:text-white/50'
               }`}
-              title={soundEnabled ? 'Mute Chimes' : 'Enable Chimes'}
+              title={soundEnabled ? 'Mute' : 'Enable sound'}
             >
               {soundEnabled ? '🔔' : '🔕'}
             </button>
@@ -1101,9 +1219,12 @@ export default function DropPage() {
             {drops.length > 0 && (
               <button
                 type="button"
-                onClick={() => setConfirmClearOpen(true)}
-                className="p-2 rounded-xl border border-white/10 text-white/60 hover:text-red-400 hover:border-red-500/30 hover:bg-red-950/20 text-xs transition-colors cursor-pointer"
-                title="Empty drop can"
+                onClick={() => {
+                  triggerHaptic('tap');
+                  setConfirmClearOpen(true);
+                }}
+                className="p-2 rounded-xl border border-white/10 text-white/50 hover:text-red-400 hover:border-red-500/30 hover:bg-red-950/20 text-xs active:scale-90 transition-all cursor-pointer"
+                title="Clear all"
               >
                 🗑️
               </button>
@@ -1112,23 +1233,23 @@ export default function DropPage() {
             <button
               type="button"
               onClick={handleLockVault}
-              className="px-3 py-1.5 rounded-xl border border-white/10 text-white/70 hover:text-white hover:bg-white/10 text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
-              title="Lock vault"
+              className="px-3 py-1.5 rounded-xl border border-white/10 text-white/70 hover:text-white hover:bg-white/10 active:scale-95 text-xs font-mono transition-all cursor-pointer"
+              title="Lock Vault"
             >
-              <span>🔒</span>
-              <span>Lock</span>
+              <span>🔒 Lock</span>
             </button>
           </div>
         </div>
       </header>
 
-      {/* Hidden Global Inputs */}
+      {/* Hidden file pickers */}
       <input
         type="file"
         ref={fileInputRef}
         onChange={(e) => {
           if (e.target.files && e.target.files[0]) {
             setPendingFile(e.target.files[0]);
+            triggerHaptic('success');
           }
         }}
         className="hidden"
@@ -1141,65 +1262,85 @@ export default function DropPage() {
         onChange={(e) => {
           if (e.target.files && e.target.files[0]) {
             setPendingFile(e.target.files[0]);
+            triggerHaptic('success');
           }
         }}
         className="hidden"
       />
 
       {/* ==================================================================== */}
-      {/* 2B. MODE 1: DROP CAN & UNIVERSAL CLIPBOARD (PRIMARY VIEW)            */}
+      {/* 2B. MODE 1: DROP CAN & TACTICAL CLIPBOARD (PRIMARY VIEW)             */}
       {/* ==================================================================== */}
       {viewMode === 'can' && (
-        <div className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col gap-8">
-          {/* THE DROP CAN TARGET ZONE */}
+        <div className="relative z-10 flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col gap-8">
+          {/* THE TACTICAL DROP CAN (TOUCH-SENSITIVE HUD) */}
           <div
-            onClick={() => fileInputRef.current?.click()}
-            className="relative group cursor-pointer rounded-3xl p-6 sm:p-10 border-2 border-dashed border-cyan-500/30 hover:border-[var(--color-brand-cyan)] bg-gradient-to-b from-[#0e1622]/80 via-[#0a1017]/70 to-[#07090e]/90 transition-all duration-300 shadow-[0_10px_40px_rgba(0,0,0,0.5)] hover:shadow-[0_0_50px_rgba(6,182,212,0.18)] flex flex-col items-center justify-center text-center gap-4 overflow-hidden"
+            onClick={() => {
+              triggerHaptic('tap');
+              fileInputRef.current?.click();
+            }}
+            className="relative group cursor-pointer rounded-3xl p-6 sm:p-10 border border-white/15 hover:border-cyan-400/80 bg-[#040407]/90 backdrop-blur-xl transition-all duration-150 shadow-[0_15px_50px_rgba(0,0,0,0.9)] hover:shadow-[0_0_40px_rgba(6,182,212,0.25)] active:scale-[0.99] flex flex-col items-center justify-center text-center gap-4 overflow-hidden"
+            style={{
+              boxShadow: '0 0 0 1px rgba(255,255,255,0.08), 0 20px 50px rgba(0,0,0,0.9)',
+            }}
           >
-            {/* Ambient inner glow */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(6,182,212,0.12)_0%,transparent_70%)] pointer-events-none group-hover:opacity-100 opacity-60 transition-opacity" />
+            {/* Tech Corner Crosshairs HUD */}
+            <span className="absolute top-3 left-3 font-mono text-[9px] text-white/20 select-none">
+              ┌ CAN_ID: 01
+            </span>
+            <span className="absolute top-3 right-3 font-mono text-[9px] text-cyan-400/40 select-none">
+              SECURE_SYNC ┐
+            </span>
+            <span className="absolute bottom-3 left-3 font-mono text-[9px] text-white/20 select-none">
+              └ ROLLING_10
+            </span>
+            <span className="absolute bottom-3 right-3 font-mono text-[9px] text-white/20 select-none">
+              TOUCH_ACTIVE ┘
+            </span>
 
-            {/* Glowing Can Icon */}
-            <div className="relative">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-black/60 border border-cyan-500/30 flex items-center justify-center text-4xl sm:text-5xl shadow-2xl group-hover:scale-105 group-hover:border-[var(--color-brand-cyan)] transition-all">
+            {/* Tactical Icon */}
+            <div className="relative my-1">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-black border border-cyan-500/40 flex items-center justify-center text-4xl sm:text-5xl shadow-[0_0_30px_rgba(6,182,212,0.2)] group-hover:scale-105 group-hover:border-cyan-400 transition-all">
                 📥
               </div>
-              <span className="absolute -bottom-2 -right-2 px-2 py-0.5 rounded-full bg-[var(--color-brand-cyan)] text-black text-[10px] font-bold font-mono uppercase tracking-wider shadow">
-                Drop Zone
-              </span>
             </div>
 
             <div className="flex flex-col gap-1 max-w-md">
-              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight group-hover:text-cyan-300 transition-colors">
-                Drop any file or paste anywhere
+              <h2 className="text-xl sm:text-2xl font-black text-white font-mono uppercase tracking-tight group-hover:text-cyan-300 transition-colors">
+                Drop Files Into The Can
               </h2>
-              <p className="text-xs sm:text-sm text-white/60">
-                Click to browse files, drag and drop into this can, or press{' '}
-                <kbd className="px-1.5 py-0.5 rounded bg-white/10 font-mono text-[11px] text-white">
+              <p className="text-xs sm:text-sm text-white/50">
+                Click to browse, drag & drop files, or paste anywhere with{' '}
+                <kbd className="px-1.5 py-0.5 rounded bg-white/10 font-mono text-[11px] text-cyan-300">
                   Ctrl+V
-                </kbd>{' '}
-                to paste screenshots, text, or docs.
+                </kbd>
               </p>
             </div>
 
-            {/* Action buttons inside can */}
+            {/* Tactile Action Buttons */}
             <div
-              className="flex items-center gap-2.5 pt-1"
+              className="flex items-center gap-2 pt-1"
               onClick={(e) => e.stopPropagation()}
             >
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="px-4 py-2 rounded-xl bg-cyan-950/60 hover:bg-cyan-900/80 border border-cyan-500/40 text-cyan-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+                onClick={() => {
+                  triggerHaptic('tap');
+                  fileInputRef.current?.click();
+                }}
+                className="px-4 py-2 rounded-xl bg-cyan-950/60 hover:bg-cyan-900/80 active:scale-95 border border-cyan-500/40 text-cyan-300 hover:text-white text-xs font-mono font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
               >
                 <span>📁</span>
-                <span>Choose File</span>
+                <span>Browse File</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => cameraInputRef.current?.click()}
-                className="px-4 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/15 text-white text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                onClick={() => {
+                  triggerHaptic('tap');
+                  cameraInputRef.current?.click();
+                }}
+                className="px-4 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] active:scale-95 border border-white/15 text-white text-xs font-mono font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
               >
                 <span>📷</span>
                 <span>Camera / Scan</span>
@@ -1208,7 +1349,7 @@ export default function DropPage() {
               <button
                 type="button"
                 onClick={handleReadClipboard}
-                className="px-4 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/15 text-white text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer hidden sm:flex"
+                className="px-4 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] active:scale-95 border border-white/15 text-white text-xs font-mono font-semibold flex items-center gap-1.5 transition-all cursor-pointer hidden sm:flex"
                 title="Paste from clipboard"
               >
                 <span>📋</span>
@@ -1218,8 +1359,8 @@ export default function DropPage() {
           </div>
 
           {/* QUICK TEXT / LINK DROP COMPOSER */}
-          <div className="bg-[#0c111a]/90 backdrop-blur-xl border border-white/10 rounded-2xl p-3 sm:p-4 shadow-xl flex flex-col gap-3">
-            {/* Attachment preview if selected */}
+          <div className="bg-[#050508]/90 backdrop-blur-xl border border-white/15 rounded-2xl p-3 sm:p-4 shadow-xl flex flex-col gap-3">
+            {/* Attachment preview if pending */}
             <AnimatePresence>
               {pendingFile && (
                 <motion.div
@@ -1253,8 +1394,11 @@ export default function DropPage() {
 
                   <button
                     type="button"
-                    onClick={() => setPendingFile(null)}
-                    className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
+                    onClick={() => {
+                      triggerHaptic('tap');
+                      setPendingFile(null);
+                    }}
+                    className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 active:scale-90 text-white flex items-center justify-center text-xs font-bold transition-all cursor-pointer"
                   >
                     ✕
                   </button>
@@ -1262,22 +1406,28 @@ export default function DropPage() {
               )}
             </AnimatePresence>
 
-            <form onSubmit={handleDropSubmit} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <form
+              onSubmit={handleDropSubmit}
+              className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2"
+            >
               <div className="flex-1 relative">
                 <input
                   type="text"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
-                  placeholder="Drop a note, URL, code, or message into the can..."
-                  className="w-full bg-black/60 border border-white/15 focus:border-[var(--color-brand-cyan)] rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/35 outline-none transition-colors shadow-inner"
+                  placeholder="Drop a note, URL, code, or message to the can..."
+                  className="w-full bg-black border border-white/15 focus:border-cyan-400 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/30 outline-none transition-colors shadow-inner font-mono text-xs sm:text-sm"
                 />
               </div>
 
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="h-11 px-3 rounded-xl bg-white/[0.05] hover:bg-white/[0.12] border border-white/10 text-white/80 hover:text-white text-base transition-colors flex items-center justify-center cursor-pointer"
+                  onClick={() => {
+                    triggerHaptic('tap');
+                    fileInputRef.current?.click();
+                  }}
+                  className="h-11 px-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] active:scale-90 border border-white/15 text-white/80 hover:text-white text-base transition-all flex items-center justify-center cursor-pointer"
                   title="Attach file"
                 >
                   📎
@@ -1286,11 +1436,11 @@ export default function DropPage() {
                 <button
                   type="submit"
                   disabled={(!inputText.trim() && !pendingFile) || isUploading}
-                  className="h-11 flex-1 sm:flex-none px-5 rounded-xl bg-gradient-to-r from-[var(--color-brand-cyan)] to-[var(--color-brand-emerald)] hover:opacity-95 text-white font-semibold text-xs tracking-wide shadow-lg shadow-cyan-950/40 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                  className="h-11 flex-1 sm:flex-none px-5 rounded-xl bg-cyan-500 hover:bg-cyan-400 active:scale-95 text-black font-mono font-bold text-xs uppercase tracking-wider shadow-lg shadow-cyan-950/50 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                 >
                   {isUploading ? (
                     <>
-                      <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span className="w-3.5 h-3.5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                       <span>Dropping...</span>
                     </>
                   ) : (
@@ -1308,34 +1458,36 @@ export default function DropPage() {
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between px-1">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono">
-                  Clipboard Vault
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">
+                  CLIPBOARD VAULT
                 </h3>
-                <span className="text-[11px] text-white/40">
-                  (Past {drops.length} {drops.length === 1 ? 'drop' : 'drops'})
+                <span className="text-[11px] font-mono text-white/40">
+                  [{drops.length}/10 ITEMS]
                 </span>
               </div>
-              <span className="text-[11px] text-white/40 hidden sm:inline">
+              <span className="text-[10px] font-mono text-white/40 hidden sm:inline uppercase">
                 Tap Copy or Download on any device
               </span>
             </div>
 
-            {/* Empty state */}
+            {/* Empty State */}
             {drops.length === 0 && (
-              <div className="py-16 text-center flex flex-col items-center justify-center gap-3 border border-dashed border-white/10 rounded-3xl bg-white/[0.01]">
-                <div className="w-14 h-14 rounded-2xl bg-white/[0.04] flex items-center justify-center text-2xl text-white/50">
+              <div className="py-16 text-center flex flex-col items-center justify-center gap-3 border border-dashed border-white/10 rounded-3xl bg-[#040407]/50">
+                <div className="w-14 h-14 rounded-2xl bg-white/[0.04] flex items-center justify-center text-2xl text-white/40">
                   🪣
                 </div>
                 <div className="flex flex-col gap-1">
-                  <h4 className="text-sm font-bold text-white/70">The Drop Can is empty</h4>
+                  <h4 className="text-xs font-mono font-bold text-white/70 uppercase">
+                    Drop Can is Empty
+                  </h4>
                   <p className="text-xs text-white/40 max-w-xs">
-                    Drop a file, screenshot, or paste text above to start your shared clipboard!
+                    Drop a file, photo, or paste text above to start your shared clipboard!
                   </p>
                 </div>
               </div>
             )}
 
-            {/* Drops Cards Grid / Feed */}
+            {/* Drops Cards Grid */}
             <div className="grid grid-cols-1 gap-3">
               {clipboardDrops.map((drop) => {
                 const isImage = drop.attachment?.mimeType.startsWith('image/');
@@ -1348,16 +1500,18 @@ export default function DropPage() {
                     key={drop.id}
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="group bg-[#0d121b]/90 hover:bg-[#101722] border border-white/10 hover:border-cyan-500/30 rounded-2xl p-4 transition-all shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                    transition={{ duration: 0.15 }}
+                    className="group bg-[#040407] hover:bg-[#08080c] border border-white/10 hover:border-cyan-400/40 rounded-2xl p-4 transition-all shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
                   >
-                    {/* Left: Icon / Thumbnail & Content */}
                     <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
                       {/* Image Thumbnail */}
                       {isImage && drop.attachment && (
                         <div
-                          onClick={() => setLightboxImage(drop.attachment!.url)}
-                          className="w-14 h-14 rounded-xl overflow-hidden border border-white/15 shrink-0 bg-black/40 cursor-zoom-in group/thumb relative"
+                          onClick={() => {
+                            triggerHaptic('tap');
+                            setLightboxImage(drop.attachment!.url);
+                          }}
+                          className="w-14 h-14 rounded-xl overflow-hidden border border-white/15 shrink-0 bg-black cursor-zoom-in group/thumb relative active:scale-95 transition-transform"
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
@@ -1382,14 +1536,14 @@ export default function DropPage() {
                         </div>
                       )}
 
-                      {/* Text / Note Icon */}
+                      {/* Text Icon */}
                       {!drop.attachment && !isLink && (
-                        <div className="w-12 h-12 rounded-xl bg-white/[0.05] border border-white/10 text-white/70 flex items-center justify-center text-lg shrink-0">
+                        <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/10 text-white/70 flex items-center justify-center text-lg shrink-0">
                           📝
                         </div>
                       )}
 
-                      {/* Text details */}
+                      {/* Details */}
                       <div className="flex flex-col min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-0.5">
                           <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-white/[0.05] text-white/60 border border-white/5">
@@ -1399,15 +1553,14 @@ export default function DropPage() {
                             {drop.createdAt}
                           </span>
                           {drop.attachment && (
-                            <span className="text-[10px] font-mono text-cyan-400">
+                            <span className="text-[10px] font-mono text-cyan-300">
                               {formatFileSize(drop.attachment.size)}
                             </span>
                           )}
                         </div>
 
-                        {/* Drop content / title */}
                         {drop.attachment ? (
-                          <span className="text-xs sm:text-sm font-semibold text-white truncate max-w-full">
+                          <span className="text-xs sm:text-sm font-semibold text-white truncate max-w-full font-mono">
                             {drop.attachment.originalName}
                           </span>
                         ) : isLink ? (
@@ -1415,21 +1568,20 @@ export default function DropPage() {
                             href={drop.content}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs sm:text-sm font-semibold text-cyan-300 hover:underline truncate max-w-full"
+                            className="text-xs sm:text-sm font-semibold text-cyan-300 hover:underline truncate max-w-full font-mono"
                           >
                             {drop.content}
                           </a>
                         ) : (
-                          <p className="text-xs sm:text-sm text-white/90 whitespace-pre-wrap break-words line-clamp-3">
+                          <p className="text-xs sm:text-sm text-white/90 whitespace-pre-wrap break-words line-clamp-3 font-mono">
                             {renderTextWithLinks(drop.content)}
                           </p>
                         )}
                       </div>
                     </div>
 
-                    {/* Right: Instant Grab / Clipboard Action Buttons */}
+                    {/* Action Buttons */}
                     <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-                      {/* Copy Button (for text, links, or file URLs) */}
                       <button
                         type="button"
                         onClick={() =>
@@ -1438,49 +1590,48 @@ export default function DropPage() {
                             drop.id
                           )
                         }
-                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-xl text-xs font-mono font-semibold flex items-center gap-1.5 active:scale-90 transition-all cursor-pointer ${
                           isCopied
                             ? 'bg-emerald-500 text-black shadow-[0_0_15px_rgba(16,185,129,0.5)]'
-                            : 'bg-white/[0.08] hover:bg-white/[0.15] border border-white/10 text-white'
+                            : 'bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-white'
                         }`}
                         title="Copy to clipboard"
                       >
                         <span>{isCopied ? '✅' : '📋'}</span>
-                        <span>{isCopied ? 'Copied!' : 'Copy'}</span>
+                        <span>{isCopied ? 'COPIED' : 'COPY'}</span>
                       </button>
 
-                      {/* Download Button (if file / attachment) */}
                       {drop.attachment && (
                         <a
                           href={drop.attachment.url}
                           download={drop.attachment.originalName}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-3 py-1.5 rounded-xl bg-cyan-950/70 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                          onClick={() => triggerHaptic('tap')}
+                          className="px-3 py-1.5 rounded-xl bg-cyan-950/70 hover:bg-cyan-900 active:scale-90 border border-cyan-500/30 text-cyan-300 hover:text-white text-xs font-mono font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
                         >
                           <span>⬇</span>
-                          <span>Download</span>
+                          <span>DOWNLOAD</span>
                         </a>
                       )}
 
-                      {/* Open Link Button (if URL) */}
                       {isLink && (
                         <a
                           href={drop.content}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-3 py-1.5 rounded-xl bg-teal-950/70 hover:bg-teal-900 border border-teal-500/30 text-teal-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                          onClick={() => triggerHaptic('tap')}
+                          className="px-3 py-1.5 rounded-xl bg-teal-950/70 hover:bg-teal-900 active:scale-90 border border-teal-500/30 text-teal-300 hover:text-white text-xs font-mono font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
                         >
                           <span>↗</span>
-                          <span>Open</span>
+                          <span>OPEN</span>
                         </a>
                       )}
 
-                      {/* Delete Drop Button */}
                       <button
                         type="button"
                         onClick={() => handleDeleteDrop(drop.id)}
-                        className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-950/20 transition-colors cursor-pointer"
+                        className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-950/20 active:scale-90 transition-all cursor-pointer"
                         title="Delete drop"
                       >
                         ✕
@@ -1495,24 +1646,25 @@ export default function DropPage() {
       )}
 
       {/* ==================================================================== */}
-      {/* 2C. MODE 2: LIVE CHAT STREAM (SECONDARY VIEW)                        */}
+      {/* 2C. MODE 2: CHAT MODE (SECONDARY VIEW)                               */}
       {/* ==================================================================== */}
       {viewMode === 'chat' && (
-        <div className="flex-1 flex flex-col max-w-4xl w-full mx-auto">
-          {/* Chat Messages Feed */}
+        <div className="relative z-10 flex-1 flex flex-col max-w-4xl w-full mx-auto">
           <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 flex flex-col gap-4">
-            <div className="mx-auto text-center px-4 py-2 rounded-2xl bg-white/[0.02] border border-white/5 max-w-md">
-              <p className="text-[11px] text-white/40 leading-relaxed">
-                💬 <strong>Chat Stream:</strong> Instant communication mode. Items dropped here also appear in your Drop Can.
+            <div className="mx-auto text-center px-4 py-2 rounded-2xl bg-[#040407] border border-white/10 max-w-md">
+              <p className="text-[11px] font-mono text-white/40 uppercase tracking-wider leading-relaxed">
+                💬 CHAT STREAM // ITEMS AUTOMATICALLY MIRROR TO DROP CAN
               </p>
             </div>
 
             {drops.length === 0 && (
               <div className="flex-1 flex flex-col items-center justify-center py-20 text-center gap-3">
-                <div className="w-14 h-14 rounded-2xl bg-white/[0.04] flex items-center justify-center text-2xl text-white/50">
+                <div className="w-14 h-14 rounded-2xl bg-white/[0.04] flex items-center justify-center text-2xl text-white/40">
                   💬
                 </div>
-                <h4 className="text-sm font-bold text-white/70">No messages yet</h4>
+                <h4 className="text-xs font-mono font-bold text-white/70 uppercase">
+                  No messages recorded
+                </h4>
                 <p className="text-xs text-white/40 max-w-xs">
                   Type a message or attach a file below to chat across your devices!
                 </p>
@@ -1525,7 +1677,7 @@ export default function DropPage() {
               return (
                 <motion.div
                   key={msg.id}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   className={`flex flex-col group ${isMyDevice ? 'items-end' : 'items-start'}`}
                 >
@@ -1534,9 +1686,9 @@ export default function DropPage() {
                       isMyDevice ? 'flex-row-reverse' : 'flex-row'
                     }`}
                   >
-                    <span className="font-semibold text-cyan-400 flex items-center gap-1">
+                    <span className="font-mono text-cyan-400 flex items-center gap-1 text-[11px]">
                       <span>{msg.device || 'Device'}</span>
-                      {isMyDevice && <span className="text-[10px] text-white/40">(This device)</span>}
+                      {isMyDevice && <span className="text-[10px] text-white/40">(Self)</span>}
                     </span>
                     <span className="text-white/35 font-mono text-[10px]">{msg.createdAt}</span>
 
@@ -1553,8 +1705,8 @@ export default function DropPage() {
                   <div
                     className={`relative max-w-[88%] sm:max-w-[75%] rounded-3xl p-4 shadow-xl text-sm leading-relaxed ${
                       isMyDevice
-                        ? 'bg-gradient-to-br from-cyan-950/80 via-[#0c242c] to-[#044b36]/90 border border-cyan-500/30 text-white rounded-tr-sm'
-                        : 'bg-[#10141d]/90 backdrop-blur-xl border border-white/10 text-white/95 rounded-tl-sm'
+                        ? 'bg-gradient-to-br from-cyan-950/80 via-[#0a1622] to-[#044b36]/90 border border-cyan-500/30 text-white rounded-tr-sm'
+                        : 'bg-[#08080c] border border-white/10 text-white/95 rounded-tl-sm'
                     }`}
                   >
                     {msg.isSending && (
@@ -1564,28 +1716,29 @@ export default function DropPage() {
                       </div>
                     )}
 
-                    {/* Image Attachment */}
                     {msg.attachment && msg.attachment.mimeType.startsWith('image/') && (
-                      <div className="mb-3 overflow-hidden rounded-2xl border border-white/15 bg-black/40 group/img relative">
+                      <div className="mb-3 overflow-hidden rounded-2xl border border-white/15 bg-black group/img relative">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={msg.attachment.url}
                           alt={msg.attachment.originalName}
                           className="max-h-72 w-full object-contain cursor-zoom-in transition-transform duration-300 hover:scale-[1.02]"
-                          onClick={() => setLightboxImage(msg.attachment!.url)}
+                          onClick={() => {
+                            triggerHaptic('tap');
+                            setLightboxImage(msg.attachment!.url);
+                          }}
                         />
                       </div>
                     )}
 
-                    {/* File Attachment */}
                     {msg.attachment && !msg.attachment.mimeType.startsWith('image/') && (
-                      <div className="mb-3 p-3 rounded-2xl bg-black/40 border border-white/15 flex items-center justify-between gap-3">
+                      <div className="mb-3 p-3 rounded-2xl bg-black border border-white/15 flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2.5 min-w-0">
                           <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-lg shrink-0">
                             📄
                           </div>
                           <div className="flex flex-col min-w-0">
-                            <span className="font-medium text-xs text-white truncate max-w-[200px]">
+                            <span className="font-mono text-xs text-white truncate max-w-[200px]">
                               {msg.attachment.originalName}
                             </span>
                             <span className="text-[10px] text-white/50 font-mono">
@@ -1599,21 +1752,20 @@ export default function DropPage() {
                           download={msg.attachment.originalName}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="shrink-0 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold border border-white/15 transition-colors cursor-pointer"
+                          onClick={() => triggerHaptic('tap')}
+                          className="shrink-0 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-90 text-white text-xs font-mono transition-all cursor-pointer"
                         >
                           ⬇
                         </a>
                       </div>
                     )}
 
-                    {/* Text */}
                     {msg.content && (
-                      <div className="whitespace-pre-wrap break-words font-normal">
+                      <div className="whitespace-pre-wrap break-words font-mono text-xs sm:text-sm">
                         {renderTextWithLinks(msg.content)}
                       </div>
                     )}
 
-                    {/* Quick copy text */}
                     {msg.content && (
                       <div className="mt-2 pt-1 border-t border-white/5 flex items-center justify-end">
                         <button
@@ -1624,7 +1776,7 @@ export default function DropPage() {
                               msg.id
                             )
                           }
-                          className="text-[10px] text-white/40 hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
+                          className="text-[10px] font-mono text-white/40 hover:text-white active:scale-95 transition-all flex items-center gap-1 cursor-pointer"
                         >
                           <span>{copiedId === msg.id ? '✅ Copied' : '📋 Copy'}</span>
                         </button>
@@ -1638,8 +1790,8 @@ export default function DropPage() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Chat Composer Bar */}
-          <footer className="sticky bottom-0 z-40 bg-[#07090e]/95 backdrop-blur-2xl border-t border-white/10 p-3 sm:p-4 w-full">
+          {/* Composer Footer */}
+          <footer className="sticky bottom-0 z-40 bg-[#000000]/95 backdrop-blur-2xl border-t border-white/10 p-3 sm:p-4 w-full">
             <AnimatePresence>
               {pendingFile && (
                 <motion.div
@@ -1648,12 +1800,15 @@ export default function DropPage() {
                   exit={{ opacity: 0, height: 0 }}
                   className="mb-2.5 p-2 rounded-xl bg-cyan-950/40 border border-cyan-500/30 flex items-center justify-between gap-3"
                 >
-                  <span className="text-xs text-white truncate max-w-[240px]">
+                  <span className="text-xs font-mono text-white truncate max-w-[240px]">
                     📎 {pendingFile.name} ({formatFileSize(pendingFile.size)})
                   </span>
                   <button
                     type="button"
-                    onClick={() => setPendingFile(null)}
+                    onClick={() => {
+                      triggerHaptic('tap');
+                      setPendingFile(null);
+                    }}
                     className="text-xs text-white/60 hover:text-white px-2 py-0.5 rounded cursor-pointer"
                   >
                     ✕
@@ -1665,8 +1820,11 @@ export default function DropPage() {
             <form onSubmit={handleDropSubmit} className="flex items-end gap-2">
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="h-11 w-11 shrink-0 rounded-2xl bg-white/[0.05] hover:bg-white/[0.12] border border-white/10 flex items-center justify-center text-white/80 hover:text-white text-lg transition-colors cursor-pointer"
+                onClick={() => {
+                  triggerHaptic('tap');
+                  fileInputRef.current?.click();
+                }}
+                className="h-11 w-11 shrink-0 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] active:scale-90 border border-white/10 flex items-center justify-center text-white/80 hover:text-white text-lg transition-all cursor-pointer"
                 title="Attach file"
               >
                 📎
@@ -1677,7 +1835,7 @@ export default function DropPage() {
                   ref={textareaRef}
                   rows={1}
                   value={inputText}
-                  placeholder="Message or drop note... (Enter to send)"
+                  placeholder="Drop a note or message... (Enter to send)"
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
@@ -1685,20 +1843,20 @@ export default function DropPage() {
                       handleDropSubmit();
                     }
                   }}
-                  className="w-full bg-black/60 border border-white/15 focus:border-[var(--color-brand-cyan)] rounded-2xl px-4 py-3 text-sm text-white placeholder:text-white/35 outline-none resize-none min-h-[44px] max-h-32 transition-colors shadow-inner"
+                  className="w-full bg-black border border-white/15 focus:border-cyan-400 rounded-2xl px-4 py-3 text-xs sm:text-sm font-mono text-white placeholder:text-white/30 outline-none resize-none min-h-[44px] max-h-32 transition-colors shadow-inner"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={(!inputText.trim() && !pendingFile) || isUploading}
-                className="h-11 px-5 shrink-0 rounded-2xl font-semibold text-sm transition-all flex items-center gap-1.5 cursor-pointer shadow-lg bg-gradient-to-r from-[var(--color-brand-cyan)] to-[var(--color-brand-emerald)] shadow-cyan-900/30 hover:opacity-95 disabled:opacity-30 disabled:cursor-not-allowed"
+                className="h-11 px-5 shrink-0 rounded-2xl font-mono font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shadow-lg bg-cyan-500 hover:bg-cyan-400 active:scale-95 text-black disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 {isUploading ? (
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                 ) : (
                   <>
-                    <span>Send</span>
+                    <span>Drop</span>
                     <span className="text-xs">➔</span>
                   </>
                 )}

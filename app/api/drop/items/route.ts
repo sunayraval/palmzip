@@ -10,6 +10,7 @@ import {
   getUploadsDir,
   DropAttachment,
   DropType,
+  DROP_PASSWORD,
   MAX_DROPS,
 } from '@/lib/drop-storage';
 
@@ -27,7 +28,7 @@ export async function GET(request: Request) {
   const token = getAuthToken(request);
   if (!verifyPassword(token)) {
     return NextResponse.json(
-      { success: false, error: 'Unauthorized. Enter passcode 2008.' },
+      { success: false, error: 'Unauthorized. Passcode required.' },
       { status: 401 }
     );
   }
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
   const token = getAuthToken(request);
   if (!verifyPassword(token)) {
     return NextResponse.json(
-      { success: false, error: 'Unauthorized. Enter passcode 2008.' },
+      { success: false, error: 'Unauthorized. Passcode required.' },
       { status: 401 }
     );
   }
@@ -87,7 +88,7 @@ export async function POST(request: Request) {
           // ignore write errors in restricted environments
         }
 
-        let publicFileUrl = `/api/drop/files?file=${encodeURIComponent(storageFilename)}&name=${encodeURIComponent(originalName)}&auth=2008`;
+        let publicFileUrl = `/api/drop/files?file=${encodeURIComponent(storageFilename)}&name=${encodeURIComponent(originalName)}&auth=${DROP_PASSWORD}`;
 
         // Upload to cloud host for seamless cross-device mobile/desktop access
         try {
@@ -169,7 +170,7 @@ export async function DELETE(request: Request) {
   const token = getAuthToken(request);
   if (!verifyPassword(token)) {
     return NextResponse.json(
-      { success: false, error: 'Unauthorized. Enter passcode 2008.' },
+      { success: false, error: 'Unauthorized. Passcode required.' },
       { status: 401 }
     );
   }

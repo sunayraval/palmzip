@@ -14,7 +14,7 @@ function getAuthToken(request: Request): string | null {
 export async function GET(request: Request) {
   const token = getAuthToken(request);
   if (!verifyPassword(token)) {
-    return new NextResponse('Unauthorized. Enter passcode 2008.', { status: 401 });
+    return new NextResponse('Unauthorized. Passcode required.', { status: 401 });
   }
 
   const encoder = new TextEncoder();
