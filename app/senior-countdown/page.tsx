@@ -1449,7 +1449,7 @@ export default function SeniorCountdownPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
-            <div className="absolute right-0 top-full pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 min-w-[210px]">
+            <div className="absolute right-0 top-full pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 min-w-[260px]">
               <div className="bg-[#0c1015]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-1.5 shadow-2xl flex flex-col gap-1">
                 <Link
                   href="/senior-countdown"
@@ -1461,6 +1461,20 @@ export default function SeniorCountdownPage() {
                   </span>
                   <span className="text-[10px] font-mono text-[var(--color-brand-gold)]">Active ●</span>
                 </Link>
+                <a
+                  href="https://kite.sunayraval.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors group/item"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-cyan)]" />
+                    <span>kite-- let your day take flight</span>
+                  </span>
+                  <span className="text-[10px] font-mono text-[var(--color-brand-cyan)] bg-cyan-950/40 px-1.5 py-0.5 rounded border border-[var(--color-brand-cyan)]/30">
+                    ↗
+                  </span>
+                </a>
               </div>
             </div>
           </div>

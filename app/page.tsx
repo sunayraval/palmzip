@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { FounderScrollCanvas } from '@/components/FounderScrollCanvas';
 import { NeuralNetwork } from '@/components/NeuralNetwork';
 import { CandlestickBackground } from '@/components/CandlestickChart';
+import { AnnouncementBar } from '@/components/AnnouncementBar';
 import { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 
@@ -463,73 +464,90 @@ export function PortfolioView({ content = contentData, isPreview = false }: { co
   return (
     <main className="relative min-h-screen bg-[#050505] selection:bg-[var(--color-brand-cyan)] selection:text-white">
       
-      {/* Sticky Header Nav */}
-      <header className={`${isPreview ? 'absolute' : 'fixed'} top-0 inset-x-0 z-50 backdrop-blur-xl bg-black/50 border-b border-white/5 h-14 sm:h-20 px-4 sm:px-6 lg:px-12 flex items-center justify-between`}>
-        <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="flex items-center gap-2.5 sm:gap-3"
-        >
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded bg-gradient-to-br from-[var(--color-brand-emerald)] to-[var(--color-brand-cyan)] flex items-center justify-center shadow-lg hover:shadow-[0_0_15px_var(--color-brand-emerald)] transition-shadow cursor-pointer">
-            <span className="text-white font-bold text-xs sm:text-sm tracking-tighter">SR</span>
-          </div>
-          <span className="text-white/90 font-semibold tracking-wide hidden sm:block">SUNAY RAVAL</span>
-        </motion.div>
-        
-        <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="flex items-center gap-3 sm:gap-6"
-        >
-          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--color-brand-emerald)]/30 bg-[var(--color-brand-emerald)]/10 hover:bg-[var(--color-brand-emerald)]/20 transition-colors cursor-default">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--color-brand-emerald)] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--color-brand-emerald)]"></span>
-            </span>
-            <span className="text-white/80 text-xs font-medium tracking-wide">{HERO.availableBadge}</span>
-          </div>
+      {/* Sticky Header Nav with Announcement Bar */}
+      <header className={`${isPreview ? 'absolute' : 'fixed'} top-0 inset-x-0 z-50 flex flex-col`}>
+        <AnnouncementBar />
+        <div className="backdrop-blur-xl bg-black/60 border-b border-white/5 h-14 sm:h-20 px-4 sm:px-6 lg:px-12 flex items-center justify-between">
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="flex items-center gap-2.5 sm:gap-3"
+          >
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded bg-gradient-to-br from-[var(--color-brand-emerald)] to-[var(--color-brand-cyan)] flex items-center justify-center shadow-lg hover:shadow-[0_0_15px_var(--color-brand-emerald)] transition-shadow cursor-pointer">
+              <span className="text-white font-bold text-xs sm:text-sm tracking-tighter">SR</span>
+            </div>
+            <span className="text-white/90 font-semibold tracking-wide hidden sm:block">SUNAY RAVAL</span>
+          </motion.div>
           
-          <Link href="/story" className="text-xs sm:text-sm font-medium text-white/90 hover:text-[var(--color-brand-cyan)] transition-colors px-2 py-1 rounded">
-            Story
-          </Link>
-          <div className="relative group">
-            <button
-              type="button"
-              className="text-xs sm:text-sm font-medium text-white/90 hover:text-[var(--color-brand-cyan)] transition-colors px-2 py-1 rounded flex items-center gap-1 cursor-pointer"
-            >
-              <span>Other</span>
-              <svg className="w-3 h-3 text-white/60 group-hover:text-white transition-transform duration-200 group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            <div className="absolute right-0 top-full pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 min-w-[210px]">
-              <div className="bg-[#0c1015]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-1.5 shadow-2xl flex flex-col gap-1">
-                <Link
-                  href="/senior-countdown"
-                  className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors group/item"
-                >
-                  <span className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-gold)]" />
-                    <span>Senior Countdown</span>
-                  </span>
-                  <span className="text-[10px] font-mono text-[var(--color-brand-gold)] bg-amber-950/40 px-1.5 py-0.5 rounded border border-[var(--color-brand-gold)]/30">
-                    '27
-                  </span>
-                </Link>
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="flex items-center gap-3 sm:gap-6"
+          >
+            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--color-brand-emerald)]/30 bg-[var(--color-brand-emerald)]/10 hover:bg-[var(--color-brand-emerald)]/20 transition-colors cursor-default">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--color-brand-emerald)] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--color-brand-emerald)]"></span>
+              </span>
+              <span className="text-white/80 text-xs font-medium tracking-wide">{HERO.availableBadge}</span>
+            </div>
+            
+            <Link href="/story" className="text-xs sm:text-sm font-medium text-white/90 hover:text-[var(--color-brand-cyan)] transition-colors px-2 py-1 rounded">
+              Story
+            </Link>
+            <div className="relative group">
+              <button
+                type="button"
+                className="text-xs sm:text-sm font-medium text-white/90 hover:text-[var(--color-brand-cyan)] transition-colors px-2 py-1 rounded flex items-center gap-1 cursor-pointer"
+              >
+                <span>Other</span>
+                <svg className="w-3 h-3 text-white/60 group-hover:text-white transition-transform duration-200 group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div className="absolute right-0 top-full pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 min-w-[260px]">
+                <div className="bg-[#0c1015]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-1.5 shadow-2xl flex flex-col gap-1">
+                  <Link
+                    href="/senior-countdown"
+                    className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors group/item"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-gold)]" />
+                      <span>Senior Countdown</span>
+                    </span>
+                    <span className="text-[10px] font-mono text-[var(--color-brand-gold)] bg-amber-950/40 px-1.5 py-0.5 rounded border border-[var(--color-brand-gold)]/30">
+                      '27
+                    </span>
+                  </Link>
+                  <a
+                    href="https://kite.sunayraval.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors group/item"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-cyan)]" />
+                      <span>kite-- let your day take flight</span>
+                    </span>
+                    <span className="text-[10px] font-mono text-[var(--color-brand-cyan)] bg-cyan-950/40 px-1.5 py-0.5 rounded border border-[var(--color-brand-cyan)]/30">
+                      ↗
+                    </span>
+                  </a>
+                </div>
               </div>
             </div>
-          </div>
-          <a 
-            href="https://www.linkedin.com/in/sunay-raval-326215245/" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="text-xs sm:text-sm font-medium text-white/90 hover:text-[var(--color-brand-cyan)] transition-colors px-2 py-1 rounded"
-          >
-            Contact
-          </a>
-        </motion.div>
+            <a 
+              href="https://www.linkedin.com/in/sunay-raval-326215245/" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-xs sm:text-sm font-medium text-white/90 hover:text-[var(--color-brand-cyan)] transition-colors px-2 py-1 rounded"
+            >
+              Contact
+            </a>
+          </motion.div>
+        </div>
       </header>
 
       {/* Main Scrollytelling Container */}
