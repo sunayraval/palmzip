@@ -19,8 +19,8 @@ export function AnnouncementBar({
     items ||
     (contentData as any).announcementTicker || [
       "KITE RELEASE [NOV 12, 2026] ▲ Let your day take flight — kite.sunayraval.com",
-      "FEATURE ANNOUNCEMENT ▲ Conversational Gemini AI & Live My Day Scheduler",
-      "KITE FEATURES ▲ Notion-Style Tasks • Canvas LMS Sync • Ambient Themes"
+      "FEATURE ANNOUNCEMENT ▲ Integration with Conversational AI Models for Adaptive Day Planning",
+      "KITE FEATURES ▲ Easy-to-Use Tasklist • Canvas LMS Sync • Ambient Themes"
     ];
 
   const renderItem = (item: string, idx: number) => {
