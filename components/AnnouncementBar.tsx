@@ -1,11 +1,14 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import contentData from '@/data/content.json';
 
 interface AnnouncementBarProps {
   items?: string[];
   badgeText?: string;
   badgeDate?: string;
+  holdSeconds?: number;
   className?: string;
 }
 
@@ -13,18 +16,29 @@ export function AnnouncementBar({
   items,
   badgeText = "NEW",
   badgeDate = "NOV 12, 2026",
+  holdSeconds = 4,
   className = ''
 }: AnnouncementBarProps) {
   const tickerItems: string[] =
     items ||
     (contentData as any).announcementTicker || [
-      "KITE RELEASE [NOV 12, 2026] ▲ Let your day take flight — kite.sunayraval.com",
-      "NEW APP ▲ Conversational Gemini AI Workspace & Smart Task Engine",
-      "FEATURES ▲ Live My Day Scheduler • Notion-Style Tasks • Canvas LMS Sync",
-      "PORTFOLIO ▲ Sunay Raval 2026"
+      "KITE RELEASE [NOV 12, 2026] ▲ Let your day take flight — kite.sunayraval.com"
     ];
 
-  const renderItem = (item: string, idx: number) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+
+  useEffect(() => {
+    if (tickerItems.length <= 1 || isPaused) return;
+
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % tickerItems.length);
+    }, holdSeconds * 1000);
+
+    return () => clearInterval(interval);
+  }, [tickerItems.length, holdSeconds, isPaused]);
+
+  const renderContent = (item: string) => {
     const isUp = item.includes('▲');
     const isDown = item.includes('▼');
     const isKiteLink = item.toLowerCase().includes('kite.sunayraval.com');
@@ -58,34 +72,32 @@ export function AnnouncementBar({
     if (isKiteLink) {
       return (
         <a
-          key={idx}
           href="https://kite.sunayraval.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="group flex items-center gap-2 font-mono text-xs sm:text-[13px] tracking-wide whitespace-nowrap hover:text-white transition-colors cursor-pointer"
+          className="group inline-flex items-center gap-2 font-mono text-xs sm:text-[13px] tracking-wide text-white/90 hover:text-white transition-colors cursor-pointer py-1"
         >
           {contentNode}
           <span className="text-[11px] text-[var(--color-brand-cyan)] opacity-70 group-hover:opacity-100 transition-opacity">
             ↗
           </span>
-          <span className="text-white/20 ml-6 select-none">•</span>
         </a>
       );
     }
 
     return (
-      <div
-        key={idx}
-        className="flex items-center gap-2 font-mono text-xs sm:text-[13px] tracking-wide whitespace-nowrap"
-      >
+      <div className="font-mono text-xs sm:text-[13px] tracking-wide text-white/90 py-1">
         {contentNode}
-        <span className="text-white/20 ml-6 select-none">•</span>
       </div>
     );
   };
 
+  const currentItem = tickerItems[currentIndex] || tickerItems[0];
+
   return (
     <div
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
       className={`relative w-full h-8 sm:h-9 bg-black/95 backdrop-blur-md border-b border-white/10 flex items-center overflow-hidden select-none z-50 ${className}`}
     >
       {/* Minimalist Badge: NEW with Date */}
@@ -101,20 +113,35 @@ export function AnnouncementBar({
         )}
       </div>
 
-      {/* Gentle Edge Fades */}
-      <div className="pointer-events-none absolute inset-y-0 left-[68px] sm:left-[145px] w-8 sm:w-16 bg-gradient-to-r from-black to-transparent z-10" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-8 sm:w-16 bg-gradient-to-l from-black to-transparent z-10" />
-
-      {/* Slower, Smooth Marquee Track (80s duration for effortless reading) */}
-      <div className="flex-1 overflow-hidden h-full flex items-center">
-        <div
-          className="animate-marquee flex items-center gap-6 pl-6 hover:[animation-play-state:paused] cursor-default"
-          style={{ animationDuration: '80s' }}
-        >
-          {tickerItems.map((item, idx) => renderItem(item, idx))}
-          {tickerItems.map((item, idx) => renderItem(item, idx + tickerItems.length))}
-        </div>
+      {/* Announcement Content Area: Transitions and holds for 3-5 seconds per item */}
+      <div className="flex-1 h-full flex items-center px-4 sm:px-6 overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentIndex}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
+            className="w-full flex items-center truncate"
+          >
+            {renderContent(currentItem)}
+          </motion.div>
+        </AnimatePresence>
       </div>
+
+      {/* Progress indicator (only visible if > 1 items) */}
+      {tickerItems.length > 1 && (
+        <div className="shrink-0 hidden md:flex items-center gap-1.5 pr-4 z-20">
+          {tickerItems.map((_, i) => (
+            <span
+              key={i}
+              className={`w-1 h-1 rounded-full transition-colors duration-300 ${
+                i === currentIndex ? 'bg-[var(--color-brand-cyan)]' : 'bg-white/20'
+              }`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
