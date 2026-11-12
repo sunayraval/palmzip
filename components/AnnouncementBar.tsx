@@ -22,7 +22,9 @@ export function AnnouncementBar({
   const tickerItems: string[] =
     items ||
     (contentData as any).announcementTicker || [
-      "KITE RELEASE [NOV 12, 2026] ▲ Let your day take flight — kite.sunayraval.com"
+      "KITE RELEASE [NOV 12, 2026] ▲ Let your day take flight — kite.sunayraval.com",
+      "FEATURE ANNOUNCEMENT ▲ Conversational Gemini AI & Live My Day Scheduler",
+      "KITE FEATURES ▲ Notion-Style Tasks • Canvas LMS Sync • Ambient Themes"
     ];
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -41,7 +43,9 @@ export function AnnouncementBar({
   const renderContent = (item: string) => {
     const isUp = item.includes('▲');
     const isDown = item.includes('▼');
-    const isKiteLink = item.toLowerCase().includes('kite.sunayraval.com');
+    const isKiteLink =
+      item.toLowerCase().includes('kite') ||
+      item.toLowerCase().includes('feature');
 
     let contentNode: React.ReactNode;
 
@@ -118,9 +122,9 @@ export function AnnouncementBar({
         <AnimatePresence mode="wait">
           <motion.div
             key={currentIndex}
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
+            exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.35, ease: 'easeOut' }}
             className="w-full flex items-center truncate"
           >
@@ -129,14 +133,18 @@ export function AnnouncementBar({
         </AnimatePresence>
       </div>
 
-      {/* Progress indicator (only visible if > 1 items) */}
+      {/* Progress / Step indicator (visible if > 1 items) */}
       {tickerItems.length > 1 && (
         <div className="shrink-0 hidden md:flex items-center gap-1.5 pr-4 z-20">
           {tickerItems.map((_, i) => (
-            <span
+            <button
               key={i}
-              className={`w-1 h-1 rounded-full transition-colors duration-300 ${
-                i === currentIndex ? 'bg-[var(--color-brand-cyan)]' : 'bg-white/20'
+              onClick={() => setCurrentIndex(i)}
+              aria-label={`Go to announcement ${i + 1}`}
+              className={`h-1 rounded-full transition-all duration-300 cursor-pointer ${
+                i === currentIndex
+                  ? 'bg-[var(--color-brand-cyan)] w-3'
+                  : 'bg-white/20 hover:bg-white/40 w-1'
               }`}
             />
           ))}
