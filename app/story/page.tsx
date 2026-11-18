@@ -17,6 +17,7 @@ import { PulseRobotSection } from '@/components/PulseRobotSection';
 import { MultiAgentPlanningSection } from '@/components/MultiAgentPlanningSection';
 import { FutureMilestonesSection } from '@/components/FutureMilestonesSection';
 import { TimelineFlowConnector, TimelineContinuousSpine } from '@/components/TimelineFlowLine';
+import { OtherDropdown } from '@/components/OtherDropdown';
 import Link from 'next/link';
 
 function getShortDate(dateTag: string): string {
@@ -336,51 +337,11 @@ export function StoryPageView({
           ))}
         </div>
 
-        <nav className="hidden md:flex items-center gap-3 lg:gap-5 text-xs sm:text-sm">
-          <Link href="/" className="text-white/70 hover:text-white transition-colors px-2 py-1">
+        <nav className="flex items-center gap-1.5 sm:gap-3 lg:gap-5 text-xs sm:text-sm">
+          <Link href="/" className="hidden sm:block text-white/70 hover:text-white transition-colors px-2 py-1">
             Home
           </Link>
-          <div className="relative group">
-            <button
-              type="button"
-              className="text-xs sm:text-sm font-medium text-white/70 hover:text-white transition-colors px-2 py-1 flex items-center gap-1 cursor-pointer"
-            >
-              <span>Other</span>
-              <svg className="w-3 h-3 text-white/50 group-hover:text-white transition-transform duration-200 group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            <div className="absolute right-0 top-full pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 min-w-[260px]">
-              <div className="bg-[#0c1015]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-1.5 shadow-2xl flex flex-col gap-1">
-                <Link
-                  href="/senior-countdown"
-                  className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors group/item"
-                >
-                  <span className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-gold)]" />
-                    <span>Senior Countdown</span>
-                  </span>
-                  <span className="text-[10px] font-mono text-[var(--color-brand-gold)] bg-amber-950/40 px-1.5 py-0.5 rounded border border-[var(--color-brand-gold)]/30">
-                    '27
-                  </span>
-                </Link>
-                <a
-                  href="https://kite.sunayraval.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors group/item"
-                >
-                  <span className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-cyan)]" />
-                    <span>kite-- let your day take flight</span>
-                  </span>
-                  <span className="text-[10px] font-mono text-[var(--color-brand-cyan)] bg-cyan-950/40 px-1.5 py-0.5 rounded border border-[var(--color-brand-cyan)]/30">
-                    ↗
-                  </span>
-                </a>
-              </div>
-            </div>
-          </div>
+          <OtherDropdown variant="story" />
         </nav>
       </header>
 
